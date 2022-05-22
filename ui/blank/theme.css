@@ -1,0 +1,262 @@
+:root {
+  --color-0: #000000;
+  --color-1: #DFDFDF;
+  --color-2: #F0F0F0;
+  --color-3: #FFFFFF;
+  font-size: 2vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  font-family: monospace;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.fill {
+  width: 100%;
+  height: 100%;
+}
+.fill-vertical {
+  height: 100%;
+}
+.fill-horizontal {
+  width: 100%;
+}
+
+.align-start {
+  align-items: flex-start;
+}
+.align-end {
+  align-items: flex-end;
+}
+.align-center {
+  align-items: center;
+}
+.justify-start {
+  justify-content: flex-start;
+}
+.justify-end {
+  justify-content: flex-end;
+}
+.justify-center {
+  justify-content: center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.black {
+  background: var(--color-0);
+  color: var(--color-3);
+}
+.gray {
+  background: var(--color-1);
+}
+.lightgray {
+  background: var(--color-2);
+}
+.white {
+  background: var(--color-3);
+}
+
+button {
+  border: none;
+  background: var(--color-3);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
+  cursor: pointer !important;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  margin: 0;
+  padding: 0.25rem;
+}
+button[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+  box-shadow: none;
+}
+button:active {
+  box-shadow: none;
+  background: var(--color-3);
+}
+button.active {
+  background: var(--color-3);
+}
+button.inactive {
+  background: var(--color-1);
+  box-shadow: none;
+}
+button img {
+  max-width: 60%;
+  max-height: 60%;
+}
+
+button.round {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 100%;
+}
+button.square {
+  width: 2rem;
+  height: 2rem;
+}
+button.tiny {
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.75rem;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+#toolbar {
+  padding: 1rem 0.5rem;
+}
+#toolbar button {
+  margin: 0 0.5rem;
+}
+
+#file-header {
+  padding: 0.5rem 1rem;
+}
+#file-header .device-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+#file-header .file-name {
+  padding: 0 1rem;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+#file-header input {
+  border: none;
+  outline: none;
+  font-family: monospace;
+  font-size: 1rem;
+  height: 100%;
+  width: 100%;
+}
+
+#bar {
+  height: 3rem;
+  padding: 0.5rem;
+}
+#bar.disabled {
+  cursor: auto;
+}
+#bar button {
+  margin: 0 0.25rem;
+}
+#bar.resizable {
+  cursor: row-resize;
+}
+
+#terminal {
+  border: solid 0.2rem var(--color-1);
+}
+
+#board-files,
+#system-files {
+  background: var(--color-1);
+  padding: 0 1rem 1.0rem 1.0rem;
+}
+#board-files ul,
+#system-files ul {
+  padding: 0.25rem 1.0rem;
+}
+
+#files ul {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+#files ul li {
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+#files ul li:hover {
+  background: var(--color-2);
+}
+#files ul li.selected {
+  background: var(--color-1);
+}
+
+#file-actions {
+  width: 5rem;
+}
+#file-actions button {
+  margin: 0.25rem 0;
+}
+
+#backdrop {
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  background: rgba(255, 255, 255, 0.5);
+}
+#dialog {
+  margin: auto;
+  width: 80%;
+  height: auto;
+  background: var(--color-3);
+  padding: 2rem;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
+}
+#dialog ul li {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+#dialog ul li:hover {
+  background: var(--color-1);
+  border-radius: 0.25rem;
+}
+
+#terminal {
+  padding: 0.5rem 1rem;
+  overflow: hidden;
+}

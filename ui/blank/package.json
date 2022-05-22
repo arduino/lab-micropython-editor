@@ -1,0 +1,15 @@
+{
+  "name": "blank",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "build-lib": "browserify build_lib.js > lib"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^17.0.0",
+    "choo": "^7.1.0"
+  }
+}

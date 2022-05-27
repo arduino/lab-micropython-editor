@@ -190,39 +190,6 @@ class SerialConnection extends EventEmitter {
 	_eventHandler(buffer) {
 		const data = buffer.toString()
 		this.emit('output', data)
-
-		// Getting data that should be sent to frontend
-		// Loading file content, listing files, etc
-		// if (data.indexOf('<REC>') !== -1) {
-		// 	this.recordingData = true
-		// }
-		// if (this.recordingData) {
-		// 	this.data += data
-		// }
-		// if (data.indexOf('<EOF>') !== -1) {
-		// 	const iofREC = this.data.indexOf('<REC>')
-		// 	const rec = this.data.indexOf('<REC>\r\n')+7
-		// 	const eof = this.data.indexOf('<EOF>')
-		// 	if (this.loadingFile) {
-		// 		this.emit('file-loaded', this.data.slice(rec, eof))
-		// 		this.loadingFile = false
-		// 	}
-		// 	if (this.loadingFileList) {
-		// 		this.emit('file-list-loaded', this.data.slice(rec, eof))
-		// 		this.loadingFileList = false
-		// 	}
-		// 	this.recordingData = false
-		// }
-
-		if (this.rawRepl && data.indexOf('\n>>> ') != -1) {
-			this.emit('execution-finished')
-			this.rawRepl = false
-		}
-
-		if (!this.rawRepl && data.indexOf('raw REPL;') != -1) {
-			this.emit('execution-started')
-			this.rawRepl = true
-		}
 	}
 	/**
 	* Put REPL in raw mode
@@ -241,32 +208,21 @@ class SerialConnection extends EventEmitter {
 	* @param {String} command Command to be written on connected port
 	*/
 	_executeRaw(command) {
-		const writePromise = (buffer) => {
-			return new Promise((resolve, reject) => {
-				setTimeout(() => {
-					this.port.write(buffer, (err) => {
-						if (err) return reject()
-						resolve()
-					})
-				}, 1)
-			})
-		}
-		const l = 1024
-		let slices = []
-		for(let i = 0; i < command.length; i+=l) {
-			let slice = command.slice(i, i+l)
-			slices.push(slice)
-		}
+		let p = 0
+		const l = 256
 		return new Promise((resolve, reject) => {
-			slices.reduce((cur, next) => {
-				return cur.then(() => {
-					return writePromise(next)
-				})
-			}, Promise.resolve())
-			.then()
-			.then(() => {
+			for(let i = 0; i < command.length; i+=l) {
+				let slice = command.slice(i, i+l)
+				setTimeout(() => {
+					this.port.write(slice)
+				}, p*10)
+				p += 1
+			}
+			let finished = (command.length / l) + 1
+			setTimeout(() => {
+				this.port.write('\x04')
 				resolve()
-			})
+			}, finished * 10)
 		})
 	}
 }

@@ -39,9 +39,8 @@ gc.collect()`
 class SerialConnection extends EventEmitter {
 	constructor() {
 		super()
+		this.executing = false
 		this.rawRepl = false
-		this.loadingFile = false
-		this.loadingFileList = false
 	}
 	/**
 	* List all available serial ports (with vendor id)
@@ -91,13 +90,15 @@ class SerialConnection extends EventEmitter {
 	* @param {String} code String of code to be executed. Line breaks must be `\n`
 	*/
 	execute(code) {
+		this.emit('execution-started')
 		// TODO: break code in lines and `_execRaw` line by line
 		this.stop()
 		this._enterRawRepl()
 		this._executeRaw(code)
-		.then(() => {
-			this._exitRawRepl()
-		})
+			.then(() => {
+				this.emit('execution-finished')
+				this._exitRawRepl()
+			})
 	}
 	/**
 	* Evaluate a command/expression.
@@ -125,7 +126,6 @@ class SerialConnection extends EventEmitter {
 	*/
 	listFiles() {
 		this.data = ''
-		this.loadingFileList = true
 		this.execute(codeListFiles)
 	}
 	/**
@@ -134,7 +134,6 @@ class SerialConnection extends EventEmitter {
 	*/
 	loadFile(path) {
 		this.data = ''
-		this.loadingFile = true
 		this.execute(codeLoadFile(path))
 	}
 	/**
@@ -152,12 +151,9 @@ class SerialConnection extends EventEmitter {
 		pCode += codeCollectGarbage + '\n'
 		// `content` is what comes from the editor. We want to write it
 		// line one by one on a file so we split by `\n`
-		var lineCount = 0;
-		var lines = content.split('\r\n')
-		lines.forEach((line) => {
+		let lines = content.split('\r\n')
+		lines.forEach((line, lineCount) => {
 			if (line) {
-				var nlMarker = line.indexOf('\n');
-				var crMarker = line.indexOf('\r');
 				// TODO: Sanitize line replace """ with \"""
 				// To avoid the string escaping with weirdly we encode
 				// the line plus the `\n` that we just removed to base64
@@ -165,10 +161,13 @@ class SerialConnection extends EventEmitter {
 				if(lineCount != lines.length - 1){
 					pCode += `\nf.write('\\n')\n`
 				}
-				lineCount++;
 			}
 		})
 		pCode += `\nf.close()\n`
+
+		this.once('execution-finished', () => {
+			this.emit('file-saved')
+		})
 		this.execute(pCode)
 	}
 

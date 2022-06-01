@@ -39,9 +39,8 @@ gc.collect()`
 class SerialConnection extends EventEmitter {
 	constructor() {
 		super()
+		this.executing = false
 		this.rawRepl = false
-		this.loadingFile = false
-		this.loadingFileList = false
 	}
 	/**
 	* List all available serial ports (with vendor id)
@@ -91,13 +90,15 @@ class SerialConnection extends EventEmitter {
 	* @param {String} code String of code to be executed. Line breaks must be `\n`
 	*/
 	execute(code) {
+		this.emit('execution-started')
 		// TODO: break code in lines and `_execRaw` line by line
 		this.stop()
 		this._enterRawRepl()
 		this._executeRaw(code)
-		.then(() => {
-			this._exitRawRepl()
-		})
+			.then(() => {
+				this.emit('execution-finished')
+				this._exitRawRepl()
+			})
 	}
 	/**
 	* Evaluate a command/expression.
@@ -125,7 +126,6 @@ class SerialConnection extends EventEmitter {
 	*/
 	listFiles() {
 		this.data = ''
-		this.loadingFileList = true
 		this.execute(codeListFiles)
 	}
 	/**
@@ -134,7 +134,6 @@ class SerialConnection extends EventEmitter {
 	*/
 	loadFile(path) {
 		this.data = ''
-		this.loadingFile = true
 		this.execute(codeLoadFile(path))
 	}
 	/**
@@ -152,12 +151,9 @@ class SerialConnection extends EventEmitter {
 		pCode += codeCollectGarbage + '\n'
 		// `content` is what comes from the editor. We want to write it
 		// line one by one on a file so we split by `\n`
-		var lineCount = 0;
-		var lines = content.split('\r\n')
-		lines.forEach((line) => {
+		let lines = content.split('\r\n')
+		lines.forEach((line, lineCount) => {
 			if (line) {
-				var nlMarker = line.indexOf('\n');
-				var crMarker = line.indexOf('\r');
 				// TODO: Sanitize line replace """ with \"""
 				// To avoid the string escaping with weirdly we encode
 				// the line plus the `\n` that we just removed to base64
@@ -165,10 +161,13 @@ class SerialConnection extends EventEmitter {
 				if(lineCount != lines.length - 1){
 					pCode += `\nf.write('\\n')\n`
 				}
-				lineCount++;
 			}
 		})
 		pCode += `\nf.close()\n`
+
+		this.once('execution-finished', () => {
+			this.emit('file-saved')
+		})
 		this.execute(pCode)
 	}
 
@@ -190,39 +189,6 @@ class SerialConnection extends EventEmitter {
 	_eventHandler(buffer) {
 		const data = buffer.toString()
 		this.emit('output', data)
-
-		// Getting data that should be sent to frontend
-		// Loading file content, listing files, etc
-		// if (data.indexOf('<REC>') !== -1) {
-		// 	this.recordingData = true
-		// }
-		// if (this.recordingData) {
-		// 	this.data += data
-		// }
-		// if (data.indexOf('<EOF>') !== -1) {
-		// 	const iofREC = this.data.indexOf('<REC>')
-		// 	const rec = this.data.indexOf('<REC>\r\n')+7
-		// 	const eof = this.data.indexOf('<EOF>')
-		// 	if (this.loadingFile) {
-		// 		this.emit('file-loaded', this.data.slice(rec, eof))
-		// 		this.loadingFile = false
-		// 	}
-		// 	if (this.loadingFileList) {
-		// 		this.emit('file-list-loaded', this.data.slice(rec, eof))
-		// 		this.loadingFileList = false
-		// 	}
-		// 	this.recordingData = false
-		// }
-
-		if (this.rawRepl && data.indexOf('\n>>> ') != -1) {
-			this.emit('execution-finished')
-			this.rawRepl = false
-		}
-
-		if (!this.rawRepl && data.indexOf('raw REPL;') != -1) {
-			this.emit('execution-started')
-			this.rawRepl = true
-		}
 	}
 	/**
 	* Put REPL in raw mode
@@ -241,32 +207,21 @@ class SerialConnection extends EventEmitter {
 	* @param {String} command Command to be written on connected port
 	*/
 	_executeRaw(command) {
-		const writePromise = (buffer) => {
-			return new Promise((resolve, reject) => {
-				setTimeout(() => {
-					this.port.write(buffer, (err) => {
-						if (err) return reject()
-						resolve()
-					})
-				}, 1)
-			})
-		}
-		const l = 1024
-		let slices = []
-		for(let i = 0; i < command.length; i+=l) {
-			let slice = command.slice(i, i+l)
-			slices.push(slice)
-		}
+		let p = 0
+		const l = 256
 		return new Promise((resolve, reject) => {
-			slices.reduce((cur, next) => {
-				return cur.then(() => {
-					return writePromise(next)
-				})
-			}, Promise.resolve())
-			.then()
-			.then(() => {
+			for(let i = 0; i < command.length; i+=l) {
+				let slice = command.slice(i, i+l)
+				setTimeout(() => {
+					this.port.write(slice)
+				}, p*10)
+				p += 1
+			}
+			let finished = (command.length / l) + 1
+			setTimeout(() => {
+				this.port.write('\x04')
 				resolve()
-			})
+			}, finished * 10)
 		})
 	}
 }

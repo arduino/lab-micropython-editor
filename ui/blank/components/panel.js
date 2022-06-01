@@ -15,64 +15,26 @@ function Panel(state, emit) {
     window.removeEventListener('mousemove', onMouseMove)
   }
 
-  // Panel selection handlers
-  function togglePanel() {
-    emit('toggle-panel')
-  }
-  function selectFiles() {
-    if (state.panel === 'files') {
-      emit('toggle-panel')
-    } else {
-      if (state.panelCollapsed) {
-        emit('toggle-panel')
-      }
-      emit('select-panel', 'files')
-    }
-  }
-  function selectTerminal() {
-    if (state.panel === 'terminal') {
-      emit('toggle-panel')
-    } else {
-      if (state.panelCollapsed) {
-        emit('toggle-panel')
-      }
-      emit('select-panel', 'terminal')
-    }
-  }
-
-  // Bar buttons
-  let fileButton = SquareButton(
-    { onclick: selectFiles, className: isFilesSelected ? 'active' : 'inactive'},
-    Image({ src: 'icons/folder.png' })
-  )
-  let terminalButton = SquareButton(
-    { onclick: selectTerminal , className: isTerminalSelected ? 'active' : 'inactive' },
-    Image( { src: 'icons/developer_board.png' } )
-  )
-
   let panelHeight = state.panelCollapsed ? 0 : state.panelHeight
-  let background = isTerminalSelected ? 'black' : 'gray'
 
   if (state.panelCollapsed) {
     return html`
-      <div id="bar" class="gray row align-center justify-end">
-        ${fileButton}
-        ${terminalButton}
+      <div id="bar" class="color-0 row align-center justify-end">
+        <span>Status</span>
       </div>
     `
   } else {
     return html`
       <div
         id="bar"
-        class="gray row align-center justify-end resizable"
+        class="color-0 row align-center justify-end resizable"
         onmousedown=${onMouseDown}
         >
-        ${fileButton}
-        ${terminalButton}
+        <span>Status</span>
       </div>
       <div
-        id="panel" 
-        class="${background} column fill"
+        id="panel"
+        class="column fill"
         style="height: ${panelHeight}px"
         >
         ${isTerminalSelected ? state.cache(XTerm, 'terminal').render() : null}

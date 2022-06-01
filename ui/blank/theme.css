@@ -1,10 +1,23 @@
 :root {
+  --color-0: #008184;
+  --color-1: #E67E22;
+  --color-2: #F39C12;
+  --color-3: #F4BA00;
+  --color-4: #ECF1F1;
+  --white: #FFF;
+  --black: #000;
+  font-size: 2vh;
+}
+
+/*
+:root {
   --color-0: #000000;
   --color-1: #DFDFDF;
   --color-2: #F0F0F0;
   --color-3: #FFFFFF;
   font-size: 2vh;
 }
+*/
 
 * {
   box-sizing: border-box;
@@ -78,23 +91,38 @@ img {
   display: none !important;
 }
 
-.black {
+.color-0 {
   background: var(--color-0);
-  color: var(--color-3);
+  color: var(--white);
 }
-.gray {
+.color-1 {
   background: var(--color-1);
+  color: var(--white);
 }
-.lightgray {
+.color-2 {
   background: var(--color-2);
+  color: var(--white);
+}
+.color-3 {
+  background: var(--color-3);
+  color: var(--black);
+}
+.color-4 {
+  background: var(--color-4);
+  color: var(--black);
+}
+
+.black {
+  background: var(--black);
+  color: var(--white);
 }
 .white {
-  background: var(--color-3);
+  background: var(--white);
+  color: var(--black);
 }
 
 button {
   border: none;
-  background: var(--color-3);
   box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
   cursor: pointer !important;
   align-items: center;
@@ -114,13 +142,13 @@ button[disabled] {
 }
 button:active {
   box-shadow: none;
-  background: var(--color-3);
+  background: var(--color-2);
 }
 button.active {
-  background: var(--color-3);
+  background: var(--color-2);
 }
 button.inactive {
-  background: var(--color-1);
+  /* background: var(--white); */
   box-shadow: none;
 }
 button img {
@@ -193,13 +221,12 @@ button.tiny {
 }
 
 #terminal {
-  border: solid 0.2rem var(--color-1);
+  border: solid 0.2rem var(--black);
 }
 
 #board-files,
 #system-files {
-  background: var(--color-1);
-  padding: 0 1rem 1.0rem 1.0rem;
+  padding: 1rem;
 }
 #board-files ul,
 #system-files ul {
@@ -215,10 +242,10 @@ button.tiny {
   padding: 0.25rem 0;
 }
 #files ul li:hover {
-  background: var(--color-2);
+  background: var(--color-3);
 }
 #files ul li.selected {
-  background: var(--color-1);
+  background: var(--color-3);
 }
 
 #file-actions {
@@ -236,13 +263,13 @@ button.tiny {
   left: 0;
   right: 0;
   z-index: 99;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(236, 241, 241, 0.5);
 }
 #dialog {
   margin: auto;
   width: 80%;
   height: auto;
-  background: var(--color-3);
+  background: var(--color-4);
   padding: 2rem;
   font-size: 1.25rem;
   box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
@@ -252,7 +279,7 @@ button.tiny {
   cursor: pointer;
 }
 #dialog ul li:hover {
-  background: var(--color-1);
+  background: var(--color-3);
   border-radius: 0.25rem;
 }
 

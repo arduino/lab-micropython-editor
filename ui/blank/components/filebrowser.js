@@ -62,17 +62,17 @@ function FileBrowser(state, emit) {
   return html`
     <div id="files" class="row fill">
       <div id="board-files" class="fill">
-        <ul id="file-list" class="fill white column">
+        <ul id="file-list" class="fill color-4 column">
           ${state.boardFiles.map(BoardFile)}
         </ul>
       </div>
-      <div id="file-actions" class="column fill-vertical align-center">
+      <div id="file-actions" class="column fill-vertical align-center justify-center">
         ${sendToBoardButton}
         ${sendToDiskButton}
         ${removeButton}
       </div>
       <div id="system-files" class="fill">
-        <ul id="file-list" class="fill white column">
+        <ul id="file-list" class="fill color-4 column">
           ${state.diskFiles.map(DiskFile)}
         </ul>
       </div>

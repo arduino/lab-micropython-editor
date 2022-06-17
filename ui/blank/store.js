@@ -2,6 +2,7 @@ function store(state, emitter) {
   state.connected = false
   state.isPortDialogOpen = false
   state.ports = []
+
   state.panel = 'terminal' // terminal | files
   state.panelHeight = 200
   state.panelCollapsed = true
@@ -13,6 +14,8 @@ function store(state, emitter) {
 
   state.diskFiles = []
   state.boardFiles = []
+
+  state.status = 'Disconnected'
 
   emitter.on('open-port-dialog', () => {
     console.log('open-port-dialog')
@@ -255,18 +258,22 @@ function store(state, emitter) {
     emitter.emit('update-files')
   })
 
-
   window.serialBus.on('connected', (port) => {
     console.log('serialBus', 'connected', port)
     state.connected = true
     state.panelCollapsed = false
+    state.status = 'Connected'
     emitter.emit('close-port-dialog')
     emitter.emit('list-board-folder')
     emitter.emit('render')
   })
-  window.serialBus.on('serialBus', (port) => {
+  window.serialBus.on('disconnected', (port) => {
     console.log('serialBus', 'disconnected', port)
     state.connected = false
+    state.boardFiles = []
+    state.status = 'Disconnected'
+    let buffer = Buffer.from('\r\nDisconnected\r\n')
+    state.cache(XTerm, 'terminal').term.write(buffer)
     emitter.emit('render')
   })
   window.serialBus.on('ports', (ports) => {
@@ -284,7 +291,6 @@ function store(state, emitter) {
     console.log('diskBus', 'folder-opened', folder, files)
     state.diskFiles = files
     state.diskFolder = folder
-    state.selectedDevice = 'disk'
     state.panelCollapsed = false
     emitter.emit('select-panel', 'files')
   })

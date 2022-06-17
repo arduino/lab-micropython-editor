@@ -176,7 +176,7 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'board') {
       window.serialBus.emit('save-file', state.selectedFile, editor.getValue())
-      setTimeout(() => emitter.emit('list-board-folder'), 100)
+      emitter.emit('update-files')
     }
   })
   emitter.on('remove-file', () => {

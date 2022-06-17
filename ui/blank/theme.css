@@ -9,16 +9,6 @@
   font-size: 2vh;
 }
 
-/*
-:root {
-  --color-0: #000000;
-  --color-1: #DFDFDF;
-  --color-2: #F0F0F0;
-  --color-3: #FFFFFF;
-  font-size: 2vh;
-}
-*/
-
 * {
   box-sizing: border-box;
 }
@@ -157,8 +147,8 @@ button img {
 }
 
 button.round {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 3.25rem;
+  height: 3.25rem;
   border-radius: 100%;
 }
 button.square {

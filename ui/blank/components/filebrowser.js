@@ -1,4 +1,37 @@
 function FileBrowser(state, emit) {
+  let canSendToBoard = state.selectedDevice === 'disk'
+                    && state.connected === true
+                    && state.selectedFile
+                    && state.diskFolder
+  let canSendToDisk = state.selectedDevice === 'board'
+                    && state.connected === true
+                    && state.selectedFile
+                    && state.diskFolder
+
+  // Action buttons
+  let sendToBoardButton = SquareButton(
+    {
+      onclick: () => emit('send-file-to-board'),
+      disabled: !canSendToBoard
+    },
+    Image({src: 'icons/left.png'})
+  )
+  let sendToDiskButton = SquareButton(
+    {
+      onclick: () => emit('send-file-to-disk'),
+      disabled: !canSendToDisk
+    },
+    Image({src: 'icons/right.png'})
+  )
+  let removeButton = SquareButton(
+    {
+      onclick: () => emit('remove-file'),
+      disabled: !state.selectedFile
+    },
+    Image({src: 'icons/delete.png'})
+  )
+
+  // List item templates
   function BoardFile(file) {
     let selectedClass = ''
     if (state.selectedDevice === 'board' && state.selectedFile === file) {
@@ -27,37 +60,6 @@ function FileBrowser(state, emit) {
       </li>
     `
   }
-
-  let canSendToBoard = state.selectedDevice === 'disk'
-                    && state.connected === true
-                    && state.selectedFile
-                    && state.diskFolder
-  let canSendToDisk = state.selectedDevice === 'board'
-                    && state.connected === true
-                    && state.selectedFile
-                    && state.diskFolder
-
-  let sendToBoardButton = SquareButton(
-    {
-      onclick: () => emit('send-file-to-board'),
-      disabled: !canSendToBoard
-    },
-    Image({src: 'icons/left.png'})
-  )
-  let sendToDiskButton = SquareButton(
-    {
-      onclick: () => emit('send-file-to-disk'),
-      disabled: !canSendToDisk
-    },
-    Image({src: 'icons/right.png'})
-  )
-  let removeButton = SquareButton(
-    {
-      onclick: () => emit('remove-file'),
-      disabled: !state.selectedFile
-    },
-    Image({src: 'icons/delete.png'})
-  )
 
   return html`
     <div id="files" class="row fill">

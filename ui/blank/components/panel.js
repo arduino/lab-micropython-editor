@@ -2,7 +2,8 @@ function Panel(state, emit) {
   let isTerminalSelected = (state.panel === 'terminal') && !state.panelCollapsed
   let isFilesSelected = (state.panel === 'files') && !state.panelCollapsed
 
-  // Dragging event handlers
+  // Dragging to resize:
+  let panelHeight = state.panelCollapsed ? 0 : state.panelHeight
   function onMouseDown(e) {
     if (e.target.id !== 'bar') return
     window.addEventListener('mousemove', onMouseMove)
@@ -15,12 +16,10 @@ function Panel(state, emit) {
     window.removeEventListener('mousemove', onMouseMove)
   }
 
-  let panelHeight = state.panelCollapsed ? 0 : state.panelHeight
-
   if (state.panelCollapsed) {
     return html`
       <div id="bar" class="color-0 row align-center justify-end">
-        <span>Status</span>
+        <span>${state.status}</span>
       </div>
     `
   } else {
@@ -30,7 +29,7 @@ function Panel(state, emit) {
         class="color-0 row align-center justify-end resizable"
         onmousedown=${onMouseDown}
         >
-        <span>Status</span>
+        <span>${state.status}</span>
       </div>
       <div
         id="panel"

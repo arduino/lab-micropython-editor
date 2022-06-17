@@ -1,6 +1,10 @@
 function Toolbar(state, emit) {
-  let isTerminalSelected = (state.panel === 'terminal') && !state.panelCollapsed
-  let isFilesSelected = (state.panel === 'files') && !state.panelCollapsed
+  const isTerminalSelected = (state.panel === 'terminal') && !state.panelCollapsed
+  const isFilesSelected = (state.panel === 'files') && !state.panelCollapsed
+  const canSave = (state.selectedDevice === 'board' && state.connected)
+               || (state.selectedDevice === 'disk' && state.diskFolder)
+
+  // Toolbar actions:
   function togglePanel() {
     emit('toggle-panel')
   }
@@ -25,6 +29,7 @@ function Toolbar(state, emit) {
     }
   }
 
+  // Buttons
   const runButton = RoundButton(
     {
       onclick: () => emit('run'),
@@ -56,7 +61,6 @@ function Toolbar(state, emit) {
     },
     Image({src: 'icons/cable.png'})
   )
-
   const newButton = RoundButton(
     {
       onclick: () => emit('new-file'),
@@ -71,8 +75,6 @@ function Toolbar(state, emit) {
     },
     Image({src: 'icons/folder.png'})
   )
-  const canSave = (state.selectedDevice === 'board' && state.connected)
-               || (state.selectedDevice === 'disk' && state.diskFolder)
   const saveButton = RoundButton(
     {
       onclick: () => emit('save-file'),
@@ -81,14 +83,14 @@ function Toolbar(state, emit) {
     },
     Image({ src: 'icons/sd_storage.png' })
   )
-  let fileButton = RoundButton(
+  const fileButton = RoundButton(
     {
       onclick: selectFiles,
       className: isFilesSelected ? 'active' : 'inactive'
     },
     Image({ src: 'icons/screen_search.png' })
   )
-  let terminalButton = RoundButton(
+  const terminalButton = RoundButton(
     {
       onclick: selectTerminal ,
       className: isTerminalSelected ? 'active' : 'inactive'

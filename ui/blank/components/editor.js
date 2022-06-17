@@ -1,11 +1,13 @@
 
 function Editor(state, emit) {
+  // File icon
   const diskIcon = Image({ src: 'icons/folder.png' })
   const serialIcon = Image({ src: 'icons/developer_board.png' })
   let icon = null
-  if (state.selectedDevice === 'serial') icon = serialIcon
+  if (state.selectedDevice === 'board') icon = serialIcon
   if (state.selectedDevice === 'disk') icon = diskIcon
 
+  // File name
   let fileName = html`
     <div class="file-name" onclick=${() => emit('start-renaming-file')}>
       ${state.selectedFile || 'untitled'}
@@ -27,11 +29,11 @@ function Editor(state, emit) {
       </div>
     `
     setTimeout(() => {
+      // XXX
       input.focus()
       input.select()
     }, 50)
   }
-
 
   return html`
     <div id="file-header" class="row lightgray align-center">

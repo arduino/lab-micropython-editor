@@ -146,30 +146,20 @@ class SerialConnection extends EventEmitter {
 		if (!path || !content) {
 			return
 		}
-		// TODO: Find anoter way to do it without binascii
-		let pCode = `f = open('${path}', 'w')\n`
-		// pCode += `import gc; gc.collect()\n`
-		pCode += codeCollectGarbage + '\n'
+		let pCode = []
+		pCode.push(`f = open('${path}', 'w')`)
+		pCode.push(codeCollectGarbage)
 		// `content` is what comes from the editor. We want to write it
 		// line one by one on a file so we split by `\n`
-		var lineCount = 0;
-		var lines = content.split('\r\n')
+		let lines = content.split('\n')
 		lines.forEach((line) => {
-			if (line) {
-				var nlMarker = line.indexOf('\n');
-				var crMarker = line.indexOf('\r');
-				// TODO: Sanitize line replace """ with \"""
-				// To avoid the string escaping with weirdly we encode
-				// the line plus the `\n` that we just removed to base64
-				pCode += `f.write("""${line}""")`
-				if(lineCount != lines.length - 1){
-					pCode += `\nf.write('\\n')\n`
-				}
-				lineCount++;
-			}
+			line = line.replace(/"""/g, `\\"\\"\\"`)
+			pCode.push(`f.write("""${line}\n""")`)
 		})
-		pCode += `\nf.close()\n`
-		this.execute(pCode)
+		pCode.push(`f.close()`)
+
+		this.execute(pCode.join('\r\n'))
+			.then(() => this.emit('file-saved'))
 	}
 
 	/**

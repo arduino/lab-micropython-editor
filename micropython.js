@@ -11,10 +11,12 @@ const codeLoadFile = (path) => {
 	return `
 print('<BEGINREC>')
 with open('${path}', 'r') as f:
-	line = f.readline()
-	while line != '':
-		print(line, end='')
-		line = f.readline()
+	while 1:
+		b = f.read()
+		if not b:
+			break
+		else:
+			print(b,end='')
 print('<ENDREC>')
 `
 }

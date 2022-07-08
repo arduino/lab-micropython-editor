@@ -41,9 +41,8 @@ gc.collect()`
 class SerialConnection extends EventEmitter {
 	constructor() {
 		super()
+		this.executing = false
 		this.rawRepl = false
-		this.loadingFile = false
-		this.loadingFileList = false
 	}
 	/**
 	* List all available serial ports (with vendor id)
@@ -127,7 +126,6 @@ class SerialConnection extends EventEmitter {
 	*/
 	listFiles() {
 		this.data = ''
-		this.loadingFileList = true
 		this.execute(codeListFiles)
 	}
 	/**
@@ -136,7 +134,6 @@ class SerialConnection extends EventEmitter {
 	*/
 	loadFile(path) {
 		this.data = ''
-		this.loadingFile = true
 		this.execute(codeLoadFile(path))
 	}
 	/**

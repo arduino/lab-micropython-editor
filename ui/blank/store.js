@@ -1,5 +1,7 @@
 function store(state, emitter) {
   state.connected = false
+  state.executing = false
+
   state.isPortDialogOpen = false
   state.ports = []
 
@@ -95,27 +97,23 @@ function store(state, emitter) {
 
   emitter.on('list-board-folder', () => {
     console.log('list-board-folder')
-
     let outputBuffer = ''
     function parseData(o) {
       outputBuffer += o
       rawMessage = extractREPLMessage(outputBuffer)
       if (rawMessage) {
+        // console.log('raw message', rawMessage, outputBuffer)
         // Prepare to parse JSON
-        // console.log('raw message', rawMessage)
         rawMessage = rawMessage.replace(/'/g, `"`)
         try {
           let jsonMessage = JSON.parse(rawMessage)
           state.boardFiles = jsonMessage
           emitter.emit('render')
-        } catch(e) {
-
-        }
+        } catch(e) {}
         window.serialBus.off('data', parseData)
       }
     }
     window.serialBus.on('data', parseData)
-
     window.serialBus.emit('list-files')
   })
   emitter.on('select-board-file', (file) => {
@@ -134,9 +132,7 @@ function store(state, emitter) {
       }
     }
     window.serialBus.on('data', parseData)
-
     window.serialBus.emit('load-file', file)
-
     emitter.emit('render')
   })
 
@@ -167,14 +163,11 @@ function store(state, emitter) {
     }
 
     if (state.selectedDevice === 'disk') {
-      window.diskBus.emit(
-        'save-file',
-        {
-          folder: state.diskFolder,
-          filename: state.selectedFile,
-          content: editor.getValue()
-        }
-      )
+      window.diskBus.emit( 'save-file', {
+        folder: state.diskFolder,
+        filename: state.selectedFile,
+        content: editor.getValue()
+      })
     }
 
     if (state.selectedDevice === 'board') {

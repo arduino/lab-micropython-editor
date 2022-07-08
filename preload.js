@@ -35,11 +35,15 @@ serialBus.on('connect', (p) => {
 	})
 	connection.on('execution-started', () => {
 		console.log('serialConnection', 'execution-started')
-		serialBus.emit('running')
+		serialBus.emit('execution-started')
 	})
 	connection.on('execution-finished', () => {
 		console.log('serialConnection', 'execution-finished')
-		serialBus.emit('stopped')
+		serialBus.emit('execution-finished')
+	})
+	connection.on('file-saved', () => {
+		console.log('serialConnection', 'file-saved')
+		serialBus.emit('file-saved')
 	})
 	connection.on('file-saved', () => {
 		console.log('serialConnection', 'file-saved')

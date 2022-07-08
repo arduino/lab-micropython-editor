@@ -91,13 +91,13 @@ class SerialConnection extends EventEmitter {
 	* @param {String} code String of code to be executed. Line breaks must be `\n`
 	*/
 	execute(code) {
-		// TODO: break code in lines and `_execRaw` line by line
 		this.stop()
 		this._enterRawRepl()
-		this._executeRaw(code)
-		.then(() => {
-			this._exitRawRepl()
-		})
+		return this._executeRaw(code)
+			.then(() => {
+				this._exitRawRepl()
+				return Promise.resolve()
+			})
 	}
 	/**
 	* Evaluate a command/expression.
@@ -191,29 +191,6 @@ class SerialConnection extends EventEmitter {
 		const data = buffer.toString()
 		this.emit('output', data)
 
-		// Getting data that should be sent to frontend
-		// Loading file content, listing files, etc
-		// if (data.indexOf('<REC>') !== -1) {
-		// 	this.recordingData = true
-		// }
-		// if (this.recordingData) {
-		// 	this.data += data
-		// }
-		// if (data.indexOf('<EOF>') !== -1) {
-		// 	const iofREC = this.data.indexOf('<REC>')
-		// 	const rec = this.data.indexOf('<REC>\r\n')+7
-		// 	const eof = this.data.indexOf('<EOF>')
-		// 	if (this.loadingFile) {
-		// 		this.emit('file-loaded', this.data.slice(rec, eof))
-		// 		this.loadingFile = false
-		// 	}
-		// 	if (this.loadingFileList) {
-		// 		this.emit('file-list-loaded', this.data.slice(rec, eof))
-		// 		this.loadingFileList = false
-		// 	}
-		// 	this.recordingData = false
-		// }
-
 		if (this.rawRepl && data.indexOf('\n>>> ') != -1) {
 			this.emit('execution-finished')
 			this.rawRepl = false
@@ -241,33 +218,31 @@ class SerialConnection extends EventEmitter {
 	* @param {String} command Command to be written on connected port
 	*/
 	_executeRaw(command) {
+		// This function returns a promise that resolves after serial write
 		const writePromise = (buffer) => {
 			return new Promise((resolve, reject) => {
-				setTimeout(() => {
-					this.port.write(buffer, (err) => {
-						if (err) return reject()
-						resolve()
-					})
-				}, 1)
+				this.port.write(buffer, (err) => {
+					if (err) return reject()
+					resolve()
+				})
 			})
 		}
-		const l = 1024
+		// Slicing command in chuncks of 256 characters
+		const l = 256
 		let slices = []
 		for(let i = 0; i < command.length; i+=l) {
 			let slice = command.slice(i, i+l)
 			slices.push(slice)
 		}
-		return new Promise((resolve, reject) => {
-			slices.reduce((cur, next) => {
-				return cur.then(() => {
-					return writePromise(next)
+		// Creating an array of promises that resolves sequentially
+		return slices.reduce(
+				(acc, data) => {
+				return acc.then(() => {
+					return writePromise(data)
 				})
-			}, Promise.resolve())
-			.then()
-			.then(() => {
-				resolve()
-			})
-		})
+			},
+			Promise.resolve()
+		)
 	}
 }
 

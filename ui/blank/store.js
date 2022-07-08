@@ -179,7 +179,6 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'board') {
       window.serialBus.emit('save-file', state.selectedFile, editor.getValue())
-      emitter.emit('update-files')
     }
   })
   emitter.on('remove-file', () => {
@@ -255,7 +254,6 @@ function store(state, emitter) {
     console.log('send-file-to-board')
     let editor = state.cache(AceEditor, 'editor').editor
     window.serialBus.emit('save-file', state.selectedFile, editor.getValue())
-    emitter.emit('update-files')
   })
 
   window.serialBus.on('connected', (port) => {
@@ -285,6 +283,10 @@ function store(state, emitter) {
     let buffer = Buffer.from(data)
     state.cache(XTerm, 'terminal').term.write(buffer)
     state.cache(XTerm, 'terminal').term.scrollToBottom()
+  })
+  window.serialBus.on('file-saved', () => {
+    console.log('serialBus', 'file-saved')
+    emitter.emit('update-files')
   })
 
   window.diskBus.on('folder-opened', ({ folder, files }) => {

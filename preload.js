@@ -20,26 +20,30 @@ serialBus.on('load-ports', () => {
 })
 
 serialBus.on('connect', (p) => {
-	console.log('serialBus', 'connect', p)
+	console.log('serialConnection', 'connect', p)
 	connection = new SerialConnection()
 	connection.on('connected', () => {
-		console.log('serialBus', 'connected')
+		console.log('serialConnection', 'connected')
 		serialBus.emit('connected', p)
 	})
 	connection.on('disconnected', () => {
-		console.log('serialBus', 'disconnected')
+		console.log('serialConnection', 'disconnected')
 		serialBus.emit('disconnected', p)
 	})
 	connection.on('output', (d) => {
 		serialBus.emit('data', d)
 	})
 	connection.on('execution-started', () => {
-		console.log('serialBus', 'execution-started')
+		console.log('serialConnection', 'execution-started')
 		serialBus.emit('running')
 	})
 	connection.on('execution-finished', () => {
-		console.log('serialBus', 'execution-finished')
+		console.log('serialConnection', 'execution-finished')
 		serialBus.emit('stopped')
+	})
+	connection.on('file-saved', () => {
+		console.log('serialConnection', 'file-saved')
+		serialBus.emit('file-saved')
 	})
 	connection.open(p)
 })

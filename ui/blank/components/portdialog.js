@@ -12,7 +12,7 @@ function PortDialog(state, emit) {
       <div id="dialog">
         <ul>
           ${state.ports.map(PortItem)}
-          <li onclick=${() => window.serialBus.emit('load-ports')}>Refresh</li>
+          <li onclick=${() => emit('load-ports')}>Refresh</li>
         </ul>
       </div>
     </div>

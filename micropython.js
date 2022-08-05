@@ -12,29 +12,30 @@ function sleep(millis) {
 }
 
 class MicroPythonBoard {
-  constructor(options) {
-    const { device, autoOpen = false } = options || {}
-    this.device = device || {}
+  constructor() {
+    this.device = null
     this.in_raw_repl = false
-    this.use_raw_paste = true
-
-    if (autoOpen) {
-      this.open()
-    }
-
   }
 
-	async listPorts() {
-		return await SerialPort.list()
-	}
+  listPorts() {
+    return SerialPort.list()
+  }
 
-  open() {
-		this.serial = new SerialPort({
+  open(device) {
+    if (device) {
+      this.device = device
+    }
+    if (!this.device) {
+      throw new Error(`No device specified`)
+    }
+
+    this.serial = new SerialPort({
       path: this.device,
 			baudRate: 115200,
       lock: false,
 			autoOpen: false
 		})
+
     return new Promise((resolve, reject) => {
       this.serial.open((err) => {
         if (err) {
@@ -109,33 +110,18 @@ class MicroPythonBoard {
   }
 
   follow(options) {
-    const { timeout = null, data_consumer = false } = options || {}
+    const { timeout = null } = options || {}
     return new Promise(async (resolve, reject) => {
       // wait for normal output
       const data = await this.read_until({
         ending: Buffer.from(`\x04`),
         timeout: timeout
       })
-      // TODO: Slice out the EOF
-      // console.log('normal output:', data)
       resolve(data)
 
-      // // wait for error output
-      // const data_err = await this.read_until({
-      //   ending: Buffer.from(`\x04`),
-      //   timeout: timeout
-      // })
-      // // TODO: Slice out the EOF
-      // console.log('error output:', data_err)
-      //
-      // resolve([data, data_err])
     })
   }
 
-  // SKIPPING THIS FOR NOW
-  // raw_paste_write() {
-  //   // Only used if `use_raw_paste` is true
-  // }
 
   exec_raw_no_follow(options) {
     const { timeout = null, command = '' } = options || {}
@@ -219,11 +205,6 @@ class MicroPythonBoard {
     }
     return Promise.reject()
   }
-
-  // TODO: When implementing command line
-  // fs_get() {
-  //
-  // }
 
   async fs_put(src, dest) {
     if (src) {

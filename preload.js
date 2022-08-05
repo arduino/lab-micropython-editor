@@ -4,6 +4,15 @@ const { contextBridge, ipcRenderer } = require('electron')
 const Micropython = require('./micropython.js')
 const board = new Micropython()
 
+function extractFileArray(output) {
+  output = output.replace(/'/g, '"');
+  output = output.split('OK')
+  let files = output[2] || ''
+  files = files.slice(0, files.indexOf(']')+1)
+  files = JSON.parse(files)
+  return files
+}
+
 const Serial = {
   loadPorts: async () => {
     let ports = await board.listPorts()
@@ -30,6 +39,21 @@ const Serial = {
   },
   onData: (fn) => {
     board.serial.on('data', fn)
+  },
+  listFiles: async () => {
+    let output = await board.fs_ls()
+    return extractFileArray(output)
+  },
+  loadFile: async (file) => {
+    let output = await board.fs_cat(file)
+    output = output.split('OK')
+    return output[2] || ''
+  },
+  removeFile: async (file) => {
+    return await board.fs_rm(file)
+  },
+  saveFileContent: async (content, filename) => {
+    return await board.fs_save(content, filename)
   }
 }
 

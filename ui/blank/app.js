@@ -20,23 +20,28 @@ function App(state, emit) {
         <button onclick=${() => emit('run')}>Run</button>
         <button onclick=${() => emit('stop')}>Stop</button>
         <button onclick=${() => emit('reset')}>Reset</button>
+        <button onclick=${() => emit('save-serial')}>Save</button>
+        <input id="filename" value="main.py" />
       </div>
 
-<textarea id="editor" rows="20">
-from machine import Pin
-from time import sleep
-
-led = Pin(6, Pin.OUT)
-while True:
- print('ping')
- led.on()
- sleep(0.5)
- print('pong')
- led.off()
- sleep(0.5)
-</textarea>
+      <textarea id="editor" rows="20">${state.code}</textarea>
 
       <div id="terminal"></div>
+
+      <div>
+        <button onclick=${() => emit('list-files-serial')}>List files</button>
+        <ul>
+          ${state.serialFiles.map((file) => {
+            return html`
+              <li>
+                <button onclick=${() => emit('load-file-serial', file)}>Load</button>
+                <button onclick=${() => emit('remove-file-serial', file)}>Remove</button>
+                ${file}
+              </li>
+            `
+          })}
+        </ul>
+      </div>
 
       <!-- Serial: List files, open file in editor, download, rename, remove -->
 

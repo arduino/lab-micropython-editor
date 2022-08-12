@@ -25,7 +25,9 @@ const Serial = {
     return await board.close()
   },
   run: async (code) => {
-    await board.stop()
+    if (board.in_raw_repl) {
+      await board.exit_raw_repl()
+    }
     await board.enter_raw_repl()
     let result = await board.exec_raw({ command: code })
     await board.exit_raw_repl()
@@ -36,6 +38,9 @@ const Serial = {
   },
   reset: () => {
     return board.reset()
+  },
+  eval: (d) => {
+    return board.eval(d)
   },
   onData: (fn) => {
     board.serial.on('data', fn)

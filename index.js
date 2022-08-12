@@ -77,7 +77,7 @@ function createWindow () {
     }
   })
   // and load the index.html of the app.
-  win.loadFile('ui/blank/index.html')
+  win.loadFile('ui/arduino/index.html')
 }
 
 app.whenReady().then(createWindow)

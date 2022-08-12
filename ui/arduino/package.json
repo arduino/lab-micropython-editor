@@ -1,0 +1,14 @@
+{
+  "name": "micropython-lab-arduino-ui",
+  "version": "1.0.0",
+  "description": "Interface for Arduino's MicroPython Lab IDE",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify libs/build_choo.js > libs/choo.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "browserify": "^17.0.0",
+    "choo": "^7.1.0"
+  }
+}

@@ -1,0 +1,163 @@
+:root {
+  --color-0: #008184;
+  --color-1: #E67E22;
+  --color-2: #F39C12;
+  --color-3: #F4BA00;
+  --color-4: #ECF1F1;
+  --white: #FFF;
+  --black: #000;
+  font-size: 2vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  font-family: monospace;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOOLBAR */
+#toolbar {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  background: var(--color-0);
+  padding: 1rem 0.5rem;
+}
+
+.toolbar-button-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.toolbar-button {
+  border: none;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
+  cursor: pointer !important;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  margin: 0.5rem;
+  padding: 0.25rem;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 100%;
+}
+.toolbar-button[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+  box-shadow: none;
+}
+.toolbar-button:active {
+  box-shadow: none;
+  background: var(--color-2);
+}
+.toolbar-button.selected {
+  background: var(--color-2);
+}
+.toolbar-button img {
+  max-width: 60%;
+  max-height: 60%;
+}
+.toolbar-button.primary {
+  background: var(--color-3)
+}
+
+.toolbar-label {
+  font-size: 0.75rem;
+  color: var(--white);
+}
+
+/* PORT DIALOG */
+#backdrop {
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  background: rgba(236, 241, 241, 0.5);
+}
+#dialog {
+  margin: auto;
+  width: 80%;
+  height: auto;
+  background: var(--color-4);
+  padding: 2rem;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
+}
+#dialog ul li {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+#dialog ul li:hover {
+  background: var(--color-3);
+  border-radius: 0.25rem;
+}
+
+/* EDITOR */
+#editor {
+  height: 100%;
+}
+
+.editor-filename {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 2rem;
+  font-size: 1rem;
+  background: var(--color-4);
+}
+.editor-filename img {
+  max-height: 100%;
+  margin: 0 0.5rem;
+}
+
+/* PANEL */
+#panel {
+  overflow: hidden;
+  height: 100%;
+}
+
+#terminal {
+  overflow: hidden;
+  width: 100vw;
+  height: 100%;
+  background: black;
+}

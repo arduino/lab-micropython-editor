@@ -21,12 +21,16 @@ class MicroPythonBoard {
     return SerialPort.list()
   }
 
-  open(device) {
+  async open(device) {
     if (device) {
       this.device = device
     }
     if (!this.device) {
       throw new Error(`No device specified`)
+    }
+    if (this.serial) {
+      this.serial.close()
+      this.serial = null
     }
 
     this.serial = new SerialPort({
@@ -37,7 +41,7 @@ class MicroPythonBoard {
 		})
 
     return new Promise((resolve, reject) => {
-      this.serial.open((err) => {
+      this.serial.open(async (err) => {
         if (err) {
           reject(err)
         } else {

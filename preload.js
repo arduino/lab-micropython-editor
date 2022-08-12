@@ -66,10 +66,11 @@ const Serial = {
     return output[2] || ''
   },
   removeFile: async (file) => {
-    return await board.fs_rm(file)
+    return board.fs_rm(file)
   },
   saveFileContent: async (content, filename) => {
-    return await board.fs_save(content, filename)
+    content = content.replace(//g, ``)
+    return board.fs_save(content, filename)
   }
 }
 

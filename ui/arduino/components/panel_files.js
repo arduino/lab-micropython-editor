@@ -17,16 +17,17 @@ function PanelFiles(state, emit) {
   let upload = Button({
     label: 'upload',
     icon: 'icons/left.png',
-    disabled: !state.isConnected || state.selectedDevice !== 'disk' || state.selectedFile === null
+    disabled: true
   })
   let download = Button({
     label: 'download',
     icon: 'icons/right.png',
-    disabled: !state.isConnected || state.selectedDevice !== 'serial' || state.selectedFile === null
+    disabled: true
   })
   let remove = Button({
     label: 'remove',
     icon: 'icons/delete.png',
+    onclick: () => emit('remove'),
     disabled: state.selectedFile === null
   })
 

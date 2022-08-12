@@ -41,10 +41,13 @@ function Toolbar(state, emit) {
     disabled: true,
     onclick: () => emit('open-folder')
   })
+
+  const canSave = (state.isConnected && state.selectedDevice === 'serial' && state.selectedFile)
+               || (state.selectedDevice === 'disk' && state.selectedFile)
   const save = Button({
     icon: 'icons/sd_storage.png',
     label: 'Save',
-    disabled: true,
+    disabled: !canSave,
     onclick: () => emit('save')
   })
 

@@ -242,7 +242,8 @@ class MicroPythonBoard {
         let slice = content.slice(i, i+64)
         slice = slice.toString()
         slice = slice.replace(/"""/g, `\\"\\"\\"`)
-        await this.serial.write(`w("""${slice}""")`)
+        // slice = slice.replace(//g, ``)
+        await this.serial.write(`w("""${slice}""")\n`)
         await this.serial.write(`\x04`)
         await sleep(50)
       }

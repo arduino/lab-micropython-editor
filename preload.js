@@ -33,11 +33,22 @@ const Serial = {
     await board.exit_raw_repl()
     return Promise.resolve(result)
   },
-  stop: () => {
-    return board.stop()
+  stop: async () => {
+    if (board.in_raw_repl) {
+      await board.stop()
+      return board.exit_raw_repl()
+    } else {
+      return board.stop()
+    }
   },
-  reset: () => {
-    return board.reset()
+  reset: async () => {
+    if (board.in_raw_repl) {
+      await board.stop()
+      await board.exit_raw_repl()
+      return board.reset()
+    } else {
+      return board.reset()
+    }
   },
   eval: (d) => {
     return board.eval(d)

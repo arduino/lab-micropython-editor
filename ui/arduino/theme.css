@@ -49,7 +49,7 @@ img {
   display: flex;
   flex-direction: row;
   background: var(--color-0);
-  padding: 1rem 0.5rem;
+  padding: 0.5rem;
 }
 
 .toolbar-button-wrapper {
@@ -160,4 +160,49 @@ img {
   width: 100vw;
   height: 100%;
   background: black;
+}
+
+#files {
+  width: 100%;
+  height: 100%;
+  background: var(--color-0);
+  display: flex;
+  flex-direction: row;
+  padding: 1rem;
+}
+
+#files .file-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+#files .file-list ul {
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  background: var(--white);
+  overflow-x: none;
+  overflow-y: scroll;
+}
+#files .file-list ul li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+#files .file-list ul li.selected {
+  background: var(--color-2);
+  color: var(--white);
+}
+#files .file-list ul li:hover {
+  background: var(--color-3);
+  color: var(--white);
+}
+
+#files .file-controls {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }

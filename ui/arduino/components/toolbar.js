@@ -38,13 +38,13 @@ function Toolbar(state, emit) {
   const openFolder = Button({
     icon: 'icons/folder.png',
     label: 'Folder',
-    disabled: false,
+    disabled: true,
     onclick: () => emit('open-folder')
   })
   const save = Button({
     icon: 'icons/sd_storage.png',
     label: 'Save',
-    disabled: false,
+    disabled: true,
     onclick: () => emit('save')
   })
 

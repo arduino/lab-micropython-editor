@@ -3,19 +3,23 @@ function Editor(state, emit) {
     emit('start-editing-filename')
   }
   let filename = html`
-    <div onclick=${editFilename}>${state.selectedFile}</div>
+    <div onclick=${editFilename}>${state.selectedFile || 'undefined'}</div>
   `
+  let fileIcon = 'icons/folder.png'
+  if (state.isConnected && state.selectedDevice === 'serial') {
+    fileIcon = 'icons/developer_board.png'
+  }
   if (state.isEditingFilename) {
     function saveFilename(e) {
       emit('save-filename', e.target.value)
     }
     filename = html`
-      <input type="text" value=${state.selectedFile} onchange=${saveFilename} />
+      <input type="text" value=${state.selectedFile || 'undefined'} onchange=${saveFilename} />
     `
   }
   return html`
     <div class="editor-filename">
-      ${Icon('icons/folder.png')}
+      ${Icon(fileIcon)}
       ${filename}
     </div>
     ${state.cache(AceEditor, 'editor').render()}

@@ -91,8 +91,8 @@ const Disk = {
     let content = await ipcRenderer.invoke('load-file', folder, file)
     return new TextDecoder().decode(content)
   },
-  removeFile: async () => {
-    return Promise.resolve()
+  removeFile: async (folder, file) => {
+    return ipcRenderer.invoke('remove-file', folder, file)
   },
   saveFileContent: async (folder, file, content) => {
     return ipcRenderer.invoke('save-file', folder, file, content)
@@ -100,7 +100,7 @@ const Disk = {
   uploadFile: async () => {
     return Promise.resolve()
   },
-  renameFile: async (oldName, newName) => {
+  renameFile: async (folder, oldName, newName) => {
     return ipcRenderer.invoke('rename-file', folder, oldName, newName)
   }
 }

@@ -120,11 +120,11 @@ function store(state, emitter) {
     log('remove')
     if (state.selectedDevice === 'serial') {
       await serial.removeFile(state.selectedFile)
-      emitter.emit('update-files')
     }
     if (state.selectedDevice === 'disk') {
-      // TODO
+      await disk.removeFile(state.diskPath, state.selectedFile)
     }
+    emitter.emit('update-files')
     emitter.emit('render')
   })
   emitter.on('select-file', async (device, filename) => {
@@ -199,7 +199,6 @@ function store(state, emitter) {
     let contents = editor.getValue()
 
     if (state.selectedDevice === 'serial') {
-
       if (state.serialFiles.indexOf(oldFilename) !== -1) {
         // If old name exists, rename file
         await serial.renameFile(oldFilename, filename)
@@ -210,12 +209,13 @@ function store(state, emitter) {
     }
 
     if (state.selectedDevice === 'disk') {
-      if (state.diskFiles.indexOf(filename) === -1) {
-        // Create new file
+      if (state.diskFiles.indexOf(oldFilename) !== -1) {
+        // If old name exists, rename file
+        await disk.renameFile(state.diskPath, oldFilename, filename)
       } else {
-        // Rename file
+        // If old name doesn't exist create new file
+        await disk.saveFileContent(state.diskPath, filename, contents)
       }
-      console.log('save disk', filename)
     }
 
     emitter.emit('update-files')

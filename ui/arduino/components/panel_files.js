@@ -45,7 +45,7 @@ function PanelFiles(state, emit) {
         ${remove}
       </div>
       <div class="file-list">
-        <span class="path">Disk: ${state.diskFolder}</span>
+        <span class="path">Disk: ${state.diskPath}</span>
         <ul>
           ${state.diskFiles.map((file) => ListItem('disk', file))}
         </ul>

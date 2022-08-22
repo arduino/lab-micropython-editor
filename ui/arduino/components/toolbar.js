@@ -38,7 +38,7 @@ function Toolbar(state, emit) {
   const openFolder = Button({
     icon: 'icons/folder.png',
     label: 'Folder',
-    disabled: true,
+    disabled: false,
     onclick: () => emit('open-folder')
   })
 

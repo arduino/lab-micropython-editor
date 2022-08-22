@@ -2,7 +2,7 @@ const log = console.log
 
 function store(state, emitter) {
   const serial = window.BridgeSerial
-  const disk = {}
+  const disk = window.BridgeDisk
 
   state.ports = []
   state.diskFiles = []
@@ -10,7 +10,7 @@ function store(state, emitter) {
   state.selectedFile = null
   state.selectedDevice = 'disk'
 
-  state.diskFolder = null
+  state.diskPath = null
   state.serialPath = null
 
   state.isConnected = false
@@ -20,6 +20,7 @@ function store(state, emitter) {
   state.isEditingFilename = false
   state.isTerminalBound = false
 
+  // SERIAL CONNECTION
   emitter.on('load-ports', async () => {
     log('load-ports')
     state.ports = await serial.loadPorts()
@@ -70,6 +71,7 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
+  // CODE EXECUTION
   emitter.on('run', async () => {
     log('run')
     if (!state.isTerminalOpen) emitter.emit('show-terminal')
@@ -78,13 +80,11 @@ function store(state, emitter) {
     await serial.run(code)
     emitter.emit('render')
   })
-
   emitter.on('stop', async () => {
     log('stop')
     await serial.stop()
     emitter.emit('render')
   })
-
   emitter.on('reset', async () => {
     log('reset')
     await serial.reset()
@@ -92,6 +92,7 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
+  // FILE MANAGEMENT
   emitter.on('new-file', () => {
     log('new-file')
     let editor = state.cache(AceEditor, 'editor').editor
@@ -99,7 +100,6 @@ function store(state, emitter) {
     editor.setValue('')
     emitter.emit('render')
   })
-
   emitter.on('save', async () => {
     log('save')
     if (state.selectedDevice === 'serial') {
@@ -109,39 +109,18 @@ function store(state, emitter) {
       await serial.saveFileContent(contents, filename)
       emitter.emit('update-files')
     }
-  })
 
+    if (state.selectedDevice === 'disk') {
+      // TODO
+    }
+  })
   emitter.on('remove', async () => {
     log('remove')
     if (state.selectedDevice === 'serial') {
       await serial.removeFile(state.selectedFile)
       emitter.emit('update-files')
     }
-    emitter.emit('render')
-  })
-
-  emitter.on('show-terminal', () => {
-    log('show-terminal')
-    state.isTerminalOpen = !state.isTerminalOpen
-    state.isFilesOpen = false
-    emitter.emit('render')
-  })
-
-  emitter.on('show-files', () => {
-    log('show-files')
-    state.isTerminalOpen = false
-    state.isFilesOpen = !state.isFilesOpen
-    emitter.emit('update-files')
-    emitter.emit('render')
-  })
-
-  emitter.on('update-files', async () => {
-    log('update-files')
-    if (state.isConnected) {
-      await serial.stop()
-      state.serialFiles = await serial.listFiles()
-    }
-    if (state.diskFolder) {
+    if (state.selectedDevice === 'disk') {
       // TODO
     }
     emitter.emit('render')
@@ -154,12 +133,57 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'serial') {
       let content = await serial.loadFile(filename)
-      content = content.replace(//g, ``)
+      content = content.replace(//g, ``) // XXX: Remove character that breaks execution
+      let editor = state.cache(AceEditor, 'editor').editor
+      editor.setValue(content)
+    }
+
+    if (state.selectedDevice === 'disk') {
+      let content = await disk.loadFile(state.diskPath, filename)
       let editor = state.cache(AceEditor, 'editor').editor
       editor.setValue(content)
     }
 
     emitter.emit('render')
   })
+
+  emitter.on('open-folder', async () => {
+    log('open-folder')
+    let { folder, files } = await disk.openFolder()
+    state.diskPath = folder
+    state.diskFiles = files
+    if (!state.isFilesOpen) emitter.emit('show-files')
+    emitter.emit('render')
+  })
+  emitter.on('update-files', async () => {
+    log('update-files')
+    if (state.isConnected) {
+      await serial.stop()
+      state.serialFiles = await serial.listFiles()
+    }
+    if (state.diskPath) {
+      state.diskFiles = await disk.listFiles(state.diskPath)
+    }
+    emitter.emit('render')
+  })
+
+  // PANEL MANAGEMENT
+  emitter.on('show-terminal', () => {
+    log('show-terminal')
+    state.isTerminalOpen = !state.isTerminalOpen
+    state.isFilesOpen = false
+    emitter.emit('render')
+  })
+  emitter.on('show-files', () => {
+    log('show-files')
+    state.isTerminalOpen = false
+    state.isFilesOpen = !state.isFilesOpen
+    emitter.emit('update-files')
+    emitter.emit('render')
+  })
+
+
+
+
 
 }

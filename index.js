@@ -10,19 +10,30 @@ async function openFolderDialog() {
   return dir.filePaths[0] || null
 }
 
+function listFolder(folder) {
+  files = fs.readdirSync(path.resolve(folder))
+  // Filter out directories
+  files = files.filter(f => {
+    let filePath = path.resolve(folder, f)
+    return !fs.lstatSync(filePath).isDirectory()
+  })
+  return files
+}
+
 ipcMain.handle('open-folder', async (event) => {
   console.log('ipcMain', 'open-folder')
   const folder = await openFolderDialog()
   let files = []
   if (folder) {
-    files = fs.readdirSync(path.resolve(folder))
-    // Filter out directories
-    files = files.filter(f => {
-      let filePath = path.resolve(folder, f)
-      return !fs.lstatSync(filePath).isDirectory()
-    })
+    files = listFolder(folder)
   }
   return { folder, files }
+})
+
+ipcMain.handle('list-files', async (event, folder) => {
+  console.log('ipcMain', 'list-files', folder)
+  if (!folder) return []
+  return listFolder(folder)
 })
 
 ipcMain.handle('load-file', (event, folder, filename) => {
@@ -79,5 +90,7 @@ function createWindow () {
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
 }
+
+// TODO: Loading splash screen
 
 app.whenReady().then(createWindow)

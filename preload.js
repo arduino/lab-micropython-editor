@@ -71,11 +71,38 @@ const Serial = {
   saveFileContent: async (content, filename) => {
     content = content.replace(//g, ``)
     return board.fs_save(content, filename)
+  },
+  downloadFile: async (serialPath, diskPath) => {
+    return Promise.resolve()
+  },
+  renameFile: async (oldName, newName) => {
+    return Promise.resolve()
   }
 }
 
 const Disk = {
-
+  openFolder: async () => {
+    return ipcRenderer.invoke('open-folder')
+  },
+  listFiles: async (folder) => {
+    return ipcRenderer.invoke('list-files', folder)
+  },
+  loadFile: async (folder, file) => {
+    let content = await ipcRenderer.invoke('load-file', folder, file)
+    return new TextDecoder().decode(content)
+  },
+  removeFile: async () => {
+    return Promise.resolve()
+  },
+  saveFileContent: async () => {
+    return Promise.resolve()
+  },
+  uploadFile: async () => {
+    return Promise.resolve()
+  },
+  renameFile: async () => {
+    return Promise.resolve()
+  }
 }
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)

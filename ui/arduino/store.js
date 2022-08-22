@@ -102,17 +102,19 @@ function store(state, emitter) {
   })
   emitter.on('save', async () => {
     log('save')
+    let editor = state.cache(AceEditor, 'editor').editor
+    let contents = editor.getValue()
+    let filename = state.selectedFile || 'undefined'
+
     if (state.selectedDevice === 'serial') {
-      let editor = state.cache(AceEditor, 'editor').editor
-      let contents = editor.getValue()
-      let filename = state.selectedFile || 'undefined'
       await serial.saveFileContent(contents, filename)
-      emitter.emit('update-files')
     }
 
-    if (state.selectedDevice === 'disk') {
-      // TODO
+    if (state.selectedDevice === 'disk' && state.diskPath) {
+      await disk.saveFileContent(state.diskPath, filename, contents)
     }
+
+    emitter.emit('update-files')
   })
   emitter.on('remove', async () => {
     log('remove')
@@ -125,28 +127,26 @@ function store(state, emitter) {
     }
     emitter.emit('render')
   })
-
   emitter.on('select-file', async (device, filename) => {
     log('select-file')
     state.selectedDevice = device
     state.selectedFile = filename
 
+    let content = ''
     if (state.selectedDevice === 'serial') {
-      let content = await serial.loadFile(filename)
+      content = await serial.loadFile(filename)
       content = content.replace(//g, ``) // XXX: Remove character that breaks execution
-      let editor = state.cache(AceEditor, 'editor').editor
-      editor.setValue(content)
     }
 
     if (state.selectedDevice === 'disk') {
-      let content = await disk.loadFile(state.diskPath, filename)
-      let editor = state.cache(AceEditor, 'editor').editor
-      editor.setValue(content)
+      content = await disk.loadFile(state.diskPath, filename)
     }
+
+    let editor = state.cache(AceEditor, 'editor').editor
+    editor.setValue(content)
 
     emitter.emit('render')
   })
-
   emitter.on('open-folder', async () => {
     log('open-folder')
     let { folder, files } = await disk.openFolder()

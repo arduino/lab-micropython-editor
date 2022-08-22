@@ -94,8 +94,8 @@ const Disk = {
   removeFile: async () => {
     return Promise.resolve()
   },
-  saveFileContent: async () => {
-    return Promise.resolve()
+  saveFileContent: async (folder, file, content) => {
+    return ipcRenderer.invoke('save-file', folder, file, content)
   },
   uploadFile: async () => {
     return Promise.resolve()

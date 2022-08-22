@@ -147,7 +147,7 @@ img {
   background: var(--color-4);
 }
 .editor-filename img {
-  max-height: 100%;
+  max-height: 80%;
   margin: 0 0.5rem;
 }
 

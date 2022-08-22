@@ -159,11 +159,29 @@ function store(state, emitter) {
     log('update-files')
     if (state.isConnected) {
       await serial.stop()
-      state.serialFiles = await serial.listFiles()
+      try {
+        state.serialFiles = await serial.listFiles()
+      } catch (e) {
+        console.log('error', e)
+      }
     }
     if (state.diskPath) {
-      state.diskFiles = await disk.listFiles(state.diskPath)
+      try {
+        state.diskFiles = await disk.listFiles(state.diskPath)
+      } catch (e) {
+        console.log('error', e)
+      }
     }
+    emitter.emit('render')
+  })
+  emitter.on('upload', async () => {
+    await serial.uploadFile(state.diskPath, state.selectedFile)
+    emitter.emit('update-files')
+    emitter.emit('render')
+  })
+  emitter.on('download', async () => {
+    await serial.downloadFile(state.diskPath, state.selectedFile)
+    emitter.emit('update-files')
     emitter.emit('render')
   })
 

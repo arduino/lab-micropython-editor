@@ -14,15 +14,25 @@ function PanelFiles(state, emit) {
     `
   }
 
+  let uploadEnabled = state.isConnected
+                    && state.diskPath
+                    && state.selectedDevice === 'disk'
+                    && state.selectedFile !== null
+  let downloadEnabled = state.isConnected
+                    && state.diskPath
+                    && state.selectedDevice === 'serial'
+                    && state.selectedFile !== null
   let upload = Button({
     label: 'upload',
     icon: 'icons/left.png',
-    disabled: true
+    onclick: () => emit('upload'),
+    disabled: !uploadEnabled
   })
   let download = Button({
     label: 'download',
     icon: 'icons/right.png',
-    disabled: true
+    onclick: () => emit('download'),
+    disabled: !downloadEnabled
   })
   let remove = Button({
     label: 'remove',

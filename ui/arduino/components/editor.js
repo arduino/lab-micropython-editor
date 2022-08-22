@@ -14,15 +14,14 @@ function Editor(state, emit) {
     fileIcon = 'icons/developer_board.png'
   }
   if (state.isEditingFilename) {
-    function saveFilename(e) {
+    function saveFileName(e) {
       emit('save-filename', e.target.value)
     }
     filename = html`
       <input
         type="text"
         value=${state.selectedFile || 'undefined'}
-        onchange=${saveFilename}
-        onblur=${saveFilename}
+        onchange=${saveFileName}
         />
     `
   }

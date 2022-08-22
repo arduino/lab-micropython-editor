@@ -72,8 +72,15 @@ const Serial = {
     content = content.replace(//g, ``)
     return board.fs_save(content || ' ', filename)
   },
-  downloadFile: async (serialPath, diskPath) => {
-    return Promise.resolve()
+  uploadFile: async (folder, filename) => {
+    let src = `${folder}/${filename}`
+    let dest = filename
+    return board.fs_put(src, dest)
+  },
+  downloadFile: async (folder, filename) => {
+    let contents = await Serial.loadFile(filename)
+    content = content.replace(//g, ``)
+    return ipcRenderer.invoke('save-file', folder, filename, contents)
   },
   renameFile: async (oldName, newName) => {
     return board.fs_rename(oldName, newName)
@@ -96,9 +103,6 @@ const Disk = {
   },
   saveFileContent: async (folder, file, content) => {
     return ipcRenderer.invoke('save-file', folder, file, content)
-  },
-  uploadFile: async () => {
-    return Promise.resolve()
   },
   renameFile: async (folder, oldName, newName) => {
     return ipcRenderer.invoke('rename-file', folder, oldName, newName)

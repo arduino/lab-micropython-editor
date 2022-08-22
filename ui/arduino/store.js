@@ -188,7 +188,6 @@ function store(state, emitter) {
     state.isEditingFilename = true
     emitter.emit('render')
   })
-
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
     let oldFilename = state.selectedFile
@@ -208,7 +207,8 @@ function store(state, emitter) {
       }
     }
 
-    if (state.selectedDevice === 'disk') {
+    if (state.diskPath !== null && state.selectedDevice === 'disk') {
+
       if (state.diskFiles.indexOf(oldFilename) !== -1) {
         // If old name exists, rename file
         await disk.renameFile(state.diskPath, oldFilename, filename)
@@ -221,8 +221,5 @@ function store(state, emitter) {
     emitter.emit('update-files')
     emitter.emit('render')
   })
-
-
-
 
 }

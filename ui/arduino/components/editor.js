@@ -5,7 +5,6 @@ function Editor(state, emit) {
   let filename = html`
     <div
       onclick=${editFilename}
-      onblur=${editFilename}
       >
       ${state.selectedFile || 'undefined'}
     </div>
@@ -23,6 +22,7 @@ function Editor(state, emit) {
         type="text"
         value=${state.selectedFile || 'undefined'}
         onchange=${saveFilename}
+        onblur=${saveFilename}
         />
     `
   }

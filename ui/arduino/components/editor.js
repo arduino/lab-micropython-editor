@@ -9,9 +9,9 @@ function Editor(state, emit) {
       ${state.selectedFile || 'undefined'}
     </div>
   `
-  let fileIcon = 'icons/folder.png'
+  let fileIcon = 'icons/Open.svg'
   if (state.isConnected && state.selectedDevice === 'serial') {
-    fileIcon = 'icons/developer_board.png'
+    fileIcon = 'icons/Connect.svg'
   }
   if (state.isEditingFilename) {
     function saveFileName(e) {

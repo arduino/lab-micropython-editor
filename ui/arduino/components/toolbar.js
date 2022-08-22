@@ -1,6 +1,6 @@
 function Toolbar(state, emit) {
   const connect = Button({
-    icon: 'icons/cable.png',
+    icon: state.isConnected ? 'icons/Connect.svg' : 'icons/Disconnect.svg',
     label: state.isConnected ? 'Disconnect' : 'Connect',
     disabled: false,
     onclick: () => emit('open-port-dialog'),
@@ -8,21 +8,21 @@ function Toolbar(state, emit) {
   })
 
   const play = Button({
-    icon: 'icons/play_arrow.png',
+    icon: 'icons/Run.svg',
     label: 'Run',
     disabled: !state.isConnected,
     onclick: () => emit('run'),
     color: 'primary'
   })
   const stop = Button({
-    icon: 'icons/stop.png',
+    icon: 'icons/Stop.svg',
     label: 'Stop',
     disabled: !state.isConnected,
     onclick: () => emit('stop'),
     color: 'primary'
   })
   const reset = Button({
-    icon: 'icons/reset.png',
+    icon: 'icons/Reboot.svg',
     label: 'Reset',
     disabled: !state.isConnected,
     onclick: () => emit('reset'),
@@ -30,13 +30,13 @@ function Toolbar(state, emit) {
   })
 
   const newFile = Button({
-    icon: 'icons/add.png',
+    icon: 'icons/New.svg',
     label: 'New',
     disabled: false,
     onclick: () => emit('new-file')
   })
   const openFolder = Button({
-    icon: 'icons/folder.png',
+    icon: 'icons/Open.svg',
     label: 'Folder',
     disabled: false,
     onclick: () => emit('open-folder')
@@ -45,21 +45,21 @@ function Toolbar(state, emit) {
   const canSave = (state.isConnected && state.selectedDevice === 'serial' && state.selectedFile)
                || (state.selectedDevice === 'disk' && state.selectedFile)
   const save = Button({
-    icon: 'icons/sd_storage.png',
+    icon: 'icons/Save.svg',
     label: 'Save',
     disabled: !canSave,
     onclick: () => emit('save')
   })
 
   const terminal = Button({
-    icon: 'icons/code.png',
+    icon: 'icons/Output.svg',
     label: 'Terminal',
     disabled: !state.isConnected,
     onclick: () => emit('show-terminal'),
     selected: state.isTerminalOpen,
   })
   const files = Button({
-    icon: 'icons/screen_search.png',
+    icon: 'icons/File-Explorer.svg',
     label: 'Files',
     disabled: false,
     onclick: () => emit('show-files'),

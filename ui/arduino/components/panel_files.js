@@ -24,19 +24,19 @@ function PanelFiles(state, emit) {
                     && state.selectedFile !== null
   let upload = Button({
     label: 'upload',
-    icon: 'icons/left.png',
+    icon: 'icons/Copy-Left.svg',
     onclick: () => emit('upload'),
     disabled: !uploadEnabled
   })
   let download = Button({
     label: 'download',
-    icon: 'icons/right.png',
+    icon: 'icons/Copy-Right.svg',
     onclick: () => emit('download'),
     disabled: !downloadEnabled
   })
   let remove = Button({
     label: 'remove',
-    icon: 'icons/delete.png',
+    icon: 'icons/Delete.svg',
     onclick: () => emit('remove'),
     disabled: state.selectedFile === null
   })

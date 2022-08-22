@@ -3,7 +3,12 @@ function Editor(state, emit) {
     emit('start-editing-filename')
   }
   let filename = html`
-    <div onclick=${editFilename}>${state.selectedFile || 'undefined'}</div>
+    <div
+      onclick=${editFilename}
+      onblur=${editFilename}
+      >
+      ${state.selectedFile || 'undefined'}
+    </div>
   `
   let fileIcon = 'icons/folder.png'
   if (state.isConnected && state.selectedDevice === 'serial') {
@@ -14,7 +19,11 @@ function Editor(state, emit) {
       emit('save-filename', e.target.value)
     }
     filename = html`
-      <input type="text" value=${state.selectedFile || 'undefined'} onchange=${saveFilename} />
+      <input
+        type="text"
+        value=${state.selectedFile || 'undefined'}
+        onchange=${saveFilename}
+        />
     `
   }
   return html`
@@ -39,7 +48,7 @@ class AceEditor extends Component {
     this.editor.session.setMode("ace/mode/python")
     this.editor.setValue(`from time import sleep
 
-while True:
+for i in range(0, 10):
     print('.')
     sleep(0.1)
 

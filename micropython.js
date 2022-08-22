@@ -271,7 +271,6 @@ class MicroPythonBoard {
       const output = await this.exec_raw({
         command: `import uos\nuos.rmdir('${filePath}')`
       })
-      console.log(output)
       return this.exit_raw_repl()
     }
     return Promise.reject()
@@ -283,7 +282,17 @@ class MicroPythonBoard {
       const output = await this.exec_raw({
         command: `import uos\nuos.remove('${filePath}')`
       })
-      console.log(output)
+      return this.exit_raw_repl()
+    }
+    return Promise.reject()
+  }
+
+  async fs_rename(oldFilePath, newFilePath) {
+    if (oldFilePath && newFilePath) {
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({
+        command: `import uos\nuos.rename('${oldFilePath}', '${newFilePath}')`
+      })
       return this.exit_raw_repl()
     }
     return Promise.reject()

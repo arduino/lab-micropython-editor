@@ -68,15 +68,15 @@ const Serial = {
   removeFile: async (file) => {
     return board.fs_rm(file)
   },
-  saveFileContent: async (content, filename) => {
+  saveFileContent: async (filename, content) => {
     content = content.replace(//g, ``)
-    return board.fs_save(content, filename)
+    return board.fs_save(content || ' ', filename)
   },
   downloadFile: async (serialPath, diskPath) => {
     return Promise.resolve()
   },
   renameFile: async (oldName, newName) => {
-    return Promise.resolve()
+    return board.fs_rename(oldName, newName)
   }
 }
 
@@ -100,8 +100,8 @@ const Disk = {
   uploadFile: async () => {
     return Promise.resolve()
   },
-  renameFile: async () => {
-    return Promise.resolve()
+  renameFile: async (oldName, newName) => {
+    return ipcRenderer.invoke('rename-file', folder, oldName, newName)
   }
 }
 

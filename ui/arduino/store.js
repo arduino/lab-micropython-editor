@@ -107,7 +107,7 @@ function store(state, emitter) {
     let filename = state.selectedFile || 'undefined'
 
     if (state.selectedDevice === 'serial') {
-      await serial.saveFileContent(contents, filename)
+      await serial.saveFileContent(filename, contents)
     }
 
     if (state.selectedDevice === 'disk' && state.diskPath) {
@@ -182,6 +182,45 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
+  // NAMING/RENAMING FILE
+  emitter.on('start-editing-filename', () => {
+    log('start-editing-filename')
+    state.isEditingFilename = true
+    emitter.emit('render')
+  })
+
+  emitter.on('save-filename', async (filename) => {
+    log('save-filename', filename)
+    let oldFilename = state.selectedFile
+    state.isEditingFilename = false
+    state.selectedFile = filename
+
+    let editor = state.cache(AceEditor, 'editor').editor
+    let contents = editor.getValue()
+
+    if (state.selectedDevice === 'serial') {
+
+      if (state.serialFiles.indexOf(oldFilename) !== -1) {
+        // If old name exists, rename file
+        await serial.renameFile(oldFilename, filename)
+      } else {
+        // If old name doesn't exist create new file
+        await serial.saveFileContent(filename, contents)
+      }
+    }
+
+    if (state.selectedDevice === 'disk') {
+      if (state.diskFiles.indexOf(filename) === -1) {
+        // Create new file
+      } else {
+        // Rename file
+      }
+      console.log('save disk', filename)
+    }
+
+    emitter.emit('update-files')
+    emitter.emit('render')
+  })
 
 
 

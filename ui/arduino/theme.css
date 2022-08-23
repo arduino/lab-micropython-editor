@@ -154,6 +154,8 @@ img {
 /* PANEL */
 #panel {
   overflow: hidden;
+}
+#panel.open {
   height: 100%;
 }
 

@@ -79,7 +79,7 @@ const Serial = {
   },
   downloadFile: async (folder, filename) => {
     let contents = await Serial.loadFile(filename)
-    content = content.replace(//g, ``)
+    contents = contents.replace(//g, ``)
     return ipcRenderer.invoke('save-file', folder, filename, contents)
   },
   renameFile: async (oldName, newName) => {

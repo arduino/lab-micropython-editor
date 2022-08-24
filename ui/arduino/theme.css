@@ -91,8 +91,9 @@ img {
   background: var(--color-2);
 }
 .toolbar-button img {
-  max-width: 60%;
-  max-height: 60%;
+  width: 60%;
+  height: 60%;
+  margin-top: 0.2rem;
 }
 .toolbar-button.primary {
   background: var(--color-3)

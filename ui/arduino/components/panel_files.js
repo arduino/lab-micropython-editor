@@ -44,7 +44,7 @@ function PanelFiles(state, emit) {
   return html`
     <div id="files">
       <div class="file-list">
-        <span class="path">Serial: ${state.serialPath}</span>
+        <span class="path">Board: ${state.serialPath}</span>
         <ul>
           ${state.serialFiles.map((file) => ListItem('serial', file))}
         </ul>

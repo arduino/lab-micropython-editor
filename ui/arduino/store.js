@@ -240,4 +240,10 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
+
+  window.addEventListener('resize', () => {
+    console.log('resize window')
+    state.cache(AceEditor, 'editor').render()
+  })
+
 }

@@ -1,10 +1,10 @@
 function Toolbar(state, emit) {
   const connect = Button({
     icon: state.isConnected ? 'icons/Connect.svg' : 'icons/Disconnect.svg',
-    label: state.isConnected ? 'Disconnect' : 'Connect',
+    label: 'Connect',
     disabled: false,
     onclick: () => emit('open-port-dialog'),
-    color: state.isConnected ? 'selected' : 'default'
+    color: 'default'
   })
 
   const play = Button({
@@ -69,12 +69,15 @@ function Toolbar(state, emit) {
   return html`
     <div id="toolbar">
       ${connect}
+      <div class="toolbar-spacing"></div>
       ${play}
       ${stop}
       ${reset}
+      <div class="toolbar-spacing"></div>
       ${newFile}
       ${openFolder}
       ${save}
+      <div class="toolbar-spacing"></div>
       ${terminal}
       ${files}
     </div>

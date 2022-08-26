@@ -8,9 +8,9 @@ function Button(param) {
     selected = false
   } = param || {}
   return html`
-    <div class="toolbar-button-wrapper">
+    <div class="toolbar-button-wrapper ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}">
       <button
-        class="toolbar-button ${color} ${selected ? 'selected' : ''}"
+        class="toolbar-button"
         onclick=${onclick}
         disabled=${disabled}
         >

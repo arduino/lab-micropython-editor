@@ -23,19 +23,19 @@ function PanelFiles(state, emit) {
                     && state.selectedDevice === 'serial'
                     && state.selectedFile !== null
   let upload = Button({
-    label: 'upload',
+    label: 'Upload',
     icon: 'icons/Copy-Left.svg',
     onclick: () => emit('upload'),
     disabled: !uploadEnabled
   })
   let download = Button({
-    label: 'download',
+    label: 'Download',
     icon: 'icons/Copy-Right.svg',
     onclick: () => emit('download'),
     disabled: !downloadEnabled
   })
   let remove = Button({
-    label: 'remove',
+    label: 'Remove',
     icon: 'icons/Delete.svg',
     onclick: () => emit('remove'),
     disabled: state.selectedFile === null

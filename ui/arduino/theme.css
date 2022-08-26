@@ -1,16 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
 :root {
-  --color-0: #008184;
-  --color-1: #E67E22;
-  --color-2: #F39C12;
-  --color-3: #F4BA00;
-  --color-4: #ECF1F1;
-  --white: #FFF;
+  --teal: #008184;
+  --white: rgb(255, 255, 255);
+  --white-faded: rgba(255, 255, 255, 0.8);
   --black: #000;
-  font-size: 2vh;
+  font-size: 2.25vh;
 }
 
 * {
   box-sizing: border-box;
+  font-family: 'Roboto Mono', monospace;
 }
 
 body {
@@ -48,8 +48,8 @@ img {
   width: 100%;
   display: flex;
   flex-direction: row;
-  background: var(--color-0);
-  padding: 0.5rem;
+  background: var(--teal);
+  padding: 0.5rem 0.5rem 0.75rem 0.5rem;
 }
 
 .toolbar-button-wrapper {
@@ -57,13 +57,26 @@ img {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin: 0 0.2rem;
+}
+
+.toolbar-button-wrapper.selected .toolbar-button {
+  background: none;
+  box-shadow: 0 0 0 0.15rem var(--white);
+}
+.toolbar-button-wrapper.selected .toolbar-button img {
+  filter: invert(1);
+}
+.toolbar-button-wrapper.selected .toolbar-label {
+  font-weight: bold;
+}
+.toolbar-button-wrapper.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .toolbar-button {
   border: none;
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),
-              0 3px 1px -2px rgba(0,0,0,0.12),
-              0 1px 5px 0 rgba(0,0,0,0.2);
   cursor: pointer !important;
   align-items: center;
   justify-content: center;
@@ -73,35 +86,34 @@ img {
   -ms-user-select: none;
   user-select: none;
   margin: 0.5rem;
-  padding: 0.25rem;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 100%;
+  background: var(--white-faded);
 }
+
 .toolbar-button[disabled] {
-  opacity: 0.5;
   pointer-events: none;
-  box-shadow: none;
+  background: var(--white-faded);
 }
+.toolbar-button:hover,
 .toolbar-button:active {
-  box-shadow: none;
-  background: var(--color-2);
+  background: var(--white);
 }
-.toolbar-button.selected {
-  background: var(--color-2);
-}
+
 .toolbar-button img {
-  width: 60%;
-  height: 60%;
-  margin-top: 0.2rem;
-}
-.toolbar-button.primary {
-  background: var(--color-3)
+  width: 90%;
+  height: 90%;
+  margin-top: 0.1rem;
 }
 
 .toolbar-label {
   font-size: 0.75rem;
   color: var(--white);
+}
+
+.toolbar-spacing {
+  width: 1rem;
 }
 
 /* PORT DIALOG */
@@ -119,7 +131,7 @@ img {
   margin: auto;
   width: 80%;
   height: auto;
-  background: var(--color-4);
+  background: var(--white);
   padding: 2rem;
   font-size: 1.25rem;
   box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.12),0 1px 5px 0 rgba(0,0,0,0.2);
@@ -129,7 +141,8 @@ img {
   cursor: pointer;
 }
 #dialog ul li:hover {
-  background: var(--color-3);
+  background: var(--teal);
+  color: var(--white);
   border-radius: 0.25rem;
 }
 
@@ -143,13 +156,12 @@ img {
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 2.5rem;
   font-size: 1rem;
   background: var(--color-4);
 }
 .editor-filename img {
-  max-height: 80%;
-  margin: 0 0.5rem;
+  max-height: 100%;
+  padding: 0.5rem;
 }
 
 /* PANEL */
@@ -170,7 +182,7 @@ img {
 #files {
   width: 100%;
   height: 100%;
-  background: var(--color-0);
+  background: var(--teal);
   display: flex;
   flex-direction: row;
   padding: 1rem;
@@ -205,11 +217,11 @@ img {
   cursor: pointer;
 }
 #files .file-list ul li.selected {
-  background: var(--color-2);
+  background: var(--teal);
   color: var(--white);
 }
 #files .file-list ul li:hover {
-  background: var(--color-3);
+  background: var(--teal);
   color: var(--white);
 }
 

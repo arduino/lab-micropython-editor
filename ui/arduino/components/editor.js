@@ -62,6 +62,7 @@ for i in range(0, 10):
     if (newContent) {
       this.editor.setValue(newContent)
     }
+    setTimeout(() => this.editor.resize(), 10)
     return false
   }
 }

@@ -163,6 +163,10 @@ img {
   max-height: 100%;
   padding: 0.5rem;
 }
+.editor-filename input {
+  width: 100%;
+  border: none;
+}
 
 /* PANEL */
 #panel {

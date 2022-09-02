@@ -1,6 +1,6 @@
 {
 	"name": "MicroPython_lab",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Arduino's MicroPython Lab IDE",
 	"main": "index.js",
 	"scripts": {

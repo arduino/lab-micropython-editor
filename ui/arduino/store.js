@@ -17,7 +17,6 @@ function store(state, emitter) {
   state.isPortDialogOpen = false
   state.isTerminalOpen = false
   state.isFilesOpen = false
-  state.isEditingFilename = false
   state.isTerminalBound = false
 
   // SERIAL CONNECTION
@@ -201,15 +200,9 @@ function store(state, emitter) {
   })
 
   // NAMING/RENAMING FILE
-  emitter.on('start-editing-filename', () => {
-    log('start-editing-filename')
-    state.isEditingFilename = true
-    emitter.emit('render')
-  })
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
     let oldFilename = state.selectedFile
-    state.isEditingFilename = false
     state.selectedFile = filename
 
     let editor = state.cache(AceEditor, 'editor').editor
@@ -240,10 +233,8 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
-
   window.addEventListener('resize', () => {
     console.log('resize window')
     state.cache(AceEditor, 'editor').render()
   })
-
 }

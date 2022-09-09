@@ -14,6 +14,7 @@ function sleep(millis) {
 class MicroPythonBoard {
   constructor() {
     this.device = null
+    this.serial = null
     this.in_raw_repl = false
   }
 
@@ -28,8 +29,8 @@ class MicroPythonBoard {
     if (!this.device) {
       throw new Error(`No device specified`)
     }
-    if (this.serial) {
-      this.serial.close()
+    if (this.serial && this.serial.isOpen) {
+      await this.serial.close()
       this.serial = null
     }
 

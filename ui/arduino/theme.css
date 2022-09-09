@@ -254,6 +254,6 @@ img {
   transition: all 0.25s;
 }
 #message.show {
-  opacity: 0.9;
+  opacity: 1;
   transform: translate(-50%, 0%);
 }

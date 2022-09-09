@@ -18,8 +18,8 @@ function store(state, emitter) {
   state.isTerminalOpen = false
   state.isFilesOpen = false
 
-  state.messageText = ''
-  state.isShowingMessage = false
+  state.messageText = 'Disconnected'
+  state.isShowingMessage = true
   state.messageTimeout = 0
 
   state.isTerminalBound = false // XXX
@@ -58,7 +58,7 @@ function store(state, emitter) {
     log('connect')
     state.serialPath = path
     await serial.connect(path)
-    emitter.emit('message', 'Connected!')
+    emitter.emit('message', 'Connected', 150)
     await serial.stop()
 
     let term = state.cache(XTerm, 'terminal').term
@@ -249,15 +249,17 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('message', (text) => {
+  emitter.on('message', (text, timeout) => {
     log('message', text)
-    clearInterval(state.messageTimeout)
     state.messageText = text
     state.isShowingMessage = true
-    state.messageTimeout = setTimeout(() => {
-      state.isShowingMessage = false
-      emitter.emit('render')
-    }, 2000)
+    if (timeout) {
+      clearInterval(state.messageTimeout)
+      state.messageTimeout = setTimeout(() => {
+        state.isShowingMessage = false
+        emitter.emit('render')
+      }, timeout)
+    }
     emitter.emit('render')
   })
 

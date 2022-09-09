@@ -5,6 +5,7 @@
   --white: rgb(255, 255, 255);
   --white-faded: rgba(255, 255, 255, 0.8);
   --black: #000;
+  --yellow: #f9c400;
   font-size: 2.25vh;
 }
 
@@ -236,4 +237,23 @@ img {
   align-items: center;
   justify-content: center;
   width: 10%;
+}
+
+#message {
+  position: fixed;
+  bottom: 1rem;
+  width: 100%;
+  max-width: 80%;
+  padding: 1rem;
+  background: var(--yellow);
+  z-index: 9999;
+  text-align: center;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  opacity: 0;
+  transition: all 0.25s;
+}
+#message.show {
+  opacity: 0.9;
+  transform: translate(-50%, 0%);
 }

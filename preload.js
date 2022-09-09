@@ -84,6 +84,9 @@ const Serial = {
   },
   renameFile: async (oldName, newName) => {
     return board.fs_rename(oldName, newName)
+  },
+  onDisconnect: async (fn) => {
+    board.serial.on('close', fn)
   }
 }
 

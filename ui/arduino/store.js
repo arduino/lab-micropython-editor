@@ -17,7 +17,12 @@ function store(state, emitter) {
   state.isPortDialogOpen = false
   state.isTerminalOpen = false
   state.isFilesOpen = false
-  state.isTerminalBound = false
+
+  state.messageText = ''
+  state.isShowingMessage = false
+  state.messageTimeout = 0
+
+  state.isTerminalBound = false // XXX
 
   // SERIAL CONNECTION
   emitter.on('load-ports', async () => {
@@ -40,17 +45,22 @@ function store(state, emitter) {
 
   emitter.on('disconnect', () => {
     log('disconnect')
-    state.serialPath = null
+    if (state.isConnected) {
+      emitter.emit('message', 'Disconnected')
+    }
     state.isConnected = false
+    state.serialPath = null
     state.isTerminalOpen = false
-    state.isFilesOpen = false
+    state.serialFiles = []
     emitter.emit('render')
   })
   emitter.on('connect', async (path) => {
     log('connect')
     state.serialPath = path
     await serial.connect(path)
+    emitter.emit('message', 'Connected!')
     await serial.stop()
+
     let term = state.cache(XTerm, 'terminal').term
     if (!state.isTerminalBound) {
       state.isTerminalBound = true
@@ -63,6 +73,7 @@ function store(state, emitter) {
       term.write(data)
       term.scrollToBottom()
     })
+    serial.onDisconnect(() => emitter.emit('disconnect'))
     state.isConnected = true
     emitter.emit('update-files')
     emitter.emit('close-port-dialog')
@@ -198,6 +209,11 @@ function store(state, emitter) {
     emitter.emit('update-files')
     emitter.emit('render')
   })
+  emitter.on('close-panel', () => {
+    state.isTerminalOpen = false
+    state.isFilesOpen = false
+    emitter.emit('render')
+  })
 
   // NAMING/RENAMING FILE
   emitter.on('save-filename', async (filename) => {
@@ -233,8 +249,21 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
+  emitter.on('message', (text) => {
+    log('message', text)
+    clearInterval(state.messageTimeout)
+    state.messageText = text
+    state.isShowingMessage = true
+    state.messageTimeout = setTimeout(() => {
+      state.isShowingMessage = false
+      emitter.emit('render')
+    }, 2000)
+    emitter.emit('render')
+  })
+
   window.addEventListener('resize', () => {
     console.log('resize window')
     state.cache(AceEditor, 'editor').render()
   })
+
 }

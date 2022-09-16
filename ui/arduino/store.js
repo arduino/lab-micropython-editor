@@ -185,12 +185,18 @@ function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('upload', async () => {
+    log('upload')
+    emitter.emit('message', 'Uploading file... Please wait')
     await serial.uploadFile(state.diskPath, state.selectedFile)
+    emitter.emit('message', 'File uploaded!', 500)
     emitter.emit('update-files')
     emitter.emit('render')
   })
   emitter.on('download', async () => {
+    log('download')
+    emitter.emit('message', 'Downloading file... Please wait')
     await serial.downloadFile(state.diskPath, state.selectedFile)
+    emitter.emit('message', 'File downloaded!', 500)
     emitter.emit('update-files')
     emitter.emit('render')
   })

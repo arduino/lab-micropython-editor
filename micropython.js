@@ -217,13 +217,14 @@ class MicroPythonBoard {
       let output = await this.exec_raw({
         command: `f=open('${dest}','w')\nw=f.write`
       })
-      for (let i = 0; i < content.length; i+=64) {
-        let slice = content.slice(i, i+64)
+      await sleep(100)
+      for (let i = 0; i < content.length; i+=128) {
+        let slice = content.slice(i, i+128)
         slice = slice.toString()
         slice = slice.replace(/"""/g, `\\"\\"\\"`)
         await this.serial.write(`w("""${slice}""")`)
         await this.serial.write(`\x04`)
-        await sleep(50)
+        await sleep(100)
       }
       return this.exit_raw_repl()
     }

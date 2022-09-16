@@ -4,6 +4,7 @@ const fs = require('fs')
 
 let win = null // main window
 
+// HELPERS
 async function openFolderDialog() {
   // https://stackoverflow.com/questions/46027287/electron-open-folder-dialog
   let dir = await dialog.showOpenDialog(win, { properties: [ 'openDirectory' ] })
@@ -20,6 +21,7 @@ function listFolder(folder) {
   return files
 }
 
+// LOCAL FILE SYSTEM ACCESS
 ipcMain.handle('open-folder', async (event) => {
   console.log('ipcMain', 'open-folder')
   const folder = await openFolderDialog()
@@ -51,6 +53,7 @@ ipcMain.handle('save-file', (event, folder, filename, content) => {
 })
 
 ipcMain.handle('update-folder', (event, folder) => {
+  console.log('ipcMain', 'update-folder', folder)
   let files = fs.readdirSync(path.resolve(folder))
   // Filter out directories
   files = files.filter(f => {
@@ -75,6 +78,7 @@ ipcMain.handle('rename-file', (event, folder, filename, newFilename) => {
   return newFilename
 })
 
+// START APP
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({

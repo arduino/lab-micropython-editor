@@ -174,7 +174,17 @@ img {
   overflow: hidden;
 }
 #panel.open {
-  height: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  z-index: 99;
+}
+#panel #handle {
+  padding: 1rem;
+  background: var(--teal);
+  cursor: n-resize;
 }
 
 #terminal {
@@ -186,11 +196,12 @@ img {
 
 #files {
   width: 100%;
-  height: 100%;
-  background: var(--teal);
+  height: calc(100% - 2rem);
+  background: var(--white);
   display: flex;
   flex-direction: row;
   padding: 1rem;
+  overflow: hidden;
 }
 
 #files .file-list {
@@ -203,13 +214,18 @@ img {
 
 #files .file-list .path {
   height: 2.5rem;
-  color: var(--white);
+  color: var(--black);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+#files .toolbar-label {
+  color: var(--black);
+}
+
 #files .file-list ul {
+  border: solid 0.1rem var(--teal);
   width: 100%;
   height: 100%;
   padding: 0.5rem;

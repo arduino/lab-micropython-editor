@@ -23,6 +23,7 @@ function store(state, emitter) {
   state.messageTimeout = 0
 
   state.isTerminalBound = false // XXX
+  state.panelHeight = null
 
   // SERIAL CONNECTION
   emitter.on('load-ports', async () => {
@@ -204,6 +205,7 @@ function store(state, emitter) {
   // PANEL MANAGEMENT
   emitter.on('show-terminal', () => {
     log('show-terminal')
+    if (state.panelHeight === null) state.panelHeight = '50%'
     state.isTerminalOpen = !state.isTerminalOpen
     state.isFilesOpen = false
     emitter.emit('render')
@@ -219,6 +221,19 @@ function store(state, emitter) {
     state.isTerminalOpen = false
     state.isFilesOpen = false
     emitter.emit('render')
+  })
+  emitter.on('start-resizing-panel', () => {
+    console.log('start-resizing-panel')
+    function handleMouseMove(e) {
+      // console.log('mouse move', e)
+      let height = window.innerHeight - e.clientY
+      state.panelHeight = `${height}px`
+      emitter.emit('render')
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', (e) => {
+      window.removeEventListener('mousemove', handleMouseMove)
+    }, { once: true })
   })
 
   // NAMING/RENAMING FILE

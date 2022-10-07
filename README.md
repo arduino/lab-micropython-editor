@@ -44,7 +44,7 @@ At the root of the repository you will find:
 
 Arduino's default UI is a [choo-choo](https://github.com/choojs/choo) app. It has pre-built dependencies so no build process is required for the interface.
 
-The dependencies and source code are included manually on the `/ui/arduino/index.html` file.
+The dependencies and source code are included manually in the `/ui/arduino/index.html` file.
 
 The app is a standard [choo-choo](https://github.com/choojs/choo) app and it has:
 
@@ -53,13 +53,13 @@ The app is a standard [choo-choo](https://github.com/choojs/choo) app and it has
 - `/ui/arduino/store.js`: A "store" that handles events emitted by the views, change the app state and orchestrate re-rendering.
 - `/ui/arduino/libs`: Prebuilt dependencies.
 
-It can be useful to learn more about [Choo]((https://github.com/choojs/choo) or the [Elm Architecture](https://guide.elm-lang.org/architecture/).
+It can be useful to learn more about [Choo](https://github.com/choojs/choo) or the [Elm Architecture](https://guide.elm-lang.org/architecture/).
 
 ## Disk and Serial API
 
 In order for the UI code to be independent of Electron code, there is an API defined at `/preload.js` that describes all the allowed operations.
 
-There are 2 main operation "channels": Serial communication and local Filesystem operations. Both channels offer methods that always return promises and are used mostly using [`async`/`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
+There are 2 main operation "channels": Serial communication and local Filesystem operations. Both channels offer methods that always return promises and are used mostly through [`async`/`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
 
 While the serial communication is mediated by `/micropython.js`, the local filesystem operations are done through Electron's `ipcRenderer` calls. The handlers for these calls are defined at `/index.js`
 
@@ -70,4 +70,4 @@ While the serial communication is mediated by `/micropython.js`, the local files
 3. Install dependencies: `npm install`
 4. Run dev mode: `npm run dev`
 
-Changes on the Electron code will require reopening the app but UI changes only require refreshing the window (ctrl-r/cmd-r).
+Some changes on the Electron code will require reopening the app but all UI changes will only require refreshing the window (ctrl-r/cmd-r).

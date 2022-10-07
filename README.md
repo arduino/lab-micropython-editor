@@ -1,4 +1,5 @@
 # Arduino MicroPython Lab
+
 Arduino MicroPython Lab is an Integrated Development Environment (IDE) for MicroPython.
 
 ## Features

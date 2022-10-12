@@ -1,13 +1,13 @@
-# Arduino MicroPython Lab
+# Arduino Lab for MicroPython
 
-Arduino MicroPython Lab is an Integrated Development Environment (IDE) for MicroPython.
+Arduino Lab for MicroPython is an Integrated Development Environment (IDE) for MicroPython.
 
 ## Features
 - MicroPython's Read Eval Print Loop (REPL)
 	- Enter paste mode
 	- Enter raw repl
 	- Software reset
-- File system management (Disk and MicroPythons File System)
+- File system management (Disk and MicroPython File System)
 	- Create
 	- Rename
 	- Remove
@@ -21,7 +21,7 @@ Arduino MicroPython Lab is an Integrated Development Environment (IDE) for Micro
 
 ## Technical
 
-Arduino MicroPython Lab is an [Electron](https://www.electronjs.org/) app that has its main purpose to communicate over serial with a microprocessor running [MicroPython](https://micropython.org/). All Electron code is at `/index.js`.
+Arduino Lab for MicroPython is an [Electron](https://www.electronjs.org/) app that has its main purpose to communicate over serial with a microprocessor running [MicroPython](https://micropython.org/). All Electron code is at `/index.js`.
 
 All operations over serial are abstracted and packaged on `/micropython.js` which is an attempt of porting `pyboard.py`. The port has its [own repository](https://github.com/murilopolese/micropython.js) but for the sake of simplicity and transparency, `micropython.js` is committed as source code.
 
@@ -43,7 +43,7 @@ At the root of the repository you will find:
 
 ## Arduino UI
 
-Arduino's default UI is a [choo-choo](https://github.com/choojs/choo) app. It has pre-built dependencies so no build process is required for the interface.
+Default UI is a [choo-choo](https://github.com/choojs/choo) app. It has pre-built dependencies so no build process is required for the interface.
 
 The dependencies and source code are included manually in the `/ui/arduino/index.html` file.
 
@@ -64,7 +64,7 @@ There are 2 main operation "channels": Serial communication and local Filesystem
 
 While the serial communication is mediated by `/micropython.js`, the local filesystem operations are done through Electron's `ipcRenderer` calls. The handlers for these calls are defined at `/index.js`
 
-## Running Arduino MicroPython Lab from source code
+## Running Arduino Lab for MicroPython from source code
 
 1. Clone this repository: `git clone https://github.com/arduino/MicroPython_Lab.git`
 2. Navigate to repository folder: `cd MicroPython_Lab`
@@ -72,3 +72,9 @@ While the serial communication is mediated by `/micropython.js`, the local files
 4. Run dev mode: `npm run dev`
 
 Some changes on the Electron code will require reopening the app but all UI changes will only require refreshing the window (ctrl-r/cmd-r).
+
+
+## Trademarks
+
+"Python" and the Python Logo are trademarks of the Python Software Foundation.
+

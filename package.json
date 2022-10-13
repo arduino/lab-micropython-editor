@@ -1,5 +1,5 @@
 {
-	"name": "arduino_labl_micropython",
+	"name": "arduino-lab-micropython-ide",
 	"version": "0.3.1",
 	"description": "Arduino Labs IDE for MicroPython",
 	"main": "index.js",

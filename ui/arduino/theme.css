@@ -150,6 +150,7 @@ img {
 /* EDITOR */
 #editor {
   height: 100%;
+  font-family: monospace;
 }
 
 .editor-filename {

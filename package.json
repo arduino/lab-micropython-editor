@@ -1,7 +1,7 @@
 {
-	"name": "MicroPython_lab",
+	"name": "Arduino Lab for MicroPython",
 	"version": "0.3.0",
-	"description": "Arduino's MicroPython Lab IDE",
+	"description": "Arduino Lab IDE for MicroPython",
 	"main": "index.js",
 	"scripts": {
 		"post-set-shell": "npm config set script-shell bash",

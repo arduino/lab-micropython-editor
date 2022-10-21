@@ -183,9 +183,29 @@ img {
   z-index: 99;
 }
 #panel #handle {
+  position: relative;
   padding: 1rem;
   background: var(--teal);
   cursor: n-resize;
+}
+
+.panel-button {
+  position: absolute;
+  right: 0.25rem;
+  transform: translateY(-50%);
+  border: none;
+  cursor: pointer !important;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1rem;
+  background: var(--white-faded);
 }
 
 #terminal {

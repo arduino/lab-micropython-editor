@@ -251,6 +251,10 @@ function store(state, emitter) {
     }, { once: true })
   })
 
+  emitter.on('clean-terminal', () => {
+    state.cache(XTerm, 'terminal').term.clear()
+  })
+
   // NAMING/RENAMING FILE
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)

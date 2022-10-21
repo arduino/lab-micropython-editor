@@ -16,7 +16,7 @@ function extractFileArray(output) {
 const Serial = {
   loadPorts: async () => {
     let ports = await board.listPorts()
-    return ports.filter(p => p.serialNumber)
+    return ports.filter(p => p.vendorId && p.productId)
   },
   connect: async (path) => {
     return await board.open(path)

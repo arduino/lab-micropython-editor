@@ -2,8 +2,11 @@ function App(state, emit) {
   return html`
     <div id="app" class="column fill">
       ${Toolbar(state, emit)}
-      ${Editor(state, emit)}
-      ${Panel(state, emit)}
+      ${FileName(state, emit)}
+      <div style="position: relative; height: 100%">
+        ${Editor(state, emit)}
+        ${Panel(state, emit)}
+      </div>
       ${PortDialog(state, emit)}
       ${Message(state, emit)}
     </div>

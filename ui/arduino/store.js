@@ -1,4 +1,14 @@
 const log = console.log
+const DEFAULT_PANEL_HEIGHT = '25rem'
+
+function resizeEditor(state) {
+  const el = state.cache(AceEditor, 'editor').element
+  if (state.isTerminalOpen || state.isFilesOpen) {
+    el.style.height = `calc(100% - ${state.panelHeight || DEFAULT_PANEL_HEIGHT})`
+  } else {
+    el.style.height = '100%'
+  }
+}
 
 function store(state, emitter) {
   const serial = window.BridgeSerial
@@ -205,30 +215,35 @@ function store(state, emitter) {
   // PANEL MANAGEMENT
   emitter.on('show-terminal', () => {
     log('show-terminal')
-    if (state.panelHeight === null) state.panelHeight = '50%'
+    if (state.panelHeight === null) state.panelHeight = DEFAULT_PANEL_HEIGHT
     state.isTerminalOpen = !state.isTerminalOpen
     state.isFilesOpen = false
     emitter.emit('render')
+    resizeEditor(state)
   })
   emitter.on('show-files', () => {
     log('show-files')
+    if (state.panelHeight === null) state.panelHeight = DEFAULT_PANEL_HEIGHT
     state.isTerminalOpen = false
     state.isFilesOpen = !state.isFilesOpen
     emitter.emit('update-files')
     emitter.emit('render')
+    resizeEditor(state)
   })
   emitter.on('close-panel', () => {
+    log('close-panel')
     state.isTerminalOpen = false
     state.isFilesOpen = false
     emitter.emit('render')
+    resizeEditor(state)
   })
   emitter.on('start-resizing-panel', () => {
-    console.log('start-resizing-panel')
+    log('start-resizing-panel')
     function handleMouseMove(e) {
-      // console.log('mouse move', e)
       let height = window.innerHeight - e.clientY
       state.panelHeight = `${height}px`
       emitter.emit('render')
+      resizeEditor(state)
     }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', (e) => {

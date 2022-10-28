@@ -182,6 +182,12 @@ function store(state, emitter) {
       await serial.stop()
       try {
         state.serialFiles = await serial.listFiles()
+        state.serialFiles = state.serialFiles.filter(
+          f => f.indexOf('.') !== -1 // Only files with extensions
+        )
+        state.serialFiles = state.serialFiles.filter(
+          f => f.indexOf('.') !== 0 // No dot files
+        )
       } catch (e) {
         console.log('error', e)
       }

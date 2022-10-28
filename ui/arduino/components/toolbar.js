@@ -33,7 +33,7 @@ function Toolbar(state, emit) {
     icon: 'icons/New.svg',
     label: 'New',
     disabled: false,
-    onclick: () => emit('new-file')
+    onclick: () => emit('open-new-file-dialog')
   })
   const openFolder = Button({
     icon: 'icons/Open.svg',

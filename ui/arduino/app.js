@@ -7,6 +7,7 @@ function App(state, emit) {
         ${Editor(state, emit)}
         ${Panel(state, emit)}
       </div>
+      ${NewFileDialog(state, emit)}
       ${PortDialog(state, emit)}
       ${Message(state, emit)}
     </div>

@@ -25,6 +25,7 @@ function store(state, emitter) {
 
   state.isConnected = false
   state.isPortDialogOpen = false
+  state.isNewFileDialogOpen = false
   state.isTerminalOpen = false
   state.isFilesOpen = false
 
@@ -114,11 +115,23 @@ function store(state, emitter) {
   })
 
   // FILE MANAGEMENT
-  emitter.on('new-file', () => {
-    log('new-file')
+  emitter.on('open-new-file-dialog', () => {
+    log('open-new-file-dialog')
+    state.isNewFileDialogOpen = true
+    emitter.emit('render')
+  })
+  emitter.on('close-new-file-dialog', () => {
+    log('close-new-file-dialog')
+    state.isNewFileDialogOpen = false
+    emitter.emit('render')
+  })
+  emitter.on('new-file', (dev) => {
+    log('select-device', dev)
+    state.selectedDevice = dev
     let editor = state.cache(AceEditor, 'editor').editor
     state.selectedFile = 'undefined'
     editor.setValue('')
+    emitter.emit('close-new-file-dialog')
     emitter.emit('render')
   })
   emitter.on('save', async () => {

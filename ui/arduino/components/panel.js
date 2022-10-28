@@ -12,14 +12,20 @@ function Panel(state, emit) {
 }
 
 function PanelHandle(state, emit) {
-  let clear = html`
+  let termControls = html`
+    <button class="panel-button" onclick=${() => document.execCommand('copy')}>
+      C
+    </button>
+    <button class="panel-button" onclick=${() => document.execCommand('paste')}>
+      P
+    </button>
     <button class="panel-button" onclick=${() => emit('clean-terminal')}>
       <img src="icons/Delete.svg" />
     </button>
   `
   return html`
     <div id="handle" onmousedown=${() => emit('start-resizing-panel')}>
-      ${state.isTerminalOpen ? clear : null}
+      ${state.isTerminalOpen ? termControls : null}
     </div>
     `
 }

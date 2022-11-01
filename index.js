@@ -1,6 +1,9 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs');
+const { info } = require('console');
+const join = require('path').join;
+const openAboutWindow = require('about-window').default;
 
 let win = null // main window
 
@@ -102,7 +105,7 @@ const template = [
   ...(isMac ? [{
     label: app.name,
     submenu: [
-      { role: 'about' },
+      { role: 'about'},
       { type: 'separator' },
       { role: 'services' },
       { type: 'separator' },
@@ -150,6 +153,8 @@ const template = [
     submenu: [
       { role: 'reload' },
       { type: 'separator' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
       { role: 'resetZoom' },
       { role: 'zoomIn' },
       { role: 'zoomOut' },
@@ -182,18 +187,66 @@ const template = [
           await shell.openExternal('https://www.arduino.cc/')
         }
       },
+      // {
+      //   label: 'About',
+      //   click: async () => {
+      //     const { shell } = require('electron')
+      //     await shell.openExternal('https://www.arduino.cc/')
+          
+      //   }
+      // },
       {
-        label: 'About',
-        click: async () => {
-          const { shell } = require('electron')
-          await shell.openExternal('https://www.arduino.cc/')
-        }
+        label:'Info about this app',
+        click: () => {
+            openAboutWindow({
+                icon_path: join(__dirname, 'ui/arduino/assets/about_image.png'),
+                copyright: '© Arduino 2022',
+                package_json_dir: __dirname,
+                bug_report_url: "https://github.com/arduino/MicroPython_Lab/issues",
+                bug_link_text: "report an issue",
+                homepage: "https://labs-micropython-ide.arduino.cc",
+                use_version_info: false,
+                win_options: {
+                    parent: win,
+                    modal: true,
+                },
+                show_close_button: 'Close',
+            })
+          }
       },
     ]
   }
 ]
+function normalizeParam(info_or_img_path) {
+  if (!info_or_img_path) {
+      throw new Error('First parameter of openAboutWindow() must not be empty. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md');
+  }
+  if (typeof info_or_img_path === 'string') {
+      return { icon_path: info_or_img_path };
+  }
+  else {
+      const info = info_or_img_path;
+      if (!info.icon_path) {
+          throw new Error("First parameter of openAboutWindow() must have key 'icon_path'. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md");
+      }
+      return Object.assign({}, info);
+  }
+}
+
 
 const menu = Menu.buildFromTemplate(template)
+
+app.setAboutPanelOptions({
+  applicationName: app.name,
+  applicationVersion: app.getVersion(),
+  copyright: app.copyright,
+  credits: '(See "Info about this app" in the Help menu)',
+  authors: ['Arduino'],
+  website: 'https://arduino.cc',
+  iconPath: path.join(__dirname, '../assets/image.png'),
+});
+
 Menu.setApplicationMenu(menu)
+
 
 app.whenReady().then(createWindow)

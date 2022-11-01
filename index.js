@@ -101,6 +101,7 @@ function createWindow () {
 // TODO: Loading splash screen
 
 const isMac = process.platform === 'darwin'
+const isDev = !app.isPackaged
 const template = [
   ...(isMac ? [{
     label: app.name,
@@ -153,13 +154,16 @@ const template = [
     submenu: [
       { role: 'reload' },
       { type: 'separator' },
-      { role: 'toggleDevTools' },
-      { type: 'separator' },
       { role: 'resetZoom' },
       { role: 'zoomIn' },
       { role: 'zoomOut' },
       { type: 'separator' },
-      { role: 'togglefullscreen' }
+      { role: 'togglefullscreen' },
+      ...(isDev ? [
+        { type: 'separator' },
+        { role: 'toggleDevTools' }, 
+      ]:[
+      ])
     ]
   },
   {

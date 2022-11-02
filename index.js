@@ -188,7 +188,14 @@ const template = [
         label: 'Learn More',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://labs.arduino.cc/')
+          await shell.openExternal('https://github.com/arduino/MicroPython_Lab')
+        }
+      },
+      {
+        label: 'Report an issue',
+        click: async () => {
+          const { shell } = require('electron')
+          await shell.openExternal('https://github.com/arduino/MicroPython_Lab/issues')
         }
       },
       {

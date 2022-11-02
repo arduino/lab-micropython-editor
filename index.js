@@ -191,20 +191,13 @@ const template = [
           await shell.openExternal('https://www.arduino.cc/')
         }
       },
-      // {
-      //   label: 'About',
-      //   click: async () => {
-      //     const { shell } = require('electron')
-      //     await shell.openExternal('https://www.arduino.cc/')
-          
-      //   }
-      // },
       {
         label:'Info about this app',
         click: () => {
             openAboutWindow({
                 icon_path: join(__dirname, 'ui/arduino/assets/about_image.png'),
-                copyright: '© Arduino 2022',
+                css_path: join(__dirname, 'ui/arduino/about.css'),
+                copyright: '© Arduino SA 2022',
                 package_json_dir: __dirname,
                 bug_report_url: "https://github.com/arduino/MicroPython_Lab/issues",
                 bug_link_text: "report an issue",

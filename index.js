@@ -188,7 +188,7 @@ const template = [
         label: 'Learn More',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://www.arduino.cc/')
+          await shell.openExternal('https://labs.arduino.cc/')
         }
       },
       {
@@ -201,7 +201,7 @@ const template = [
                 package_json_dir: __dirname,
                 bug_report_url: "https://github.com/arduino/MicroPython_Lab/issues",
                 bug_link_text: "report an issue",
-                homepage: "https://labs-micropython-ide.arduino.cc",
+                homepage: "https://labs.arduino.cc",
                 use_version_info: false,
                 win_options: {
                     parent: win,

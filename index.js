@@ -1,6 +1,8 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const join = require('path').join
+const openAboutWindow = require('about-window').default
 
 let win = null // main window
 
@@ -98,11 +100,12 @@ function createWindow () {
 // TODO: Loading splash screen
 
 const isMac = process.platform === 'darwin'
+const isDev = !app.isPackaged
 const template = [
   ...(isMac ? [{
     label: app.name,
     submenu: [
-      { role: 'about' },
+      { role: 'about'},
       { type: 'separator' },
       { role: 'services' },
       { type: 'separator' },
@@ -154,7 +157,12 @@ const template = [
       { role: 'zoomIn' },
       { role: 'zoomOut' },
       { type: 'separator' },
-      { role: 'togglefullscreen' }
+      { role: 'togglefullscreen' },
+      ...(isDev ? [
+        { type: 'separator' },
+        { role: 'toggleDevTools' }, 
+      ]:[
+      ])
     ]
   },
   {
@@ -179,21 +187,53 @@ const template = [
         label: 'Learn More',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://www.arduino.cc/')
+          await shell.openExternal('https://github.com/arduino/MicroPython_Lab')
         }
       },
       {
-        label: 'About',
+        label: 'Report an issue',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://www.arduino.cc/')
+          await shell.openExternal('https://github.com/arduino/MicroPython_Lab/issues')
         }
+      },
+      {
+        label:'Info about this app',
+        click: () => {
+            openAboutWindow({
+                icon_path: join(__dirname, 'ui/arduino/assets/about_image.png'),
+                css_path: join(__dirname, 'ui/arduino/about.css'),
+                copyright: '© Arduino SA 2022',
+                package_json_dir: __dirname,
+                bug_report_url: "https://github.com/arduino/MicroPython_Lab/issues",
+                bug_link_text: "report an issue",
+                homepage: "https://labs.arduino.cc",
+                use_version_info: false,
+                win_options: {
+                    parent: win,
+                    modal: true,
+                },
+                show_close_button: 'Close',
+            })
+          }
       },
     ]
   }
 ]
 
 const menu = Menu.buildFromTemplate(template)
+
+app.setAboutPanelOptions({
+  applicationName: app.name,
+  applicationVersion: app.getVersion(),
+  copyright: app.copyright,
+  credits: '(See "Info about this app" in the Help menu)',
+  authors: ['Arduino'],
+  website: 'https://arduino.cc',
+  iconPath: path.join(__dirname, '../assets/image.png'),
+})
+
 Menu.setApplicationMenu(menu)
+
 
 app.whenReady().then(createWindow)

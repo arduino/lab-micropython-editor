@@ -1,9 +1,9 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('path')
-const fs = require('fs');
-const { info } = require('console');
-const join = require('path').join;
-const openAboutWindow = require('about-window').default;
+const fs = require('fs')
+const { info } = require('console')
+const join = require('path').join
+const openAboutWindow = require('about-window').default
 
 let win = null // main window
 
@@ -223,17 +223,16 @@ const template = [
 ]
 function normalizeParam(info_or_img_path) {
   if (!info_or_img_path) {
-      throw new Error('First parameter of openAboutWindow() must not be empty. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md');
+      throw new Error('First parameter of openAboutWindow() must not be empty. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md')
   }
   if (typeof info_or_img_path === 'string') {
-      return { icon_path: info_or_img_path };
+      return { icon_path: info_or_img_path }
   }
   else {
-      const info = info_or_img_path;
       if (!info.icon_path) {
-          throw new Error("First parameter of openAboutWindow() must have key 'icon_path'. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md");
+          throw new Error("First parameter of openAboutWindow() must have key 'icon_path'. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md")
       }
-      return Object.assign({}, info);
+      return Object.assign({}, info)
   }
 }
 
@@ -248,7 +247,7 @@ app.setAboutPanelOptions({
   authors: ['Arduino'],
   website: 'https://arduino.cc',
   iconPath: path.join(__dirname, '../assets/image.png'),
-});
+})
 
 Menu.setApplicationMenu(menu)
 

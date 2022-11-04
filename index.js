@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const { info } = require('console')
 const join = require('path').join
 const openAboutWindow = require('about-window').default
 
@@ -221,21 +220,6 @@ const template = [
     ]
   }
 ]
-function normalizeParam(info_or_img_path) {
-  if (!info_or_img_path) {
-      throw new Error('First parameter of openAboutWindow() must not be empty. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md')
-  }
-  if (typeof info_or_img_path === 'string') {
-      return { icon_path: info_or_img_path }
-  }
-  else {
-      if (!info.icon_path) {
-          throw new Error("First parameter of openAboutWindow() must have key 'icon_path'. Please see the document: https://github.com/rhysd/electron-about-window/blob/master/README.md")
-      }
-      return Object.assign({}, info)
-  }
-}
-
 
 const menu = Menu.buildFromTemplate(template)
 

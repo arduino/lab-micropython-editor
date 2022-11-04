@@ -1,22 +1,22 @@
 {
-	"name": "MicroPython_lab",
-	"version": "0.1.0",
-	"description": "",
+	"name": "arduino-lab-micropython-ide",
+	"productName": "Arduino Lab for Micropython",
+	"version": "0.3.1",
+	"description": "Arduino Lab for MicroPython is a project sponsored by Arduino, based on original work by Murilo Polese.\nThis is an experimental pre-release software, please direct any questions exclusively to Github issues.",
+	
 	"main": "index.js",
 	"scripts": {
 		"post-set-shell": "npm config set script-shell bash",
-		"post-install": "npm install electron@8.5.5 $(if [ $(uname -m) =  arm64 ]; then echo --arch=x64; fi) --save-dev",
-		"post-rebuild": "electron-rebuild",
-		"dev": "APP_DEV=true electron ./",
-		"pack": "electron-builder --dir",
+		"rebuild": "electron-rebuild",
+		"dev": "electron ./",
 		"build": "npm run post-set-shell && electron-builder $(if [ $(uname -m) =  arm64 ]; then echo --mac --x64; fi)",
-		"postinstall": "npm run post-set-shell && npm run post-install && npm run post-rebuild"
+		"postinstall": "npm run post-set-shell && npm run rebuild"
 	},
 	"devDependencies": {
-		"electron": "^8.5.5",
-		"electron-builder": "^22.3.2",
-		"electron-notarize": "^1.1.1",
-		"electron-rebuild": "^1.10.0",
+		"electron": "^19.0.10",
+		"electron-builder": "^23.3.3",
+		"electron-notarize": "^1.2.1",
+		"electron-rebuild": "^3.2.9",
 		"is-ci": "^3.0.1"
 	},
 	"build": {
@@ -36,11 +36,10 @@
 		},
 		"afterSign": "scripts/notarize.js"
 	},
-	"author": "",
-	"license": "ISC",
+	"license": "MIT",
 	"dependencies": {
-		"colors": "1.0.3",
+		"about-window": "^1.15.2",
 		"mkdirp": "^1.0.3",
-		"serialport": "^9.2.8"
+		"serialport": "^10.4.0"
 	}
 }

@@ -1,229 +1,304 @@
-const EventEmitter = require('events')
-const SerialPort = require('serialport')
+const { SerialPort } = require('serialport')
+const { ReadlineParser } = require('@serialport/parser-readline')
+const fs = require('fs')
+const path = require('path')
 
-const codeListFiles = `
-from os import listdir
-print('<BEGINREC>')
-print(listdir())
-print('<ENDREC>')
-`
-const codeLoadFile = (path) => {
-	return `
-print('<BEGINREC>')
-with open('${path}', 'r') as f:
-	line = f.readline()
-	while line != '':
-		print(line, end='')
-		line = f.readline()
-print('<ENDREC>')
-`
+function sleep(millis) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve()
+    }, millis)
+  })
 }
 
-const codeRemoveFile = (path) => {
-	return `
-from os import remove
-remove('${path}')
-`
-}
+class MicroPythonBoard {
+  constructor() {
+    this.device = null
+    this.serial = null
+    this.in_raw_repl = false
+  }
 
-const codeRenameFile = (oldPath, newPath) => {
-	return `
-from os import rename
-rename('${oldPath}', '${newPath}')
-`
-}
+  listPorts() {
+    return SerialPort.list()
+  }
 
-const codeCollectGarbage = `import gc
-gc.collect()`
+  async open(device) {
+    if (device) {
+      this.device = device
+    }
+    if (!this.device) {
+      throw new Error(`No device specified`)
+    }
+    if (this.serial && this.serial.isOpen) {
+      await this.serial.close()
+      this.serial = null
+    }
 
-class SerialConnection extends EventEmitter {
-	constructor() {
-		super()
-		this.executing = false
-		this.rawRepl = false
-	}
-	/**
-	* List all available serial ports (with vendor id)
-	* @return {Promise} Resolves with an array of port objects
-	*/
-	static listAvailable() {
-		return new Promise((resolve, reject) => {
-			SerialPort.list().then((ports) => {
-				const availablePorts = ports.filter((port) => {
-					return !!port.vendorId
-				})
-				if (availablePorts) {
-					resolve(availablePorts)
-				} else {
-					reject(new Error('No ports available'))
-				}
-			})
-		})
-	}
-	/**
-	* Opens a connection on a given port.
-	* @param {String} port Port address to open the connection
-	*/
-	open(port) {
-		this.port = new SerialPort(port, {
+    this.serial = new SerialPort({
+      path: this.device,
 			baudRate: 115200,
+      lock: false,
 			autoOpen: false
 		})
-		this.port.on('open', () => {
-			this.emit('connected')
-			this.port.write('\r')
-		})
-		this.port.on('data', (data) => this._eventHandler(data))
-		this.port.open()
-	}
-	/**
-	* Closes current connection.
-	*/
-	close() {
-		this.emit('disconnected')
-		if (this.port) {
-			this.port.close()
-		}
-	}
-	/**
-	* Executes code in a string format. This code can contain multiple lines.
-	* @param {String} code String of code to be executed. Line breaks must be `\n`
-	*/
-	execute(code) {
-		this.emit('execution-started')
-		// TODO: break code in lines and `_execRaw` line by line
-		this.stop()
-		this._enterRawRepl()
-		this._executeRaw(code)
-			.then(() => {
-				this.emit('execution-finished')
-				this._exitRawRepl()
-			})
-	}
-	/**
-	* Evaluate a command/expression.
-	* @param {String} command Command/expression to be evaluated
-	*/
-	evaluate(command) {
-		this.port.write(Buffer.from(command))
-	}
-	/**
-	* Send a "stop" command in order to interrupt any running code. For serial
-	* REPL this command is "CTRL-C".
-	*/
-	stop() {
-		this.port.write('\r\x03') // CTRL-C
-	}
-	/**
-	* Send a command to "soft reset".
-	*/
-	softReset() {
-		this.stop();
-		this.port.write('\r\x04') // CTRL-D
-	}
-	/**
-	* Prints on console the existing files on file system.
-	*/
-	listFiles() {
-		this.data = ''
-		this.execute(codeListFiles)
-	}
-	/**
-	* Prints on console the content of a given file.
-	* @param {String} path File's path
-	*/
-	loadFile(path) {
-		this.data = ''
-		this.execute(codeLoadFile(path))
-	}
-	/**
-	* Writes a given content to a file in the file system.
-	* @param {String} path File's path
-	* @param {String} content File's content
-	*/
-	writeFile(path, content) {
-		if (!path || !content) {
-			return
-		}
-		// TODO: Find anoter way to do it without binascii
-		let pCode = `f = open('${path}', 'w')\n`
-		// pCode += `import gc; gc.collect()\n`
-		pCode += codeCollectGarbage + '\n'
-		// `content` is what comes from the editor. We want to write it
-		// line one by one on a file so we split by `\n`
-		let lines = content.split('\r\n')
-		lines.forEach((line, lineCount) => {
-			if (line) {
-				// TODO: Sanitize line replace """ with \"""
-				// To avoid the string escaping with weirdly we encode
-				// the line plus the `\n` that we just removed to base64
-				pCode += `f.write("""${line}""")`
-				if(lineCount != lines.length - 1){
-					pCode += `\nf.write('\\n')\n`
-				}
-			}
-		})
-		pCode += `\nf.close()\n`
 
-		this.once('execution-finished', () => {
-			this.emit('file-saved')
-		})
-		this.execute(pCode)
-	}
+    return new Promise((resolve, reject) => {
+      this.serial.open(async (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
+  }
 
-	/**
-	* Removes file on a given path
-	* @param {String} path File's path
-	*/
-	removeFile(path) {
-		this.execute(codeRemoveFile(path))
-	}
+  close() {
+    if (this.serial.isOpen) {
+      return this.serial.close()
+    } else {
+      return Promise.resolve()
+    }
+  }
 
-	renameFile(oldPath, newPath) {
-		this.execute(codeRenameFile(oldPath, newPath))
-	}
-	/**
-	* Handles data comming from connection
-	* @param {Buffer} buffer Data comming from connection
-	*/
-	_eventHandler(buffer) {
-		const data = buffer.toString()
-		this.emit('output', data)
-	}
-	/**
-	* Put REPL in raw mode
-	*/
-	_enterRawRepl() {
-		this.port.write('\r\x01') // CTRL-A
-	}
-	/**
-	* Exit REPL raw mode
-	*/
-	_exitRawRepl() {
-		this.port.write('\r\x04\r\x02') // CTRL-D // CTRL-B
-	}
-	/**
-	* Writes a command to connected port
-	* @param {String} command Command to be written on connected port
-	*/
-	_executeRaw(command) {
-		let p = 0
-		const l = 256
-		return new Promise((resolve, reject) => {
-			for(let i = 0; i < command.length; i+=l) {
-				let slice = command.slice(i, i+l)
-				setTimeout(() => {
-					this.port.write(slice)
-				}, p*10)
-				p += 1
-			}
-			let finished = (command.length / l) + 1
-			setTimeout(() => {
-				this.port.write('\x04')
-				resolve()
-			}, finished * 10)
-		})
-	}
+  read_until(options) {
+    const {
+      ending = `\n`,
+      timeout = null,
+      data_consumer = () => false
+    } = options || {}
+    return new Promise((resolve, reject) => {
+      const parser = this.serial.pipe(new ReadlineParser({ delimiter: ending }))
+      let waiting = 0
+      if (timeout) {
+        waiting = setTimeout(() => {
+          reject(new Error(`Couldn't find ending: ${ending}`))
+        }, timeout)
+      }
+      parser.once('data', (data) => {
+        data_consumer(data)
+        clearTimeout(waiting)
+        resolve(data + ending)
+      })
+    })
+  }
+
+  enter_raw_repl(timeout) {
+    return new Promise(async (resolve, reject) => {
+      // ctrl-C twice: interrupt any running program
+      await this.serial.write(Buffer.from(`\r\x03\x03`))
+      // flush input
+      await this.serial.flush()
+      // ctrl-A: enter raw REPL
+      await this.serial.write(Buffer.from(`\r\x01`))
+
+      let data = await this.read_until({
+        ending: Buffer.from(`raw REPL; CTRL-B to exit\r\n>`),
+        timeout: timeout
+      })
+
+      if (data.indexOf(`raw REPL; CTRL-B to exit\r\n>`) !== -1) {
+        this.in_raw_repl = true
+        return resolve()
+      } else {
+        return reject(new Error(`Couldn't enter raw REPL mode`))
+      }
+    })
+  }
+
+  async exit_raw_repl() {
+    if (this.in_raw_repl) {
+      // ctrl-B: enter friendly REPL
+      await this.serial.write(Buffer.from(`\r\x02`))
+      this.in_raw_repl = false
+    }
+    return Promise.resolve()
+  }
+
+  follow(options) {
+    const { timeout = null } = options || {}
+    return new Promise(async (resolve, reject) => {
+      // wait for normal output
+      const data = await this.read_until({
+        ending: Buffer.from(`\x04`),
+        timeout: timeout
+      })
+      resolve(data)
+    })
+  }
+
+
+  exec_raw_no_follow(options) {
+    const { timeout = null, command = '' } = options || {}
+    return new Promise(async (resolve, reject) => {
+      // Dismiss any data with ctrl-C
+      await this.serial.write(Buffer.from(`\x03`))
+      // Soft reboot
+      await this.serial.write(Buffer.from(`\x04`))
+      // Check if we have a prompt
+      const data = await this.read_until({
+        ending: Buffer.from(`>`),
+        timeout: timeout,
+      })
+
+      // Write command using standard raw REPL, 256 bytes every 10ms.
+      for (let i = 0; i < command.length; i += 256) {
+        const slice = Buffer.from(command.slice(i, i+256))
+        await this.serial.write(slice)
+        await sleep(10)
+      }
+      // Execute
+      await this.serial.write(Buffer.from(`\x04`))
+      resolve()
+    })
+
+  }
+
+  exec_raw(options) {
+    const { timeout = null, command = '' } = options || {}
+    this.exec_raw_no_follow({
+      timeout: timeout,
+      command: command
+    })
+    return this.follow({ timeout })
+  }
+
+  async eval(k) {
+    return await this.serial.write(Buffer.from(k))
+  }
+
+  async stop() {
+    // Dismiss any data with ctrl-C
+    await this.serial.write(Buffer.from(`\x03`))
+  }
+
+  async reset() {
+    // Dismiss any data with ctrl-C
+    await this.serial.write(Buffer.from(`\x03`))
+    // Soft reboot
+    await this.serial.write(Buffer.from(`\x04`))
+  }
+
+  async execfile(filePath) {
+    if (filePath) {
+      const content = fs.readFileSync(path.resolve(filePath))
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({ command: content })
+      console.log(output)
+      return this.exit_raw_repl()
+    }
+    return Promise.reject()
+  }
+
+  async fs_ls() {
+    await this.enter_raw_repl()
+    const output = await this.exec_raw({
+      command: `import uos\nprint(uos.listdir())`
+    })
+    await this.exit_raw_repl()
+    return Promise.resolve(output)
+  }
+
+  async fs_cat(filePath) {
+    if (filePath) {
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({
+        command: `with open('${filePath}') as f:\n while 1:\n  b=f.read(256)\n  if not b:break\n  print(b,end='')`
+      })
+      await this.exit_raw_repl()
+      return Promise.resolve(output)
+    }
+    return Promise.reject(new Error(`Path to file was not specified`))
+  }
+
+  async fs_put(src, dest) {
+    if (src && dest) {
+      const content = fs.readFileSync(path.resolve(src))
+      await this.enter_raw_repl()
+      let output = await this.exec_raw({
+        command: `f=open('${dest}','w')\nw=f.write`
+      })
+      await sleep(100)
+      for (let i = 0; i < content.length; i+=128) {
+        let slice = content.slice(i, i+128)
+        slice = slice.toString()
+        slice = slice.replace(/"""/g, `\\"\\"\\"`)
+        await this.serial.write(`w("""${slice}""")`)
+        await this.serial.write(`\x04`)
+        await sleep(100)
+      }
+      return this.exit_raw_repl()
+    }
+    return Promise.reject(new Error(`Must specify source and destination paths`))
+  }
+
+  async fs_save(content, dest) {
+    if (content && dest) {
+      if (typeof content === 'string') {
+        content = Buffer.from(content)
+      }
+      await this.enter_raw_repl()
+      let output = await this.exec_raw({
+        command: `f=open('${dest}','w')\nw=f.write`
+      })
+      for (let i = 0; i < content.length; i+=64) {
+        let slice = content.slice(i, i+64)
+        slice = slice.toString()
+        slice = slice.replace(/"""/g, `\\"\\"\\"`)
+        // slice = slice.replace(//g, ``)
+        await this.serial.write(`w("""${slice}""")\n`)
+        await this.serial.write(`\x04`)
+        await sleep(50)
+      }
+      return this.exit_raw_repl()
+    } else {
+      return Promise.reject(new Error(`Must specify content and destination path`))
+    }
+  }
+
+  async fs_mkdir() {
+    if (filePath) {
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({
+        command: `import uos\nuos.mkdir('${filePath}')`
+      })
+      console.log(output)
+      return this.exit_raw_repl()
+    }
+    return Promise.reject()
+  }
+
+  async fs_rmdir() {
+    if (filePath) {
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({
+        command: `import uos\nuos.rmdir('${filePath}')`
+      })
+      return this.exit_raw_repl()
+    }
+    return Promise.reject()
+  }
+
+  async fs_rm(filePath) {
+    if (filePath) {
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({
+        command: `import uos\nuos.remove('${filePath}')`
+      })
+      return this.exit_raw_repl()
+    }
+    return Promise.reject()
+  }
+
+  async fs_rename(oldFilePath, newFilePath) {
+    if (oldFilePath && newFilePath) {
+      await this.enter_raw_repl()
+      const output = await this.exec_raw({
+        command: `import uos\nuos.rename('${oldFilePath}', '${newFilePath}')`
+      })
+      return this.exit_raw_repl()
+    }
+    return Promise.reject()
+  }
 }
 
-module.exports = SerialConnection
+module.exports = MicroPythonBoard

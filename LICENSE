@@ -659,3 +659,7 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+Additional Terms per GNU GPL Section 7
+
+This license does not grant any license or rights to use the "Arduino" trademark, any Arduino logos, or any other trademarks of Arduino SA. You are not authorized to use the name Arduino or the names of any author or contributor for publicity purposes, without written authorization.

@@ -1,6 +1,7 @@
 # Arduino Lab for MicroPython
 
-Arduino Lab for MicroPython is an Integrated Development Environment (IDE) for MicroPython.
+Arduino Lab for MicroPython is a lightweight editor for MicroPython programs, supporting connection with a board, code upload, file transfer, interactive REPL shell.
+This project is sponsored by Arduino, based on original work by Murilo Polese. This is an experimental pre-release software, please direct any questions only to Github issues.
 
 ## Features
 - MicroPython's Read Eval Print Loop (REPL)
@@ -77,4 +78,13 @@ Some changes on the Electron code will require reopening the app but all UI chan
 ## Trademarks
 
 "Python" and the Python Logo are trademarks of the Python Software Foundation.
+
+## Disclaimer
+
+This software is provided “as is” and we make no express or implied warranties whatsoever with respect to its functionality, 
+operability, or use, including, without limitation, any implied warranties of merchantability, fitness for a particular purpose, 
+or infringement. We expressly disclaim any liability whatsoever for any direct, indirect, consequential, incidental or special damages, 
+including, without limitation, lost revenues, lost profits, losses resulting from business interruption or loss of data, 
+regardless of the form of action or legal theory under which the liability may be asserted, even if advised of the possibility 
+or likelihood of such damages.
 

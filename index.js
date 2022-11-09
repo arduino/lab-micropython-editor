@@ -187,14 +187,14 @@ const template = [
         label: 'Learn More',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://github.com/arduino/MicroPython_Lab')
+          await shell.openExternal('https://github.com/arduino/lab-micropython-editor')
         }
       },
       {
         label: 'Report an issue',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://github.com/arduino/MicroPython_Lab/issues')
+          await shell.openExternal('https://github.com/arduino/lab-micropython-editor/issues')
         }
       },
       {
@@ -205,7 +205,7 @@ const template = [
                 css_path: join(__dirname, 'ui/arduino/about.css'),
                 copyright: '© Arduino SA 2022',
                 package_json_dir: __dirname,
-                bug_report_url: "https://github.com/arduino/MicroPython_Lab/issues",
+                bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",
                 bug_link_text: "report an issue",
                 homepage: "https://labs.arduino.cc",
                 use_version_info: false,

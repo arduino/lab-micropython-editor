@@ -67,8 +67,8 @@ While the serial communication is mediated by `/micropython.js`, the local files
 
 ## Running Arduino Lab for MicroPython from source code
 
-1. Clone this repository: `git clone https://github.com/arduino/MicroPython_Lab.git`
-2. Navigate to repository folder: `cd MicroPython_Lab`
+1. Clone this repository: `git clone https://github.com/arduino/lab-micropython-editor.git`
+2. Navigate to repository folder: `cd lab-micropython-editor`
 3. Install dependencies: `npm install`
 4. Run dev mode: `npm run dev`
 

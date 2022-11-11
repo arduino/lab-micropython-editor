@@ -28,6 +28,7 @@ function store(state, emitter) {
   state.isNewFileDialogOpen = false
   state.isTerminalOpen = false
   state.isFilesOpen = false
+  state.isEditingFilename = false
 
   state.messageText = 'Disconnected'
   state.isShowingMessage = true
@@ -163,7 +164,16 @@ function store(state, emitter) {
   })
   emitter.on('select-file', async (device, filename) => {
     log('select-file')
+
     state.selectedDevice = device
+
+    /*
+    XXX: If user is changing a file name, do not request the file from the board
+    over serial to prevent two commands being executed at the same time.
+    TODO: Create a queue of actions and execute them in order
+    */
+    if (state.selectedDevice === 'serial' && state.isEditingFilename) return
+
     state.selectedFile = filename
 
     let content = ''
@@ -275,6 +285,10 @@ function store(state, emitter) {
   })
 
   // NAMING/RENAMING FILE
+  emitter.on('edit-filename', () => {
+    state.isEditingFilename = true
+    emitter.emit('render')
+  })
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
     let oldFilename = state.selectedFile
@@ -304,8 +318,11 @@ function store(state, emitter) {
       }
     }
 
+    state.isEditingFilename = false
     emitter.emit('update-files')
     emitter.emit('render')
+
+    emitter.emit('message', "Filename is saved.", 1000)
   })
 
   emitter.on('message', (text, timeout) => {

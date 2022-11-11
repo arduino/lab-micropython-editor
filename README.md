@@ -81,10 +81,4 @@ Some changes on the Electron code will require reopening the app but all UI chan
 
 ## Disclaimer
 
-This software is provided “as is” and we make no express or implied warranties whatsoever with respect to its functionality, 
-operability, or use, including, without limitation, any implied warranties of merchantability, fitness for a particular purpose, 
-or infringement. We expressly disclaim any liability whatsoever for any direct, indirect, consequential, incidental or special damages, 
-including, without limitation, lost revenues, lost profits, losses resulting from business interruption or loss of data, 
-regardless of the form of action or legal theory under which the liability may be asserted, even if advised of the possibility 
-or likelihood of such damages.
-
+This software is provided “as is” and we make no express or implied warranties whatsoever with respect to its functionality, operability, or use, including, without limitation, any implied warranties of merchantability, fitness for a particular purpose, or infringement. We expressly disclaim any liability whatsoever for any direct, indirect, consequential, incidental or special damages, including, without limitation, lost revenues, lost profits, losses resulting from business interruption or loss of data, regardless of the form of action or legal theory under which the liability may be asserted, even if advised of the possibility or likelihood of such damages.

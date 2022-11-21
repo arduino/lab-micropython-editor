@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const join = require('path').join
 const openAboutWindow = require('about-window').default
 
 let win = null // main window
@@ -20,6 +19,8 @@ function listFolder(folder) {
     let filePath = path.resolve(folder, f)
     return !fs.lstatSync(filePath).isDirectory()
   })
+  // Filter out dot files
+  files = files.filter(f => f.indexOf('.') !== 0)
   return files
 }
 
@@ -160,7 +161,7 @@ const template = [
       { role: 'togglefullscreen' },
       ...(isDev ? [
         { type: 'separator' },
-        { role: 'toggleDevTools' }, 
+        { role: 'toggleDevTools' },
       ]:[
       ])
     ]
@@ -201,8 +202,8 @@ const template = [
         label:'Info about this app',
         click: () => {
             openAboutWindow({
-                icon_path: join(__dirname, 'ui/arduino/assets/about_image.png'),
-                css_path: join(__dirname, 'ui/arduino/about.css'),
+                icon_path: path.join(__dirname, 'ui/arduino/assets/about_image.png'),
+                css_path: path.join(__dirname, 'ui/arduino/about.css'),
                 copyright: '© Arduino SA 2022',
                 package_json_dir: __dirname,
                 bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",

@@ -14,13 +14,13 @@ function Panel(state, emit) {
 function PanelHandle(state, emit) {
   let termControls = html`
     <button class="panel-button" onclick=${() => document.execCommand('copy')}>
-      C
+      ${Icon("icons/Copy.svg")}
     </button>
     <button class="panel-button" onclick=${() => document.execCommand('paste')}>
-      P
+      ${Icon("icons/Paste.svg")}
     </button>
     <button class="panel-button" onclick=${() => emit('clean-terminal')}>
-      <img src="icons/Delete.svg" />
+      ${Icon("icons/Delete.svg")}
     </button>
   `
   return html`

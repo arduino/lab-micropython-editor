@@ -11,6 +11,13 @@ function sleep(millis) {
   })
 }
 
+function escape_string(string) {
+  string = string.replace(/"""/g, `\\"\\"\\"`)
+  string = string.replace(/\'/g, `\\'`)
+  string = string.replace(/\"/g, `\\"`)
+  return string
+}
+
 class MicroPythonBoard {
   constructor() {
     this.device = null
@@ -221,7 +228,7 @@ class MicroPythonBoard {
       for (let i = 0; i < content.length; i+=128) {
         let slice = content.slice(i, i+128)
         slice = slice.toString()
-        slice = slice.replace(/"""/g, `\\"\\"\\"`)
+        slice = escape_string(slice)
         await this.serial.write(`w("""${slice}""")`)
         await this.serial.write(`\x04`)
         await sleep(100)
@@ -243,8 +250,7 @@ class MicroPythonBoard {
       for (let i = 0; i < content.length; i+=64) {
         let slice = content.slice(i, i+64)
         slice = slice.toString()
-        slice = slice.replace(/"""/g, `\\"\\"\\"`)
-        // slice = slice.replace(//g, ``)
+        slice = escape_string(slice)
         await this.serial.write(`w("""${slice}""")\n`)
         await this.serial.write(`\x04`)
         await sleep(50)

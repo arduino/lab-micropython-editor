@@ -8,6 +8,9 @@ function FileName(state, emit) {
   function onBlur(e) {
     emit('save-filename', e.target.value)
   }
+  function onFocus(e) {
+    emit('edit-filename')
+  }
   function onKeyDown(e) {
     if(e.key.toLowerCase() === 'enter') {
       e.target.blur()
@@ -22,6 +25,7 @@ function FileName(state, emit) {
     <input
       type="text"
       value=${state.selectedFile || 'undefined'}
+      onfocus=${onFocus}
       onblur=${onBlur}
       onkeydown=${onKeyDown}
       />

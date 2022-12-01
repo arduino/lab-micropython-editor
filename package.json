@@ -33,12 +33,15 @@
 			"target": "zip",
 			"icon": "build_resources/icon.icns"
 		},
-		"afterSign": "scripts/notarize.js"
+		"afterSign": "build_resources/notarize.js"
 	},
 	"license": "MIT",
 	"dependencies": {
 		"about-window": "^1.15.2",
 		"mkdirp": "^1.0.3",
 		"serialport": "^10.4.0"
+	},
+	"engines": {
+		"node": "14"
 	}
 }

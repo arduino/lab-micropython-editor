@@ -12,6 +12,7 @@ class AceEditor extends Component {
 
   load(element) {
     this.editor = ace.edit("editor")
+    this.editor.setShowPrintMargin(false)
     this.editor.setFontSize(14)
     this.editor.setTheme("ace/theme/github")
     this.editor.session.setMode("ace/mode/python")

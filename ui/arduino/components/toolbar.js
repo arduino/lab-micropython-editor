@@ -3,8 +3,14 @@ function Toolbar(state, emit) {
     icon: state.isConnected ? 'icons/Connect.svg' : 'icons/Disconnect.svg',
     label: state.isConnected ? 'Disconnect' : 'Connect',
     disabled: false,
-    onclick: () => emit('open-port-dialog'),
-    color: 'default'
+    color: 'default',
+    onclick: () => {
+      if (state.isConnected) {
+        emit('disconnect')
+      } else {
+        emit('open-port-dialog')
+      }
+    },
   })
 
   const play = Button({

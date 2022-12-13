@@ -65,7 +65,7 @@ function store(state, emitter) {
     state.serialPath = null
     state.isTerminalOpen = false
     state.serialFiles = []
-    emitter.emit('render')
+    emitter.emit('close-panel')
   })
   emitter.on('connect', async (path) => {
     log('connect')

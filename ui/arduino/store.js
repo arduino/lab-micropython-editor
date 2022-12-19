@@ -13,6 +13,9 @@ function resizeEditor(state) {
 function store(state, emitter) {
   const serial = window.BridgeSerial
   const disk = window.BridgeDisk
+  const win = window.BridgeWindow
+
+  win.setWindowSize(700, 640)
 
   state.ports = []
   state.diskFiles = []

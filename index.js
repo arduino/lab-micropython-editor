@@ -81,6 +81,16 @@ ipcMain.handle('rename-file', (event, folder, filename, newFilename) => {
   return newFilename
 })
 
+ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {
+  console.log('ipcMain', 'set-window-size', minWidth, minHeight)
+  if (!win) {
+    console.log('No window defined')
+    return false
+  }
+
+  win.setMinimumSize(minWidth, minHeight)
+})
+
 // START APP
 function createWindow () {
   // Create the browser window.

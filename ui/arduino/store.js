@@ -1,5 +1,5 @@
 const log = console.log
-const DEFAULT_PANEL_HEIGHT = '25rem'
+const DEFAULT_PANEL_HEIGHT = '15rem'
 
 function resizeEditor(state) {
   const el = state.cache(AceEditor, 'editor').element

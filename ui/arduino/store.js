@@ -157,7 +157,8 @@ function store(state, emitter) {
   })
   emitter.on('remove', async () => {
     log('remove')
-    if (confirm(`Do you want to remove ${state.selectedFile} from ${state.selectedDevice}?`)) {
+    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+    if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
       if (state.selectedDevice === 'serial') {
         await serial.removeFile(state.selectedFile)
       }
@@ -325,7 +326,8 @@ function store(state, emitter) {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.serialFiles.indexOf(filename) !== -1) {
-        confirmation = confirm(`Do you want to overwrite ${filename} on ${state.selectedDevice}?`)
+        let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+        confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
 
       if (confirmation) {
@@ -352,7 +354,8 @@ function store(state, emitter) {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.diskFiles.indexOf(filename) !== -1) {
-        confirmation = confirm(`Do you want to overwrite ${filename} on ${state.selectedDevice}?`)
+        let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+        confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
       if (confirmation) {
         if (state.diskFiles.indexOf(oldFilename) !== -1) {

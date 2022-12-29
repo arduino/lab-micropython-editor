@@ -32,9 +32,10 @@ class MicroPythonBoard {
   async open(device) {
     if (device) {
       this.device = device
-    }
-    if (!this.device) {
-      throw new Error(`No device specified`)
+    } else {
+      return Promise.reject(
+        new Error(`No device specified`)
+      )
     }
     if (this.serial && this.serial.isOpen) {
       await this.serial.close()
@@ -73,8 +74,10 @@ class MicroPythonBoard {
       timeout = null,
       data_consumer = () => false
     } = options || {}
+    const parser = this.serial.pipe(
+      new ReadlineParser({ delimiter: ending })
+    )
     return new Promise((resolve, reject) => {
-      const parser = this.serial.pipe(new ReadlineParser({ delimiter: ending }))
       let waiting = 0
       if (timeout) {
         waiting = setTimeout(() => {
@@ -196,11 +199,31 @@ class MicroPythonBoard {
     return Promise.reject()
   }
 
-  async fs_ls() {
+  async fs_exists(filePath) {
+    filePath = filePath || ''
+    let command = `try:\n`
+        command += `  f = open("${filePath}", "r")\n`
+        command += `  print(1)\n`
+        command += `except OSError:\n`
+        command += `  print(0)\n`
     await this.enter_raw_repl()
-    const output = await this.exec_raw({
-      command: `import uos\nprint(uos.listdir())`
-    })
+    let output = await this.exec_raw({ command: command })
+    await this.exit_raw_repl()
+    // Extract output
+    output = output.split('OK')
+    let result = output[2] || ''
+    return Promise.resolve(result[0] === '1')
+  }
+
+  async fs_ls(folderPath) {
+    folderPath = folderPath || ''
+    let command = `import uos\n`
+        command += `try:\n`
+        command += `  print(uos.listdir("${folderPath}"))\n`
+        command += `except OSError:\n`
+        command += `  print([])\n`
+    await this.enter_raw_repl()
+    const output = await this.exec_raw({ command: command })
     await this.exit_raw_repl()
     return Promise.resolve(output)
   }
@@ -267,7 +290,6 @@ class MicroPythonBoard {
       const output = await this.exec_raw({
         command: `import uos\nuos.mkdir('${filePath}')`
       })
-      console.log(output)
       return this.exit_raw_repl()
     }
     return Promise.reject()
@@ -275,10 +297,13 @@ class MicroPythonBoard {
 
   async fs_rmdir() {
     if (filePath) {
+      let command = `import uos\n`
+          command += `try:\n`
+          command += `  uos.rmdir("${filePath}")\n`
+          command += `except OSError:\n`
+          command += `  print(0)\n`
       await this.enter_raw_repl()
-      const output = await this.exec_raw({
-        command: `import uos\nuos.rmdir('${filePath}')`
-      })
+      const output = await this.exec_raw({ command: command })
       return this.exit_raw_repl()
     }
     return Promise.reject()
@@ -286,10 +311,13 @@ class MicroPythonBoard {
 
   async fs_rm(filePath) {
     if (filePath) {
+      let command = `import uos\n`
+          command += `try:\n`
+          command += `  uos.remove("${filePath}")\n`
+          command += `except OSError:\n`
+          command += `  print(0)\n`
       await this.enter_raw_repl()
-      const output = await this.exec_raw({
-        command: `import uos\nuos.remove('${filePath}')`
-      })
+      const output = await this.exec_raw({ command: command })
       return this.exit_raw_repl()
     }
     return Promise.reject()

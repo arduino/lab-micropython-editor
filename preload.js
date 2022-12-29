@@ -112,5 +112,12 @@ const Disk = {
   }
 }
 
+const Window = {
+  setWindowSize: (minWidth, minHeight) => {
+    ipcRenderer.invoke('set-window-size', minWidth, minHeight)
+  }
+}
+
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)
+contextBridge.exposeInMainWorld('BridgeWindow', Window)

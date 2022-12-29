@@ -1,5 +1,5 @@
 const log = console.log
-const DEFAULT_PANEL_HEIGHT = '25rem'
+const DEFAULT_PANEL_HEIGHT = '15rem'
 
 function resizeEditor(state) {
   const el = state.cache(AceEditor, 'editor').element
@@ -13,6 +13,9 @@ function resizeEditor(state) {
 function store(state, emitter) {
   const serial = window.BridgeSerial
   const disk = window.BridgeDisk
+  const win = window.BridgeWindow
+
+  win.setWindowSize(700, 640)
 
   state.ports = []
   state.diskFiles = []
@@ -150,17 +153,21 @@ function store(state, emitter) {
     }
 
     emitter.emit('update-files')
+    emitter.emit('message', `${filename} is saved on ${state.selectedDevice}.`, 1000)
   })
   emitter.on('remove', async () => {
     log('remove')
-    if (state.selectedDevice === 'serial') {
-      await serial.removeFile(state.selectedFile)
+    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+    if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
+      if (state.selectedDevice === 'serial') {
+        await serial.removeFile(state.selectedFile)
+      }
+      if (state.selectedDevice === 'disk') {
+        await disk.removeFile(state.diskPath, state.selectedFile)
+      }
+      emitter.emit('update-files')
+      emitter.emit('render')
     }
-    if (state.selectedDevice === 'disk') {
-      await disk.removeFile(state.diskPath, state.selectedFile)
-    }
-    emitter.emit('update-files')
-    emitter.emit('render')
   })
   emitter.on('select-file', async (device, filename) => {
     log('select-file')
@@ -226,19 +233,37 @@ function store(state, emitter) {
   })
   emitter.on('upload', async () => {
     log('upload')
-    emitter.emit('message', 'Uploading file... Please wait')
-    await serial.uploadFile(state.diskPath, state.selectedFile)
-    emitter.emit('message', 'File uploaded!', 500)
-    emitter.emit('update-files')
-    emitter.emit('render')
+    let confirmation = true
+    if (state.serialFiles.indexOf(state.selectedFile) !== -1) {
+      confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on board?`)
+    }
+    if (confirmation) {
+      emitter.emit('message', 'Uploading file... Please wait')
+      let editor = state.cache(AceEditor, 'editor').editor
+      let contents = editor.getValue()
+      await disk.saveFileContent(state.diskPath, state.selectedFile, contents)
+      await serial.uploadFile(state.diskPath, state.selectedFile)
+      emitter.emit('message', 'File uploaded!', 500)
+      emitter.emit('update-files')
+      emitter.emit('render')
+    }
   })
   emitter.on('download', async () => {
     log('download')
-    emitter.emit('message', 'Downloading file... Please wait')
-    await serial.downloadFile(state.diskPath, state.selectedFile)
-    emitter.emit('message', 'File downloaded!', 500)
-    emitter.emit('update-files')
-    emitter.emit('render')
+    let confirmation = true
+    if (state.diskFiles.indexOf(state.selectedFile) !== -1) {
+      confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on disk?`)
+    }
+    if (confirmation) {
+      emitter.emit('message', 'Downloading file... Please wait')
+      let editor = state.cache(AceEditor, 'editor').editor
+      let contents = editor.getValue()
+      await serial.saveFileContent(state.selectedFile, contents)
+      await serial.downloadFile(state.diskPath, state.selectedFile)
+      emitter.emit('message', 'File downloaded!', 500)
+      emitter.emit('update-files')
+      emitter.emit('render')
+    }
   })
 
   // PANEL MANAGEMENT
@@ -298,31 +323,61 @@ function store(state, emitter) {
     let contents = editor.getValue()
 
     if (state.selectedDevice === 'serial') {
-      if (state.serialFiles.indexOf(oldFilename) !== -1) {
-        // If old name exists, rename file
-        await serial.renameFile(oldFilename, filename)
+      // Ask for confirmation to overwrite existing file
+      let confirmation = true
+      if (state.serialFiles.indexOf(filename) !== -1) {
+        let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+        confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
+      }
+
+      if (confirmation) {
+        if (state.serialFiles.indexOf(oldFilename) !== -1) {
+          // If old name exists, save old file and rename
+          await serial.saveFileContent(oldFilename, contents)
+          await serial.renameFile(oldFilename, filename)
+        } else {
+          // If old name doesn't exist create new file
+          await serial.saveFileContent(filename, contents)
+        }
+        state.isEditingFilename = false
+        emitter.emit('update-files')
+        emitter.emit('render')
+
+        emitter.emit('message', `${filename} is saved on ${state.selectedDevice}.`, 1000)
       } else {
-        // If old name doesn't exist create new file
-        await serial.saveFileContent(filename, contents)
+        state.isEditingFilename = false
+        emitter.emit('render')
       }
     }
 
     if (state.diskPath !== null && state.selectedDevice === 'disk') {
+      // Ask for confirmation to overwrite existing file
+      let confirmation = true
+      if (state.diskFiles.indexOf(filename) !== -1) {
+        let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+        confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
+      }
+      if (confirmation) {
+        if (state.diskFiles.indexOf(oldFilename) !== -1) {
+          // If old name exists, save old file and rename
+          await disk.saveFileContent(state.diskPath, oldFilename, contents)
+          await disk.renameFile(state.diskPath, oldFilename, filename)
+        } else {
+          // If old name doesn't exist create new file
+          await disk.saveFileContent(state.diskPath, filename, contents)
+        }
+        state.isEditingFilename = false
+        emitter.emit('update-files')
+        emitter.emit('render')
 
-      if (state.diskFiles.indexOf(oldFilename) !== -1) {
-        // If old name exists, rename file
-        await disk.renameFile(state.diskPath, oldFilename, filename)
+        emitter.emit('message', `${filename} is saved on ${state.selectedDevice}.`, 1000)
       } else {
-        // If old name doesn't exist create new file
-        await disk.saveFileContent(state.diskPath, filename, contents)
+        state.isEditingFilename = false
+        emitter.emit('render')
       }
     }
 
-    state.isEditingFilename = false
-    emitter.emit('update-files')
-    emitter.emit('render')
 
-    emitter.emit('message', "Filename is saved.", 1000)
   })
 
   emitter.on('message', (text, timeout) => {

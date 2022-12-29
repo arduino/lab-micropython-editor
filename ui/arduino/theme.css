@@ -278,6 +278,11 @@ img {
   width: 10%;
 }
 
+#files .file-controls .toolbar-button {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 #message {
   position: fixed;
   bottom: 1rem;

@@ -133,7 +133,7 @@ function store(state, emitter) {
     log('select-device', dev)
     state.selectedDevice = dev
     let editor = state.cache(AceEditor, 'editor').editor
-    state.selectedFile = 'undefined'
+    state.selectedFile = null
     editor.setValue('')
     emitter.emit('close-new-file-dialog')
     emitter.emit('render')

@@ -49,6 +49,7 @@ function Toolbar(state, emit) {
   })
 
   const canSave = (state.isConnected && state.selectedDevice === 'serial' && state.selectedFile)
+               || (state.isConnected && state.selectedDevice === 'disk' && state.diskPath)
                || (state.selectedDevice === 'disk' && state.selectedFile)
   const save = Button({
     icon: 'icons/Save.svg',

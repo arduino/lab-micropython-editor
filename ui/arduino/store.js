@@ -143,6 +143,7 @@ function store(state, emitter) {
     let editor = state.cache(AceEditor, 'editor').editor
     let contents = editor.getValue()
     let filename = state.selectedFile || 'undefined'
+    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
     if (state.selectedDevice === 'serial') {
       await serial.saveFileContent(filename, contents)
@@ -153,7 +154,7 @@ function store(state, emitter) {
     }
 
     emitter.emit('update-files')
-    emitter.emit('message', `${filename} is saved on ${state.selectedDevice}.`, 1000)
+    emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
   })
   emitter.on('remove', async () => {
     log('remove')
@@ -318,6 +319,7 @@ function store(state, emitter) {
     log('save-filename', filename)
     let oldFilename = state.selectedFile
     state.selectedFile = filename
+    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
     let editor = state.cache(AceEditor, 'editor').editor
     let contents = editor.getValue()
@@ -326,7 +328,6 @@ function store(state, emitter) {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.serialFiles.indexOf(filename) !== -1) {
-        let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
         confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
 
@@ -343,7 +344,7 @@ function store(state, emitter) {
         emitter.emit('update-files')
         emitter.emit('render')
 
-        emitter.emit('message', `${filename} is saved on ${state.selectedDevice}.`, 1000)
+        emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
       } else {
         state.isEditingFilename = false
         emitter.emit('render')
@@ -354,7 +355,6 @@ function store(state, emitter) {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.diskFiles.indexOf(filename) !== -1) {
-        let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
         confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
       if (confirmation) {
@@ -370,7 +370,7 @@ function store(state, emitter) {
         emitter.emit('update-files')
         emitter.emit('render')
 
-        emitter.emit('message', `${filename} is saved on ${state.selectedDevice}.`, 1000)
+        emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
       } else {
         state.isEditingFilename = false
         emitter.emit('render')

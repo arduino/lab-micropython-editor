@@ -12,7 +12,6 @@ function sleep(millis) {
 }
 
 function escape_string(string) {
-  string = string.replace(/"""/g, `\\"\\"\\"`)
   string = string.replace(/\'/g, `\\'`)
   string = string.replace(/\"/g, `\\"`)
   return string

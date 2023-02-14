@@ -48,12 +48,16 @@ function Toolbar(state, emit) {
     onclick: () => emit('open-folder')
   })
 
-  const canSave = (state.isConnected && state.selectedDevice === 'serial' && state.selectedFile)
-               || (state.selectedDevice === 'disk' && state.selectedFile)
+  const canSaveBoard = state.isConnected 
+    && state.selectedDevice === 'serial' 
+    && state.selectedFile
+  const canSaveDisk = state.selectedDevice === 'disk' 
+    && state.selectedFile 
+    && state.diskPath
   const save = Button({
     icon: 'icons/Save.svg',
     label: 'Save',
-    disabled: !canSave,
+    disabled: !canSaveBoard && !canSaveDisk,
     onclick: () => emit('save')
   })
 

@@ -1,17 +1,8 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 
-const Micropython = require('./micropython.js')
+const Micropython = require('micropython.js')
 const board = new Micropython()
-
-function extractFileArray(output) {
-  output = output.replace(/'/g, '"');
-  output = output.split('OK')
-  let files = output[2] || ''
-  files = files.slice(0, files.indexOf(']')+1)
-  files = JSON.parse(files)
-  return files
-}
 
 const Serial = {
   loadPorts: async () => {
@@ -57,19 +48,17 @@ const Serial = {
     board.serial.on('data', fn)
   },
   listFiles: async () => {
-    let output = await board.fs_ls()
-    return extractFileArray(output)
+    const output = await board.fs_ls()
+    return output
   },
   loadFile: async (file) => {
-    let output = await board.fs_cat(file)
-    output = output.split('OK')
-    return output[2] || ''
+    const output = await board.fs_cat(file)
+    return output || ''
   },
   removeFile: async (file) => {
     return board.fs_rm(file)
   },
   saveFileContent: async (filename, content) => {
-    content = content.replace(//g, ``)
     return board.fs_save(content || ' ', filename)
   },
   uploadFile: async (folder, filename) => {
@@ -79,7 +68,6 @@ const Serial = {
   },
   downloadFile: async (folder, filename) => {
     let contents = await Serial.loadFile(filename)
-    contents = contents.replace(//g, ``)
     return ipcRenderer.invoke('save-file', folder, filename, contents)
   },
   renameFile: async (oldName, newName) => {

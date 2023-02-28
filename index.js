@@ -95,7 +95,7 @@ ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 700,
+    width: 720,
     height: 640,
     webPreferences: {
       nodeIntegration: true,

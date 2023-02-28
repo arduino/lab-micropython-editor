@@ -15,7 +15,7 @@ function store(state, emitter) {
   const disk = window.BridgeDisk
   const win = window.BridgeWindow
 
-  win.setWindowSize(700, 640)
+  win.setWindowSize(720, 640)
 
   state.ports = []
   state.diskFiles = []
@@ -187,7 +187,6 @@ function store(state, emitter) {
     let content = ''
     if (state.selectedDevice === 'serial') {
       content = await serial.loadFile(filename)
-      content = content.replace(//g, ``) // XXX: Remove character that breaks execution
     }
 
     if (state.selectedDevice === 'disk') {

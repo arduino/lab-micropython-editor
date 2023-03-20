@@ -12,13 +12,15 @@ async function openFolderDialog() {
   return dir.filePaths[0] || null
 }
 
-function listFolder(folder) {
+function listFolder(folder, filesOnly) {
   files = fs.readdirSync(path.resolve(folder))
   // Filter out directories
-  files = files.filter(f => {
-    let filePath = path.resolve(folder, f)
-    return !fs.lstatSync(filePath).isDirectory()
-  })
+  if (filesOnly) {
+    files = files.filter(f => {
+      let filePath = path.resolve(folder, f)
+      return !fs.lstatSync(filePath).isDirectory()
+    })
+  }
   // Filter out dot files
   files = files.filter(f => f.indexOf('.') !== 0)
   return files
@@ -105,7 +107,7 @@ function createWindow () {
     }
   })
   // and load the index.html of the app.
-  win.loadFile('ui/arduino/index.html')
+  win.loadFile('ui/ftp/dist/index.html')
 }
 
 // TODO: Loading splash screen

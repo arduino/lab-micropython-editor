@@ -7,3 +7,4 @@ dist/
 .vscode
 Resources
 temp
+.parcel-cache

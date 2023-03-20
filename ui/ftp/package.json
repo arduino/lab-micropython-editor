@@ -1,0 +1,20 @@
+{
+  "name": "ftp",
+  "version": "1.0.0",
+  "description": "FTP Frontend for MPYLAB",
+  "source": "index.html",
+  "scripts": {
+    "start": "parcel",
+    "dev": "parcel watch --public-url ./",
+    "build": "parcel build --public-url ./"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.8.3",
+    "parcel": "latest",
+    "process": "^0.11.10"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

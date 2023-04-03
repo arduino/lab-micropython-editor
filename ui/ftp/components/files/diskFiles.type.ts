@@ -1,8 +1,9 @@
 type DiskFilesType = () => {
-    diskFiles: String[]
-    // selectedFile: File
-    navigate: (folder : String) => void
-    selectFile: (path: String) => void
+  diskPath: string,
+  diskFiles: string[]
+  selectedFiles: File[]
+  navigate: (folder : string) => void
+  selectFile: (path: string) => void
 }
 
 export default DiskFilesType

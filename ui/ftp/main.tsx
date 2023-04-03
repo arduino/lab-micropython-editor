@@ -6,28 +6,46 @@ import DiskNavigation from './components/navigation/diskNavigation'
 import DiskFiles from './components/files/diskFiles'
 import SerialNavigation from './components/navigation/serialNavigation'
 import SerialFiles from './components/files/serialFiles'
+import FileManagement from './components/files/fileManagement'
 
 import { useMainLogic } from './main.logic.ts'
 
 const App: React.FC = () => {
-  const { 
+  const {
+    waiting,
     toolbarLogic,
     diskNavigationLogic,
     diskFilesLogic,
     serialNavigationLogic,
-    serialFilesLogic
+    serialFilesLogic,
+    fileManagementLogic
   } = useMainLogic()
+  if (waiting) {
+    return (
+      <>
+        <Toolbar toolbarLogic={toolbarLogic}></Toolbar>
+        WAIT!
+      </>
+    )
+  }
   return (
     <>
       <Toolbar toolbarLogic={toolbarLogic}></Toolbar>
-      <div>
-        <div>
-          <DiskNavigation navigationLogic={diskNavigationLogic}></DiskNavigation>
-          <DiskFiles diskFilesLogic={diskFilesLogic}></DiskFiles>
-        </div>
-        <div>
+      <div className="row">
+        <div className="column">
           <SerialNavigation navigationLogic={serialNavigationLogic}></SerialNavigation>
-          <SerialFiles serialFilesLogic={serialFilesLogic}></SerialFiles>
+          <div className="file-panel">
+            <SerialFiles serialFilesLogic={serialFilesLogic}></SerialFiles>
+          </div>
+        </div>
+        <div className="column file-management">
+          <FileManagement fileManagementLogic={fileManagementLogic} />
+        </div>
+        <div className="column">
+          <DiskNavigation navigationLogic={diskNavigationLogic}></DiskNavigation>
+          <div className="file-panel">
+            <DiskFiles diskFilesLogic={diskFilesLogic}></DiskFiles>
+          </div>
         </div>
       </div>
     </>

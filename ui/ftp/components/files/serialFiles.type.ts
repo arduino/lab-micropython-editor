@@ -1,6 +1,6 @@
 type SerialFilesType = () => {
     serialFiles: String[]
-    selectedFile: File
+    selectedFiles: File[]
     navigate: (folder : String) => void
     selectFile: (path: String) => void
 }

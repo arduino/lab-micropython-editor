@@ -21,6 +21,11 @@ function listFolder(folder) {
   })
   // Filter out dot files
   files = files.filter(f => f.indexOf('.') !== 0)
+
+  // Sort alphabetically in case-insensitive fashion
+  files.sort(function (a, b) {
+    return a.localeCompare(b);
+  });
   return files
 }
 

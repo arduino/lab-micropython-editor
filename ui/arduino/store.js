@@ -218,6 +218,9 @@ function store(state, emitter) {
         state.serialFiles = state.serialFiles.filter(
           f => f.indexOf('.') !== 0 // No dot files
         )
+        state.serialFiles.sort(function (a, b) {
+          return a.localeCompare(b);
+        });
       } catch (e) {
         console.log('error', e)
       }

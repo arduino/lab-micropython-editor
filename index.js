@@ -19,8 +19,6 @@ function listFolder(folder) {
     let filePath = path.resolve(folder, f)
     return !fs.lstatSync(filePath).isDirectory()
   })
-  // Filter out dot files
-  files = files.filter(f => f.indexOf('.') !== 0)
   return files
 }
 

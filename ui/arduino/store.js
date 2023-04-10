@@ -215,12 +215,14 @@ function store(state, emitter) {
         state.serialFiles = state.serialFiles.filter(
           f => f.indexOf('.') !== -1 // Only files with extensions
         )
+        // Filter out dot files
         state.serialFiles = state.serialFiles.filter(
-          f => f.indexOf('.') !== 0 // No dot files
+          f => f.indexOf('.') !== 0
         )
-        state.serialFiles.sort(function (a, b) {
-          return a.localeCompare(b);
-        });
+        // Sort alphabetically in case-insensitive fashion
+        state.serialFiles = state.serialFiles.sort(
+          (a, b) => a.localeCompare(b)
+        )
       } catch (e) {
         console.log('error', e)
       }
@@ -228,6 +230,12 @@ function store(state, emitter) {
     if (state.diskPath) {
       try {
         state.diskFiles = await disk.listFiles(state.diskPath)
+        // Filter out dot files
+        state.diskFiles = state.diskFiles.filter(f => f.indexOf('.') !== 0)
+        // Sort alphabetically in case-insensitive fashion
+        state.diskFiles = state.diskFiles.sort(
+          (a, b) => a.localeCompare(b)
+        )
       } catch (e) {
         console.log('error', e)
       }

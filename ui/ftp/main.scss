@@ -1,11 +1,32 @@
 * {
     box-sizing: border-box;
+    font-family: sans-serif;
+    font-size: var(--base-size);
 }
 html,
 body {
     margin: 0;
     width: 100%;
     height: 100%;
+
+    --base-size: 18px;
+    --brand-color: #008184;
+    --light-color: #FFFFFF;
+    --dark-color: #005C5F;
+    --dark-tone: #DAE3E3;
+    --light-tone: #ECF1F1;
+    --highlight-color: #F26727;
+
+    background: var(--light-tone);
+}
+
+main {
+  width: 100vw;
+  height: 100vh;
+}
+.window-wrapper {
+  width: 100%;
+  height: 100%;
 }
 
 .row {
@@ -28,19 +49,95 @@ body {
   align-items: center;
 }
 
-ul {
-    list-style: none;
-    padding: 0;
+.full-width {
+  width: 100%;
+}
+.full-height {
+  height: 100%;
+}
+
+.toolbar {
+  height: 100px;
+  padding-bottom: var(--base-size);
+
+  select {
+    width: 100%;
+  }
+
+  button {
+    width: 100%;
+  }
 }
 
 .file-panel {
-  width: 100%;
-  overflow: scroll;
-  height: 70vh;
+  padding: 40px;
+  width: calc(50% - 25px);
+}
+
+.list {
+  background: var(--light-color);
+  overflow: overlay;
+}
+
+.list-item {
+  padding: var(--base-size) 5px;
+  cursor: pointer;
+  .checkbox, input[type="checkbox"] {
+    display: inline-block;
+    width: 50px;
+    cursor: pointer;
+    text-align: center;
+  }
+  &:hover {
+    background: var(--dark-tone);
+  }
+}
+
+.navigation {
+  height: 100px;
+  background: var(--dark-tone);
+  padding: var(--base-size);
+  padding-bottom: var(--base-size);
+  overflow: overlay;
+  & > * {
+    margin-right: 10px;
+  }
 }
 
 .file-management {
-  width: 10%;
+  width: 50px;
+  button {
+    padding: 0;
+    width: 50px;
+    height: 50px;
+    margin: 5px 0;
+  }
+}
+
+
+select {
+  padding: 5px 30px;
+  border: none;
+  cursor: pointer;
+  background: var(--light-color);
+}
+
+button {
+  background: var(--brand-color);
+  color: var(--light-color);
+  border: none;
+  padding: 5px 30px;
+  cursor: pointer;
+}
+
+.window-overlay {
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  position: fixed;
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
   justify-content: center;
-  align-items: center;
 }

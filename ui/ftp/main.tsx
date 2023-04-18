@@ -1,53 +1,35 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import Toolbar from './components/toolbar/toolbar'
-import DiskNavigation from './components/navigation/diskNavigation'
-import DiskFiles from './components/files/diskFiles'
-import SerialNavigation from './components/navigation/serialNavigation'
-import SerialFiles from './components/files/serialFiles'
-import FileManagement from './components/files/fileManagement'
+import SerialView from './components/serialView.tsx'
+import FileManagementView from './components/fileManagementView.tsx'
+import DiskView from './components/diskView.tsx'
+import LoadingView from './components/loadingView.tsx'
 
 import { useMainLogic } from './main.logic.ts'
 
 const App: React.FC = () => {
   const {
     waiting,
-    toolbarLogic,
-    diskNavigationLogic,
-    diskFilesLogic,
-    serialNavigationLogic,
-    serialFilesLogic,
-    fileManagementLogic
+    serialLogic,
+    diskLogic,
+    fileManagementLogic,
+    loadingLogic
   } = useMainLogic()
-  if (waiting) {
-    return (
-      <>
-        <Toolbar toolbarLogic={toolbarLogic}></Toolbar>
-        WAIT!
-      </>
-    )
-  }
+
+  const overlay = (
+    <div className="window-overlay">
+      <div>Waiting</div>
+    </div>
+  )
   return (
     <>
-      <Toolbar toolbarLogic={toolbarLogic}></Toolbar>
-      <div className="row">
-        <div className="column">
-          <SerialNavigation navigationLogic={serialNavigationLogic}></SerialNavigation>
-          <div className="file-panel">
-            <SerialFiles serialFilesLogic={serialFilesLogic}></SerialFiles>
-          </div>
-        </div>
-        <div className="column file-management">
-          <FileManagement fileManagementLogic={fileManagementLogic} />
-        </div>
-        <div className="column">
-          <DiskNavigation navigationLogic={diskNavigationLogic}></DiskNavigation>
-          <div className="file-panel">
-            <DiskFiles diskFilesLogic={diskFilesLogic}></DiskFiles>
-          </div>
-        </div>
-      </div>
+    <div className="window-wrapper row">
+      <SerialView logic={serialLogic} />
+      <FileManagementView logic={fileManagementLogic} />
+      <DiskView logic={diskLogic} />
+    </div>
+    {waiting ? overlay : null}
     </>
   )
 }
@@ -56,6 +38,7 @@ window.addEventListener('load', () => {
   window.BridgeWindow.setWindowSize(900, 600)
   const container : HTMLElement | null = document.querySelector('main')
   const root = ReactDOM.createRoot(container)
+
   root.render(
     <React.StrictMode>
       <App />

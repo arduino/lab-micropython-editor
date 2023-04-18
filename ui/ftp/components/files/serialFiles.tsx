@@ -15,7 +15,7 @@ const SerialFiles: React.FC = ({ serialFilesLogic }) => {
   const onSelect = (folder) => () => selectFile([serialPath,folder].join('/'))
   const files = serialFiles.map((folder, i) => {
       const checked = selectedFiles
-                      .filter(f => f.device === Device.serial)
+                      .filter(f => f.device === DeviceType.serial)
                       .find(f => f.path === [serialPath,folder].join('/'))
       return (
         <li key={i}>

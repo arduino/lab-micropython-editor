@@ -15,7 +15,7 @@ const DiskFiles: React.FC = ({ diskFilesLogic }) => {
     const onSelect = (folder) => () => selectFile([diskPath,folder].join('/'))
     const files = diskFiles.map((folder, i) => {
         const checked = selectedFiles
-                        .filter(f => f.device === Device.disk)
+                        .filter(f => f.device === DeviceType.disk)
                         .find(f => f.path === [diskPath,folder].join('/'))
         return (
           <li key={i}>

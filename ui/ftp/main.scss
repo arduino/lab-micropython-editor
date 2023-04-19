@@ -91,6 +91,11 @@ main {
   &:hover {
     background: var(--dark-tone);
   }
+  &.checked {
+    background: var(--highlight-color);
+    color: var(--light-color);
+    font-weight: bold;
+  }
 }
 
 .navigation {

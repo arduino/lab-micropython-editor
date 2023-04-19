@@ -50,6 +50,9 @@ const Serial = {
   listFiles: async (folder) => {
     return await board.fs_ls(folder)
   },
+  ilistFiles: async (folder) => {
+    return await board.fs_ils(folder)
+  },
   loadFile: async (file) => {
     const output = await board.fs_cat(file)
     return output || ''

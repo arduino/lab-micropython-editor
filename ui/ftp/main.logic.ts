@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Device, File, AvailableDevices } from './main.type'
+import { DeviceType, File, FileType, AvailableDevices } from './main.type'
 
 export const useMainLogic = function() {
   const { BridgeSerial, BridgeDisk } = window
@@ -28,11 +28,31 @@ export const useMainLogic = function() {
   }
 
   const navigateSerial = async (newPath) => {
-    const files = await BridgeSerial.listFiles(newPath)
+    setWaiting(true)
     setSerialPath(newPath)
-    setSerialFiles(files)
+    await refreshSerialFiles(newPath)
     const newSelection = selectedFiles.filter(f => f.device !== DeviceType.serial)
     setSelectedFiles(newSelection)
+    setWaiting(false)
+  }
+
+  const refreshSerialFiles = async (path) => {
+    const detailedFiles = await BridgeSerial.ilistFiles(path)
+    const folders = detailedFiles.filter(f => f[1] === FileType.folder) || []
+    const files = detailedFiles.filter(f => f[1] === FileType.file) || []
+    const sortedFiles = folders.concat(files)
+      .map(f => ({
+        path: f[0],
+        type: (f[1] === FileType.folder) ? 'folder' : 'file',
+        size: f[3],
+        device: DeviceType.serial
+      })) || []
+    setSerialFiles(sortedFiles)
+  }
+
+  const refreshDiskFiles = async () => {
+    const files = await BridgeDisk.listFiles(diskPath)
+    setDiskFiles(files)
   }
 
   const refresh = async () => {
@@ -41,19 +61,12 @@ export const useMainLogic = function() {
     const devices = await BridgeSerial.loadPorts()
     setAvailableDevices(devices)
     // list serial files
-    if (connectedDevice) {
-      const files = await BridgeSerial.listFiles(serialPath)
-      setSerialFiles(files)
-    } else {
-      setSerialFiles([])
-    }
+    if (connectedDevice) await refreshSerialFiles(serialPath)
+    else setSerialFiles([])
     // list disk files
-    if (diskPath) {
-      const files = await BridgeDisk.listFiles(diskPath)
-      setDiskFiles(files)
-    } else {
-      setDiskFiles([])
-    }
+    if (diskPath) await refreshDiskFiles()
+    else setDiskFiles([])
+
     setWaiting(false)
   }
 
@@ -63,13 +76,12 @@ export const useMainLogic = function() {
     serialPath: serialPath,
     serialFiles: serialFiles,
     selectedFiles: selectedFiles,
-    connect: async (devicePath: String) => {
+    connect: async (port: String) => {
       setWaiting(true)
-      await BridgeSerial.connect(devicePath)
-      setConnectedDevice(devicePath)
+      await BridgeSerial.connect(port)
+      setConnectedDevice(port)
       setSerialPath('/')
-      const files = await BridgeSerial.listFiles('/')
-      setSerialFiles(files)
+      refreshSerialFiles(serialPath)
       setWaiting(false)
     },
     disconnect: async () => {
@@ -80,17 +92,13 @@ export const useMainLogic = function() {
       setSerialFiles([])
       setWaiting(false)
     },
-    selectFile: (path) => {
+    selectFile: (file: File) => {
       const serialFilesOnly = selectedFiles.filter(f => f.device === DeviceType.serial)
-      const selected = serialFilesOnly.find(f => f.path === path)
+      const selected = serialFilesOnly.find(f => f.path === file.path)
       if (selected) {
-        let newSelection = serialFilesOnly.filter(f => f.path !== path)
+        let newSelection = serialFilesOnly.filter(f => f.path !== file.path)
         setSelectedFiles(newSelection)
       } else {
-        let file = {
-          path: path,
-          device: DeviceType.serial
-        }
         serialFilesOnly.push(file)
         setSelectedFiles(serialFilesOnly.slice())
       }

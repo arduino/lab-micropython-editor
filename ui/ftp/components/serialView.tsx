@@ -2,6 +2,7 @@ import { React } from 'react'
 
 import {
   File,
+  DeviceType,
   AvailableDevice
 } from '../main.type.ts'
 
@@ -22,9 +23,12 @@ const SerialView: React.FC = ({ logic }) => {
   const {
     availableDevices = [],
     serialFiles = [],
+    selectedFiles = [],
     serialPath = '',
     connect,
-    disconnect
+    disconnect,
+    navigate,
+    selectFile
   } : SerialParams = logic()
 
   const onSelectDevice = (e) => {
@@ -36,16 +40,34 @@ const SerialView: React.FC = ({ logic }) => {
     }
   }
 
-  const ListItem = (file: File, i: number) => (
-    <div className="list-item" key={i}>
-      <input className="checkbox" type="checkbox" />
-      <span>{file}</span>
-    </div>
-  )
+  const ListItem = (file: File, i: number) => {
+    const onClick = () => {
+      if (file.type === 'file') {
+        selectFile(file)
+      } else {
+        navigate(serialPath + '/' + file.path)
+      }
+    }
+    const checked = selectedFiles
+      .filter(f => f.device === DeviceType.serial)
+      .find(f => f.path === file.path)
+    const icon = file.type === 'file'
+      ? <div className="checkbox">📄</div>
+      : <div className="checkbox">📁</div>
+    return (
+      <div className={`list-item ${checked?'checked':''}`} key={i} onClick={onClick}>
+        {icon}<span>{file.path}</span>
+      </div>
+    )
+  }
 
-  const NavigationItem = (name: string, i:number) => (
-    <button key={i}>{name}</button>
-  )
+  const NavigationItem = (name: string, i:number) => {
+    const crumbs = serialPath.split('/').filter(c => c !== '')
+    const path = '/' + crumbs.slice(0, i).join('/')
+    return (
+      <button key={i} onClick={() => navigate(path)}>{name}</button>
+    )
+  }
   let serialPathArray = []
   if (serialPath) {
     serialPathArray = ['/'].concat(

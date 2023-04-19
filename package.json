@@ -38,9 +38,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"about-window": "^1.15.2",
-		"micropython.js": "github:murilopolese/micropython.js#v1.2.2",
-		"mkdirp": "^1.0.3",
-		"serialport": "^10.4.0"
+		"micropython.js": "github:arduino/micropython.js#1.3.0",
+		"mkdirp": "^1.0.3"
 	},
 	"engines": {
 		"node": "18"

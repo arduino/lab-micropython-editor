@@ -139,6 +139,10 @@ button {
   padding: 5px 30px;
   cursor: pointer;
 }
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .window-overlay {
   width: 100vw;

@@ -144,6 +144,8 @@ export const useMainLogic = function() {
     navigate: navigateDisk
   })
   const fileManagementLogic = () => ({
+    canUpload: selectedFiles.find(f => f.device === DeviceType.disk) && serialPath,
+    canDownload: selectedFiles.find(f => f.device === DeviceType.serial) && diskPath,
     upload: async () => {
       setWaiting(true)
       try {
@@ -180,7 +182,7 @@ export const useMainLogic = function() {
             await BridgeDisk.removeFile(diskPath, filename)
           }
           if (f.device === DeviceType.serial) {
-            await BridgeSerial.removeFile(f.path)
+            await BridgeSerial.removeFile(serialPath + '/' + f.path)
           }
         }
         refresh()

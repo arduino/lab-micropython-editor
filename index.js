@@ -26,13 +26,31 @@ function listFolder(folder, filesOnly) {
   return files
 }
 
+function ilistFolder(folder, filesOnly) {
+  let files = fs.readdirSync(path.resolve(folder))
+  files = files.map(f => {
+    let filePath = path.resolve(folder, f)
+    return {
+      path: f,
+      type: fs.lstatSync(filePath).isDirectory() ? 'folder' : 'file'
+    }
+  })
+  // Filter out directories
+  if (filesOnly) {
+    files = files.filter(f => f.type === 'file')
+  }
+  // Filter out dot files
+  files = files.filter(f => f.path.indexOf('.') !== 0)
+  return files
+}
+
 // LOCAL FILE SYSTEM ACCESS
 ipcMain.handle('open-folder', async (event) => {
   console.log('ipcMain', 'open-folder')
   const folder = await openFolderDialog()
   let files = []
   if (folder) {
-    files = listFolder(folder)
+    files = ilistFolder(folder)
   }
   return { folder, files }
 })
@@ -41,6 +59,12 @@ ipcMain.handle('list-files', async (event, folder) => {
   console.log('ipcMain', 'list-files', folder)
   if (!folder) return []
   return listFolder(folder)
+})
+
+ipcMain.handle('ilist-files', async (event, folder) => {
+  console.log('ipcMain', 'ilist-files', folder)
+  if (!folder) return []
+  return ilistFolder(folder)
 })
 
 ipcMain.handle('load-file', (event, folder, filename) => {

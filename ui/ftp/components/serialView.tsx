@@ -15,7 +15,6 @@ type SerialParams = () => {
   connect: (path: string) => void
   disconnect: () => void
   selectFile: (path: string) => void
-  refresh: () => void
   navigate: (path: string) => void
 }
 

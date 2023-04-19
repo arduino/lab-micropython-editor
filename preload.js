@@ -87,6 +87,9 @@ const Disk = {
   listFiles: async (folder) => {
     return ipcRenderer.invoke('list-files', folder)
   },
+  ilistFiles: async (folder) => {
+    return ipcRenderer.invoke('ilist-files', folder)
+  },
   loadFile: async (folder, file) => {
     let content = await ipcRenderer.invoke('load-file', folder, file)
     return new TextDecoder().decode(content)

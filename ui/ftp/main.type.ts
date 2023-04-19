@@ -5,7 +5,7 @@ export type File = {
     path: String
     type: FileType
     device: Device
-    size: Number
+    size?: Number
 }
 
 export type AvailableDevice = {

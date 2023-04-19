@@ -82,6 +82,7 @@ main {
 .list-item {
   padding: var(--base-size) 5px;
   cursor: pointer;
+  display: flex;
   .checkbox, input[type="checkbox"] {
     display: inline-block;
     width: 50px;
@@ -95,6 +96,10 @@ main {
     background: var(--highlight-color);
     color: var(--light-color);
     font-weight: bold;
+
+    &:hover {
+      opacity: 0.85;
+    }
   }
 }
 

@@ -20,11 +20,12 @@ export const useMainLogic = function() {
 
   // HELPERS
   const navigateDisk = async (newPath) => {
-    const files = await BridgeDisk.listFiles(newPath)
+    setWaiting(true)
     setDiskPath(newPath)
-    setDiskFiles(files)
+    await refreshDiskFiles(newPath)
     const newSelection = selectedFiles.filter(f => f.device !== DeviceType.disk)
     setSelectedFiles(newSelection)
+    setWaiting(false)
   }
 
   const navigateSerial = async (newPath) => {
@@ -36,11 +37,12 @@ export const useMainLogic = function() {
     setWaiting(false)
   }
 
-  const refreshSerialFiles = async (path) => {
+  const refreshSerialFiles = async (path: String) => {
     const detailedFiles = await BridgeSerial.ilistFiles(path)
     const folders = detailedFiles.filter(f => f[1] === FileType.folder) || []
     const files = detailedFiles.filter(f => f[1] === FileType.file) || []
-    const sortedFiles = folders.concat(files)
+    const sortedFiles = folders
+      .concat(files)
       .map(f => ({
         path: f[0],
         type: (f[1] === FileType.folder) ? 'folder' : 'file',
@@ -50,9 +52,18 @@ export const useMainLogic = function() {
     setSerialFiles(sortedFiles)
   }
 
-  const refreshDiskFiles = async () => {
-    const files = await BridgeDisk.listFiles(diskPath)
-    setDiskFiles(files)
+  const refreshDiskFiles = async (path: String) => {
+    const detailedFiles = await BridgeDisk.ilistFiles(path)
+    const folders = detailedFiles.filter(f => f.type === 'folder') || []
+    const files = detailedFiles.filter(f => f.type === 'file') || []
+    const sortedFiles = folders
+      .concat(files)
+      .map(f => ({
+        path: f.path,
+        type: f.type,
+        device: DeviceType.disk
+      }))
+    setDiskFiles(sortedFiles)
   }
 
   const refresh = async () => {
@@ -64,7 +75,7 @@ export const useMainLogic = function() {
     if (connectedDevice) await refreshSerialFiles(serialPath)
     else setSerialFiles([])
     // list disk files
-    if (diskPath) await refreshDiskFiles()
+    if (diskPath) await refreshDiskFiles(diskPath)
     else setDiskFiles([])
 
     setWaiting(false)
@@ -103,7 +114,6 @@ export const useMainLogic = function() {
         setSelectedFiles(serialFilesOnly.slice())
       }
     },
-    refresh: refresh,
     navigate: navigateSerial,
   })
   const diskLogic = () => ({
@@ -113,20 +123,21 @@ export const useMainLogic = function() {
     openFolder: async () => {
       const { folder, files } = await BridgeDisk.openFolder()
       setDiskPath(folder)
-      setDiskFiles(files)
+      await refreshDiskFiles(folder)
     },
-    selectFile: (path) => {
+    selectFile: (file: File) => {
       const diskFilesOnly = selectedFiles.filter(f => f.device === DeviceType.disk)
-      const selected = diskFilesOnly.find(f => f.path === path)
+      const selected = diskFilesOnly.find(f => f.path === file.path)
       if (selected) {
-        let newSelection = diskFilesOnly.filter(f => f.path !== path)
+        let newSelection = diskFilesOnly.filter(f => f.path !== file.path)
         setSelectedFiles(newSelection)
       } else {
-        let file = {
-          path: path,
+        let f = {
+          path: file.path,
+          type: file.type,
           device: DeviceType.disk
         }
-        diskFilesOnly.push(file)
+        diskFilesOnly.push(f)
         setSelectedFiles(diskFilesOnly.slice())
       }
     },

@@ -202,6 +202,7 @@ export const useMainLogic = function() {
     serialLogic,
     diskLogic,
     fileManagementLogic,
-    loadingLogic
+    loadingLogic,
+    refresh
   }
 }

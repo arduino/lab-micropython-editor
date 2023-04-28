@@ -1,4 +1,5 @@
 export enum DeviceType { serial, disk }
+
 export enum FileType { file = 0x8000, folder = 0x4000 }
 
 export type File = {

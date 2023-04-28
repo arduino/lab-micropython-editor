@@ -1,4 +1,5 @@
 import React from 'react'
+import { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 
 import SerialView from './components/serialView.tsx'
@@ -14,8 +15,13 @@ const App: React.FC = () => {
     serialLogic,
     diskLogic,
     fileManagementLogic,
-    loadingLogic
+    loadingLogic,
+    refresh
   } = useMainLogic()
+
+  useEffect(() => {
+    refresh()
+  }, [])
 
   const overlay = (
     <div className="window-overlay">

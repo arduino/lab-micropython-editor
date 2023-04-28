@@ -104,14 +104,23 @@ main {
 }
 
 .navigation {
-  height: 100px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  height: calc(var(--base-size) * 5);
   background: var(--dark-tone);
   padding: var(--base-size);
   padding-bottom: var(--base-size);
-  overflow: overlay;
+  overflow: hidden;
   & > * {
     margin-right: 10px;
   }
+}
+
+.breadcrumb {
+  padding: 0.5em;
+  background: var(--light-tone);
+  cursor: pointer;
 }
 
 .file-management {

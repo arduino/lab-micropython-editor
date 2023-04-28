@@ -6,6 +6,8 @@ import {
   AvailableDevice
 } from '../main.type.ts'
 
+import BreadCrumb from './ui/BreadCrumb'
+
 type SerialParams = () => {
   availableDevices: AvailableDevices[]
   connectedDevice: string
@@ -60,20 +62,6 @@ const SerialView: React.FC = ({ logic }) => {
     )
   }
 
-  const NavigationItem = (name: string, i:number) => {
-    const crumbs = serialPath.split('/').filter(c => c !== '')
-    const path = '/' + crumbs.slice(0, i).join('/')
-    return (
-      <button key={i} onClick={() => navigate(path)}>{name}</button>
-    )
-  }
-  let serialPathArray = []
-  if (serialPath) {
-    serialPathArray = ['/'].concat(
-      serialPath.split('/').filter(s => s !== '')
-    )
-  }
-
   return (
     <div className="column file-panel">
       <div className="toolbar row">
@@ -83,7 +71,7 @@ const SerialView: React.FC = ({ logic }) => {
         </select>
       </div>
       <div className="row full-width navigation">
-        {serialPathArray.map(NavigationItem)}
+        {BreadCrumb(serialPath, navigate)}
       </div>
       <div className="column full-width list full-height">
         {serialFiles.map(ListItem)}

@@ -5,6 +5,8 @@ import {
   DeviceType
 } from '../main.type.ts'
 
+import BreadCrumb from './ui/BreadCrumb'
+
 type DiskViewParams = {
   waiting: Boolean,
   diskPath: String
@@ -47,26 +49,13 @@ const DiskView: React.FC = ({ logic }) => {
       )
     }
 
-    const NavigationItem = (name: string, i:number) => {
-      const crumbs = diskPath.split('/').filter(c => c !== '')
-      const path = '/' + crumbs.slice(0, i).join('/')
-      return (
-        <button key={i} onClick={() => navigate(path)}>{name}</button>
-      )
-    }
-    let diskPathArray = []
-    if (diskPath) {
-      diskPathArray = ['/'].concat(
-        diskPath.split('/').filter(s => s !== '')
-      )
-    }
     return (
       <div className="column file-panel">
         <div className="toolbar row full-width">
             <button onClick={openFolder}>Select folder</button>
         </div>
         <div className="row full-width navigation">
-          {diskPathArray.map(NavigationItem)}
+          {BreadCrumb(diskPath, navigate)}
         </div>
         <div className="column full-width full-height list">
           {diskFiles.map(ListItem)}

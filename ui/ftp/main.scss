@@ -111,16 +111,29 @@ main {
   background: var(--dark-tone);
   padding: var(--base-size);
   padding-bottom: var(--base-size);
-  overflow: hidden;
+  overflow: overlay;
   & > * {
     margin-right: 10px;
   }
 }
 
 .breadcrumb {
+  position: relative;
   padding: 0.5em;
+  padding-left: 2.5rem;
   background: var(--light-tone);
   cursor: pointer;
+  overflow: hidden;
+  height: 2rem;
+  text-overflow: ellipsis;
+}
+
+.breadcrumb::after {
+  content: '📁';
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .file-management {

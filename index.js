@@ -131,8 +131,8 @@ function createWindow () {
     }
   })
   // and load the index.html of the app.
-  win.loadFile('ui/editor/index.html')
-  // win.loadFile('ui/ftp/dist/index.html')
+  // win.loadFile('ui/editor/index.html')
+  win.loadFile('ui/ftp/dist/index.html')
 }
 
 // TODO: Loading splash screen

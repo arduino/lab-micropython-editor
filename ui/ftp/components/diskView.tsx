@@ -6,6 +6,7 @@ import {
 } from '../main.type.ts'
 
 import BreadCrumb from './ui/BreadCrumb'
+import NavigateUp from './ui/NavigateUp'
 
 type DiskViewParams = {
   waiting: Boolean,
@@ -54,10 +55,8 @@ const DiskView: React.FC = ({ logic }) => {
         <div className="toolbar row full-width">
             <button onClick={openFolder}>Select folder</button>
         </div>
-        <div className="row full-width navigation">
-          {BreadCrumb(diskPath, navigate)}
-        </div>
         <div className="column full-width full-height list">
+          {NavigateUp(diskPath, navigate)}
           {diskFiles.map(ListItem)}
         </div>
       </div>

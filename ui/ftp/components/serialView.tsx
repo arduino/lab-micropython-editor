@@ -7,6 +7,7 @@ import {
 } from '../main.type.ts'
 
 import BreadCrumb from './ui/BreadCrumb'
+import NavigateUp from './ui/NavigateUp'
 
 type SerialParams = () => {
   availableDevices: AvailableDevices[]
@@ -62,6 +63,7 @@ const SerialView: React.FC = ({ logic }) => {
     )
   }
 
+
   return (
     <div className="column file-panel">
       <div className="toolbar row">
@@ -70,10 +72,8 @@ const SerialView: React.FC = ({ logic }) => {
           {availableDevices.map((d, i) => <option key={i}>{d.path}</option>)}
         </select>
       </div>
-      <div className="row full-width navigation">
-        {BreadCrumb(serialPath, navigate)}
-      </div>
       <div className="column full-width list full-height">
+        {NavigateUp(serialPath, navigate)}
         {serialFiles.map(ListItem)}
       </div>
     </div>

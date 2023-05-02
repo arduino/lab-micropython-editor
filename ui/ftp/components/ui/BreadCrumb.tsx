@@ -6,9 +6,6 @@ const BreadCrumb = (path: string, navigate: (p: string) => void) => {
       path.split('/').filter(s => s !== '')
     )
   }
-  if (pathArray.length > 2) {
-    pathArray = pathArray.slice(-3)
-  }
   return pathArray.map((name, i) => {
     const crumbs = path.split('/').filter(c => c !== '')
     const p = '/' + crumbs.slice(0, i).join('/')

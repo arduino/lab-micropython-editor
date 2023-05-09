@@ -69,6 +69,7 @@ function store(state, emitter) {
     state.isTerminalOpen = false
     state.serialFiles = []
     emitter.emit('render')
+    resizeEditor(state)
   })
   emitter.on('connect', async (path) => {
     log('connect')

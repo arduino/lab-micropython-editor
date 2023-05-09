@@ -59,6 +59,7 @@ img {
   justify-content: center;
   align-items: center;
   margin: 0 0.2rem;
+  cursor: pointer;
 }
 
 .toolbar-button-wrapper.selected .toolbar-button {
@@ -184,7 +185,7 @@ img {
 }
 #panel #handle {
   position: relative;
-  height: 2rem;
+  height: 2.5rem;
   background: var(--teal);
   cursor: n-resize;
   display: flex;
@@ -205,7 +206,8 @@ img {
   user-select: none;
   width: 1.5rem;
   height: 1.5rem;
-  line-height: 1rem;
+  border-radius: 100%;
+  line-height: 1.75rem;
   background: var(--white-faded);
   margin: 0 0.25rem;
 }
@@ -215,6 +217,7 @@ img {
   width: 100vw;
   height: 100%;
   background: black;
+  padding: 0 0.5rem;
 }
 
 #files {
@@ -223,7 +226,7 @@ img {
   background: var(--white);
   display: flex;
   flex-direction: row;
-  padding: 1rem;
+  padding: 0.5rem 1rem 1rem 1rem;
   overflow: hidden;
 }
 
@@ -231,16 +234,18 @@ img {
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0 1rem 1rem 1rem;
   width: 45%;
 }
 
 #files .file-list .path {
-  height: 2.5rem;
+  /* height: 2.5rem; */
   color: var(--black);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 0.5rem;
+  padding: 0.25rem 0;
 }
 
 #files .toolbar-label {
@@ -279,8 +284,9 @@ img {
 }
 
 #files .file-controls .toolbar-button {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
 }
 
 #message {

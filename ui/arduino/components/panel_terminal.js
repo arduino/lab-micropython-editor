@@ -26,12 +26,12 @@ class XTerm extends Component {
   }
 
   resizeTerm() {
-    let handleSize = 2 * 0.0225 * window.innerHeight
+    let handleSize = 36
     const parentStyle = window.getComputedStyle(document.querySelector('#panel'))
     const parentWidth = parseInt(parentStyle.getPropertyValue('width'))
     const parentHeight = parseInt(parentStyle.getPropertyValue('height'))
     const cols = Math.floor(parentWidth / this.term._core._renderService.dimensions.actualCellWidth)
-    const rows = Math.floor((parentHeight-handleSize) / this.term._core._renderService.dimensions.actualCellHeight)
+    const rows = Math.floor((parentHeight-handleSize) / this.term._core._renderService.dimensions.actualCellHeight) - 1
     this.term.resize(cols, rows)
   }
 }

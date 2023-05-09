@@ -23,7 +23,7 @@ function store(state, emitter) {
   state.selectedFile = null
   state.selectedDevice = 'disk'
 
-  state.diskPath = null
+  state.diskPath = localStorage.getItem('diskPath')
   state.serialPath = null
 
   state.isConnected = false
@@ -202,6 +202,9 @@ function store(state, emitter) {
   emitter.on('open-folder', async () => {
     log('open-folder')
     let { folder, files } = await disk.openFolder()
+    // disk.openFolder() returns *string* 'null' because of `ipc`
+    folder = folder === 'null' ? null : folder
+    localStorage.setItem('diskPath', folder)
     state.diskPath = folder
     state.diskFiles = files
     if (!state.isFilesOpen) emitter.emit('show-files')
@@ -238,6 +241,7 @@ function store(state, emitter) {
           (a, b) => a.localeCompare(b)
         )
       } catch (e) {
+        state.diskPath = null
         console.log('error', e)
       }
     }

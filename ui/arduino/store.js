@@ -202,11 +202,11 @@ function store(state, emitter) {
   emitter.on('open-folder', async () => {
     log('open-folder')
     let { folder, files } = await disk.openFolder()
-    // disk.openFolder() returns *string* 'null' because of `ipc`
-    folder = folder === 'null' ? null : folder
-    localStorage.setItem('diskPath', folder)
-    state.diskPath = folder
-    state.diskFiles = files
+    if (folder !== 'null' && folder !== null) {
+      localStorage.setItem('diskPath', folder)
+      state.diskPath = folder
+      state.diskFiles = files
+    }
     if (!state.isFilesOpen) emitter.emit('show-files')
     emitter.emit('render')
   })

@@ -48,18 +48,29 @@ function Toolbar(state, emit) {
     onclick: () => emit('open-folder')
   })
 
-  const canSaveBoard = state.isConnected 
-    && state.selectedDevice === 'serial' 
-    && state.selectedFile
-  const canSaveDisk = state.selectedDevice === 'disk' 
-    && state.selectedFile 
-    && state.diskPath
-  const save = Button({
+  let save = Button({
     icon: 'icons/Save.svg',
     label: 'Save',
-    disabled: !canSaveBoard && !canSaveDisk,
-    onclick: () => emit('save')
+    disabled: true,
+    onclick: () => false
   })
+  if (state.selectedDevice === 'serial') {
+    const canSaveBoard = state.isConnected && state.selectedFile
+    save = Button({
+      icon: 'icons/Save.svg',
+      label: 'Save',
+      disabled: !canSaveDisk,
+      onclick: () => emit('save')
+    })
+  } else if (state.selectedDevice === 'disk') {
+    const canSaveDisk = state.selectedFile && state.diskPath
+    save = Button({
+      icon: 'icons/Save.svg',
+      label: 'Save',
+      disabled: !canSaveDisk,
+      onclick: () => emit('save')
+    })
+  }
 
   const terminal = Button({
     icon: 'icons/Output.svg',

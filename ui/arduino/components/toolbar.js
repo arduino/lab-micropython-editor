@@ -59,7 +59,7 @@ function Toolbar(state, emit) {
     save = Button({
       icon: 'icons/Save.svg',
       label: 'Save',
-      disabled: !canSaveDisk,
+      disabled: !canSaveBoard,
       onclick: () => emit('save')
     })
   } else if (state.selectedDevice === 'disk') {

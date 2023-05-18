@@ -20,7 +20,8 @@ const Serial = {
       await board.exit_raw_repl()
     }
     await board.enter_raw_repl()
-    let result = await board.exec_raw({ command: code })
+    // Prevent executing empty string
+    let result = await board.exec_raw({ command: code || '#' })
     await board.exit_raw_repl()
     return Promise.resolve(result)
   },

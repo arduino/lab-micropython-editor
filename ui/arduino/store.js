@@ -68,6 +68,11 @@ function store(state, emitter) {
     state.serialPath = null
     state.isTerminalOpen = false
     state.serialFiles = []
+
+    if (state.selectedDevice === 'serial') {
+      state.selectedDevice = 'disk'
+    }
+
     emitter.emit('render')
     resizeEditor(state)
   })

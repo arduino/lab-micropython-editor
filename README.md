@@ -24,7 +24,7 @@ This project is sponsored by Arduino, based on original work by Murilo Polese. T
 
 Arduino Lab for MicroPython is an [Electron](https://www.electronjs.org/) app that has its main purpose to communicate over serial with a microprocessor running [MicroPython](https://micropython.org/). All Electron code is at `/index.js`.
 
-All operations over serial are abstracted and packaged on `/micropython.js` which is an attempt of porting `pyboard.py`. The port has its [own repository](https://github.com/murilopolese/micropython.js) but for the sake of simplicity and transparency, `micropython.js` is committed as source code.
+All operations over serial are abstracted and packaged on `/micropython.js` which is an attempt of porting `pyboard.py`. The port has its [own repository](https://github.com/arduino/micropython.js) but for the sake of simplicity and transparency, `micropython.js` is committed as source code.
 
 The User Interface (UI) source code stays inside `/ui` folder and is completely independent of the Electron code.
 
@@ -39,7 +39,6 @@ At the root of the repository you will find:
 - `/scripts`: Scripts executed during the build process.
 - `/ui`: Available user interfaces.
 - `/index.js`: Main Electron code.
-- `/micropython.js`: Serial connection abstraction.
 - `/preload.js`: Creates Disk and Serial APIs on Electron's main process and exposes it to Electron's renderer process (context bridge).
 
 ## Arduino UI
@@ -82,4 +81,3 @@ Some changes on the Electron code will require reopening the app but all UI chan
 ## Disclaimer
 
 This software is provided “as is” and we make no express or implied warranties whatsoever with respect to its functionality, operability, or use, including, without limitation, any implied warranties of merchantability, fitness for a particular purpose, or infringement. We expressly disclaim any liability whatsoever for any direct, indirect, consequential, incidental or special damages, including, without limitation, lost revenues, lost profits, losses resulting from business interruption or loss of data, regardless of the form of action or legal theory under which the liability may be asserted, even if advised of the possibility or likelihood of such damages.
-

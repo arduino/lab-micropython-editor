@@ -1,14 +1,6 @@
 const log = console.log
 const DEFAULT_PANEL_HEIGHT = '15rem'
 
-function resizeEditor(state) {
-  const el = state.cache(AceEditor, 'editor').element
-  if (state.isTerminalOpen || state.isFilesOpen) {
-    el.style.height = `calc(100% - ${state.panelHeight || DEFAULT_PANEL_HEIGHT})`
-  } else {
-    el.style.height = '100%'
-  }
-}
 
 function store(state, emitter) {
   const serial = window.BridgeSerial
@@ -28,7 +20,6 @@ function store(state, emitter) {
 
   state.isConnected = false
   state.isPortDialogOpen = false
-  state.isNewFileDialogOpen = false
   state.isTerminalOpen = false
   state.isFilesOpen = false
   state.isEditingFilename = false
@@ -49,8 +40,9 @@ function store(state, emitter) {
   emitter.on('open-port-dialog', async () => {
     log('open-port-dialog')
     emitter.emit('disconnect')
-    state.ports = await serial.loadPorts()
     state.isPortDialogOpen = true
+    emitter.emit('render')
+    state.ports = await serial.loadPorts()
     emitter.emit('render')
   })
   emitter.on('close-port-dialog', async () => {
@@ -77,11 +69,13 @@ function store(state, emitter) {
     resizeEditor(state)
   })
   emitter.on('connect', async (path) => {
-    log('connect')
-    state.serialPath = path
+    log('connect', path)
+
     await serial.connect(path)
     emitter.emit('message', 'Connected', 150)
     await serial.stop()
+    // This must be set after the serial operations
+    state.serialPath = path
 
     let term = state.cache(XTerm, 'terminal').term
     if (!state.isTerminalBound) {
@@ -99,7 +93,9 @@ function store(state, emitter) {
     state.isConnected = true
     emitter.emit('update-files')
     emitter.emit('close-port-dialog')
-    emitter.emit('show-terminal')
+    if (!state.isFilesOpen) {
+      emitter.emit('show-terminal')
+    }
     emitter.emit('render')
   })
 
@@ -125,16 +121,6 @@ function store(state, emitter) {
   })
 
   // FILE MANAGEMENT
-  emitter.on('open-new-file-dialog', () => {
-    log('open-new-file-dialog')
-    state.isNewFileDialogOpen = true
-    emitter.emit('render')
-  })
-  emitter.on('close-new-file-dialog', () => {
-    log('close-new-file-dialog')
-    state.isNewFileDialogOpen = false
-    emitter.emit('render')
-  })
   emitter.on('new-file', (dev) => {
     log('select-device', dev)
     state.selectedDevice = dev
@@ -168,9 +154,11 @@ function store(state, emitter) {
     if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
       if (state.selectedDevice === 'serial') {
         await serial.removeFile(state.selectedFile)
+        emitter.emit('new-file', 'serial')
       }
       if (state.selectedDevice === 'disk') {
         await disk.removeFile(state.diskPath, state.selectedFile)
+        emitter.emit('new-file', 'disk')
       }
       emitter.emit('update-files')
       emitter.emit('render')
@@ -315,14 +303,18 @@ function store(state, emitter) {
   emitter.on('start-resizing-panel', () => {
     log('start-resizing-panel')
     function handleMouseMove(e) {
-      let height = window.innerHeight - e.clientY
+      let height = Math.max(window.innerHeight - e.clientY, 200)
+      height = Math.min(height, window.innerHeight - 200)
       state.panelHeight = `${height}px`
       emitter.emit('render')
       resizeEditor(state)
     }
+    function stopMouseListener() {
+      window.removeEventListener('mousemove', handleMouseMove)
+    }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', (e) => {
-      window.removeEventListener('mousemove', handleMouseMove)
+      stopMouseListener()
     }, { once: true })
   })
 
@@ -419,4 +411,14 @@ function store(state, emitter) {
     state.cache(AceEditor, 'editor').render()
   })
 
+}
+
+
+function resizeEditor(state) {
+  const el = state.cache(AceEditor, 'editor').element
+  if (state.isTerminalOpen || state.isFilesOpen) {
+    el.style.height = `calc(100% - ${state.panelHeight || DEFAULT_PANEL_HEIGHT})`
+  } else {
+    el.style.height = '100%'
+  }
 }

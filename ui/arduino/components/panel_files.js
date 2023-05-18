@@ -22,29 +22,61 @@ function PanelFiles(state, emit) {
                     && state.diskPath
                     && state.selectedDevice === 'serial'
                     && state.selectedFile !== null
+  let canRemoveSerial = state.isConnected
+                    && state.selectedDevice === 'serial'
+                    && state.selectedFile !== null
+  let canRemoveDisk = state.selectedDevice === 'disk'
+                    && state.selectedFile !== null
+
   let upload = Button({
-    label: 'Upload',
     icon: 'icons/Copy-Left.svg',
     onclick: () => emit('upload'),
     disabled: !uploadEnabled
   })
   let download = Button({
-    label: 'Download',
     icon: 'icons/Copy-Right.svg',
     onclick: () => emit('download'),
     disabled: !downloadEnabled
   })
-  let remove = Button({
-    label: 'Remove',
+  let refresh = Button({
+    icon: 'icons/Reboot.svg',
+    onclick: () => emit('update-files'),
+    disabled: !(state.isConnected || state.diskPath)
+  })
+
+  let removeSerial = Button({
     icon: 'icons/Delete.svg',
     onclick: () => emit('remove'),
-    disabled: state.selectedFile === null
+    disabled: !canRemoveSerial
+  })
+  let newSerial = Button({
+    icon: 'icons/New.svg',
+    onclick: () => emit('new-file', 'serial'),
+    disabled: !state.isConnected
+  })
+
+  let removeDisk = Button({
+    icon: 'icons/Delete.svg',
+    onclick: () => emit('remove'),
+    disabled: !canRemoveDisk
+  })
+  let newDisk = Button({
+    icon: 'icons/New.svg',
+    onclick: () => emit('new-file', 'disk'),
+    disabled: !state.diskPath
   })
 
   return html`
     <div id="files">
       <div class="file-list">
-        <span class="path">Board: ${state.serialPath}</span>
+        <div class="path">
+          <a class="full" href="#" onclick=${() => emit('open-port-dialog')}>
+            <span>${state.isConnected ? Icon('icons/Connect.svg') : Icon('icons/Disconnect.svg')}</span>
+            <span>${state.isConnected ? state.serialPath : 'Connect'}</span>
+          </a>
+          ${removeSerial}
+          ${newSerial}
+        </div>
         <ul>
           ${state.serialFiles.map((file) => ListItem('serial', file))}
         </ul>
@@ -52,10 +84,17 @@ function PanelFiles(state, emit) {
       <div class="file-controls">
         ${upload}
         ${download}
-        ${remove}
+        ${refresh}
       </div>
       <div class="file-list">
-        <span class="path">Disk: ${state.diskPath}</span>
+        <div class="path">
+          <a class="full" href="#" onclick=${() => emit('open-folder')}>
+            <span>${Icon('icons/Open.svg')}</span>
+            <span>${state.diskPath ? state.diskPath : 'Select Folder'}</span>
+          </a>
+          ${removeDisk}
+          ${newDisk}
+        </div>
         <ul>
           ${state.diskFiles.map((file) => ListItem('disk', file))}
         </ul>

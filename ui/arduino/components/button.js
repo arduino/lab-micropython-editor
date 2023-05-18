@@ -9,11 +9,11 @@ function Button(param) {
   } = param || {}
   return html`
     <div
-      class="toolbar-button-wrapper ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}"
+      class="button-wrapper ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}"
       onclick=${onclick}
       >
       <button
-        class="toolbar-button"
+        class="button"
         disabled=${disabled}
         >
         ${Icon(icon)}

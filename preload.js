@@ -49,8 +49,10 @@ const Serial = {
     board.serial.on('data', fn)
   },
   listFiles: async () => {
-    const output = await board.fs_ls()
-    return output
+    return await board.fs_ls()
+  },
+  ilistFiles: async () => {
+    return await board.fs_ils()
   },
   loadFile: async (file) => {
     const output = await board.fs_cat(file)
@@ -85,6 +87,9 @@ const Disk = {
   },
   listFiles: async (folder) => {
     return ipcRenderer.invoke('list-files', folder)
+  },
+  ilistFiles: async (folder) => {
+    return ipcRenderer.invoke('ilist-files', folder)
   },
   loadFile: async (folder, file) => {
     let content = await ipcRenderer.invoke('load-file', folder, file)

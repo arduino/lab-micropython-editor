@@ -1,15 +1,23 @@
 function PanelFiles(state, emit) {
   function ListItem(device, file) {
     let selectedClass = ''
-    if (device === state.selectedDevice && file === state.selectedFile) {
+    if (device === state.selectedDevice && file.path === state.selectedFile) {
       selectedClass = 'selected'
+    }
+    function onClick() {
+      if (file.type === 'folder') {
+        console.log('clicked on a folder')
+      } else {
+        emit('select-file', device, file.path)
+      }
     }
     return html`
       <li
-        onclick=${() => emit('select-file', device, file)}
+        onclick=${onClick}
         class=${selectedClass}
         >
-        ${file}
+        ${file.type === 'folder' ? '📁' : '📄'}
+        ${file.path}
       </li>
     `
   }

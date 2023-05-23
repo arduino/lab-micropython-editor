@@ -63,6 +63,7 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'serial') {
       state.selectedDevice = 'disk'
+      state.selectedFile = null
     }
 
     emitter.emit('render')
@@ -208,33 +209,38 @@ function store(state, emitter) {
     if (state.isConnected) {
       await serial.stop()
       try {
-        state.serialFiles = await serial.listFiles()
-        state.serialFiles = state.serialFiles.filter(
-          f => f.indexOf('.') !== -1 // Only files with extensions
-        )
+        const files = await serial.ilistFiles()
+        state.serialFiles = files.map(f => ({
+          path: f[0],
+          type: f[1] === 0x4000 ? 'folder' : 'file'
+        }))
         // Filter out dot files
         state.serialFiles = state.serialFiles.filter(
-          f => f.indexOf('.') !== 0
+          f => f.path.indexOf('.') !== 0
         )
         // Sort alphabetically in case-insensitive fashion
         state.serialFiles = state.serialFiles.sort(
-          (a, b) => a.localeCompare(b)
+          (a, b) => a.path.localeCompare(b.path)
         )
       } catch (e) {
+        state.serialPath = null
+        state.serialFiles = []
         console.log('error', e)
       }
     }
     if (state.diskPath) {
       try {
-        state.diskFiles = await disk.listFiles(state.diskPath)
+        state.diskFiles = await disk.ilistFiles(state.diskPath)
         // Filter out dot files
-        state.diskFiles = state.diskFiles.filter(f => f.indexOf('.') !== 0)
+        state.diskFiles = state.diskFiles.filter(f => f.path.indexOf('.') !== 0)
         // Sort alphabetically in case-insensitive fashion
         state.diskFiles = state.diskFiles.sort(
-          (a, b) => a.localeCompare(b)
+          (a, b) => a.path.localeCompare(b.path)
         )
       } catch (e) {
         state.diskPath = null
+        state.diskFiles = []
+        localStorage.setItem('diskPath', null)
         console.log('error', e)
       }
     }

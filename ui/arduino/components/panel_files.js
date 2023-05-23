@@ -6,7 +6,7 @@ function PanelFiles(state, emit) {
     }
     function onClick() {
       if (file.type === 'folder') {
-        console.log('clicked on a folder')
+        emit('navigate-to', device, file.path)
       } else {
         emit('select-file', device, file.path)
       }
@@ -86,6 +86,9 @@ function PanelFiles(state, emit) {
           ${newSerial}
         </div>
         <ul>
+          <li onclick=${() => emit('navigate-to-parent', 'serial')}>
+            ..
+          </li>
           ${state.serialFiles.map((file) => ListItem('serial', file))}
         </ul>
       </div>
@@ -104,6 +107,9 @@ function PanelFiles(state, emit) {
           ${newDisk}
         </div>
         <ul>
+          <li onclick=${() => emit('navigate-to-parent', 'disk')}>
+            ..
+          </li>
           ${state.diskFiles.map((file) => ListItem('disk', file))}
         </ul>
       </div>

@@ -18,6 +18,9 @@ function store(state, emitter) {
   state.diskPath = localStorage.getItem('diskPath')
   state.serialPath = null
 
+  state.diskNavigation = '/'
+  state.serialNavigation = '/'
+
   state.isConnected = false
   state.isPortDialogOpen = false
   state.isTerminalOpen = false
@@ -57,6 +60,7 @@ function store(state, emitter) {
       emitter.emit('message', 'Disconnected')
     }
     state.isConnected = false
+    state.serialNavigation = '/'
     state.serialPath = null
     state.isTerminalOpen = false
     state.serialFiles = []
@@ -196,20 +200,32 @@ function store(state, emitter) {
   emitter.on('open-folder', async () => {
     log('open-folder')
     let { folder, files } = await disk.openFolder()
+    state.diskNavigation = '/'
     if (folder !== 'null' && folder !== null) {
       localStorage.setItem('diskPath', folder)
       state.diskPath = folder
       state.diskFiles = files
     }
     if (!state.isFilesOpen) emitter.emit('show-files')
-    emitter.emit('render')
+    emitter.emit('update-files')
   })
   emitter.on('update-files', async () => {
     log('update-files')
+    // console.log(state.diskPath, state.diskNavigation)
+    // console.log(state.serialPath, state.serialNavigation)
+    function sortFoldersFirst(allFiles) {
+      let folders = allFiles.filter(f => f.type === 'folder')
+      let files = allFiles.filter(f => f.type === 'file')
+      folders = folders.sort((a, b) => a.path.localeCompare(b.path))
+      files = files.sort((a, b) => a.path.localeCompare(b.path))
+      return folders.concat(files)
+    }
     if (state.isConnected) {
       await serial.stop()
       try {
-        const files = await serial.ilistFiles()
+        const files = await serial.ilistFiles(
+          state.serialNavigation
+        )
         state.serialFiles = files.map(f => ({
           path: f[0],
           type: f[1] === 0x4000 ? 'folder' : 'file'
@@ -222,7 +238,10 @@ function store(state, emitter) {
         state.serialFiles = state.serialFiles.sort(
           (a, b) => a.path.localeCompare(b.path)
         )
+        // Sort folders first
+        state.serialFiles = sortFoldersFirst(state.serialFiles)
       } catch (e) {
+        state.serialNavigation = '/'
         state.serialPath = null
         state.serialFiles = []
         console.log('error', e)
@@ -230,14 +249,19 @@ function store(state, emitter) {
     }
     if (state.diskPath) {
       try {
-        state.diskFiles = await disk.ilistFiles(state.diskPath)
+        state.diskFiles = await disk.ilistFiles(
+          state.diskPath + '/' + state.diskNavigation
+        )
         // Filter out dot files
         state.diskFiles = state.diskFiles.filter(f => f.path.indexOf('.') !== 0)
         // Sort alphabetically in case-insensitive fashion
         state.diskFiles = state.diskFiles.sort(
           (a, b) => a.path.localeCompare(b.path)
         )
+        // Sort folders first
+        state.diskFiles = sortFoldersFirst(state.diskFiles)
       } catch (e) {
+        state.diskNavigation = '/'
         state.diskPath = null
         state.diskFiles = []
         localStorage.setItem('diskPath', null)
@@ -345,12 +369,12 @@ function store(state, emitter) {
     if (state.selectedDevice === 'serial') {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
-      if (state.serialFiles.indexOf(filename) !== -1) {
+      if (state.serialFiles.find(f => f.path === filename)) {
         confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
 
       if (confirmation) {
-        if (state.serialFiles.indexOf(oldFilename) !== -1) {
+        if (state.serialFiles.find(f => f.path === oldFilename)) {
           // If old name exists, save old file and rename
           await serial.saveFileContent(oldFilename, contents)
           await serial.renameFile(oldFilename, filename)
@@ -372,11 +396,12 @@ function store(state, emitter) {
     if (state.diskPath !== null && state.selectedDevice === 'disk') {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
-      if (state.diskFiles.indexOf(filename) !== -1) {
+      if (state.diskFiles.find((f) => f.path === filename)) {
+      // if (state.diskFiles.indexOf(filename) !== -1) {
         confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
       if (confirmation) {
-        if (state.diskFiles.indexOf(oldFilename) !== -1) {
+        if (state.diskFiles.find((f) => f.path === oldFilename)) {
           // If old name exists, save old file and rename
           await disk.saveFileContent(state.diskPath, oldFilename, contents)
           await disk.renameFile(state.diskPath, oldFilename, filename)
@@ -397,6 +422,34 @@ function store(state, emitter) {
 
 
   })
+
+  // NAVIGATION
+  emitter.on('navigate-to', (device, fullPath) => {
+    log('navigate-to', device, fullPath)
+    fullPath = fullPath || '/'
+    if (device === 'serial') {
+      state.serialNavigation += '/' + fullPath
+    }
+    if (device === 'disk') {
+      state.diskNavigation += '/' + fullPath
+    }
+    emitter.emit('update-files')
+  })
+  emitter.on('navigate-to-parent', (device) => {
+    log('navigate-to-parent', device)
+    if (device === 'serial') {
+      const navArray = state.serialNavigation.split('/')
+      navArray.pop()
+      state.serialNavigation = '/' + navArray.join('/')
+    }
+    if (device === 'disk') {
+      const navArray = state.diskNavigation.split('/')
+      navArray.pop()
+      state.diskNavigation = '/' + navArray.join('/')
+    }
+    emitter.emit('update-files')
+  })
+
 
   emitter.on('message', (text, timeout) => {
     log('message', text)

@@ -460,9 +460,11 @@ function store(state, emitter) {
     fullPath = fullPath || '/'
     if (device === 'serial') {
       state.serialNavigation += '/' + fullPath
+      state.serialNavigation = cleanNavigation(state.serialNavigation)
     }
     if (device === 'disk') {
       state.diskNavigation += '/' + fullPath
+      state.diskNavigation = cleanNavigation(state.diskNavigation)
     }
     emitter.emit('update-files')
   })
@@ -471,12 +473,16 @@ function store(state, emitter) {
     if (device === 'serial') {
       const navArray = state.serialNavigation.split('/')
       navArray.pop()
-      state.serialNavigation = '/' + navArray.join('/')
+      state.serialNavigation = cleanNavigation(
+        '/' + navArray.join('/')
+      )
     }
     if (device === 'disk') {
       const navArray = state.diskNavigation.split('/')
       navArray.pop()
-      state.diskNavigation = '/' + navArray.join('/')
+      state.diskNavigation = cleanNavigation(
+        '/' + navArray.join('/')
+      )
     }
     emitter.emit('update-files')
   })
@@ -510,4 +516,8 @@ function resizeEditor(state) {
   } else {
     el.style.height = '100%'
   }
+}
+
+function cleanNavigation(path) {
+  return path.split('/').filter(f => f).join('/')
 }

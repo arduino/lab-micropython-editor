@@ -127,7 +127,7 @@ function store(state, emitter) {
 
   // FILE MANAGEMENT
   emitter.on('new-file', (dev) => {
-    log('select-device', dev)
+    log('new-file', dev)
     state.selectedDevice = dev
     let editor = state.cache(AceEditor, 'editor').editor
     state.selectedFile = null
@@ -143,11 +143,11 @@ function store(state, emitter) {
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
     if (state.selectedDevice === 'serial') {
-      await serial.saveFileContent(filename, contents)
+      await serial.saveFileContent(state.serialNavigation + '/' + filename, contents)
     }
 
     if (state.selectedDevice === 'disk' && state.diskPath) {
-      await disk.saveFileContent(state.diskPath, filename, contents)
+      await disk.saveFileContent(state.diskPath + '/' + state.diskNavigation, filename, contents)
     }
 
     emitter.emit('update-files')
@@ -158,11 +158,14 @@ function store(state, emitter) {
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
     if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
       if (state.selectedDevice === 'serial') {
-        await serial.removeFile(state.selectedFile)
+        await serial.removeFile(state.serialNavigation + '/' + state.selectedFile)
         emitter.emit('new-file', 'serial')
       }
       if (state.selectedDevice === 'disk') {
-        await disk.removeFile(state.diskPath, state.selectedFile)
+        await disk.removeFile(
+          state.diskPath + '/' + state.diskNavigation,
+          state.selectedFile
+        )
         emitter.emit('new-file', 'disk')
       }
       emitter.emit('update-files')
@@ -185,11 +188,17 @@ function store(state, emitter) {
 
     let content = ''
     if (state.selectedDevice === 'serial') {
-      content = await serial.loadFile(filename)
+      const nav = state.serialNavigation === '/' ? '' : state.serialNavigation
+      content = await serial.loadFile(
+        nav + '/' + filename
+      )
     }
 
     if (state.selectedDevice === 'disk') {
-      content = await disk.loadFile(state.diskPath, filename)
+      content = await disk.loadFile(
+        state.diskPath + '/' + state.diskNavigation,
+        filename
+      )
     }
 
     let editor = state.cache(AceEditor, 'editor').editor
@@ -374,13 +383,23 @@ function store(state, emitter) {
       }
 
       if (confirmation) {
+        const nav = state.serialNavigation === '/' ? '' : state.serialNavigation
         if (state.serialFiles.find(f => f.path === oldFilename)) {
           // If old name exists, save old file and rename
-          await serial.saveFileContent(oldFilename, contents)
-          await serial.renameFile(oldFilename, filename)
+          await serial.saveFileContent(
+            nav + '/' + oldFilename,
+            contents
+          )
+          await serial.renameFile(
+            nav + '/' + oldFilename,
+            filename
+          )
         } else {
           // If old name doesn't exist create new file
-          await serial.saveFileContent(filename, contents)
+          await serial.saveFileContent(
+            nav + '/' + filename,
+            contents
+          )
         }
         state.isEditingFilename = false
         emitter.emit('update-files')
@@ -403,11 +422,23 @@ function store(state, emitter) {
       if (confirmation) {
         if (state.diskFiles.find((f) => f.path === oldFilename)) {
           // If old name exists, save old file and rename
-          await disk.saveFileContent(state.diskPath, oldFilename, contents)
-          await disk.renameFile(state.diskPath, oldFilename, filename)
+          await disk.saveFileContent(
+            state.diskPath + '/' + state.diskNavigation,
+            oldFilename,
+            contents
+          )
+          await disk.renameFile(
+            state.diskPath + '/' + state.diskNavigation,
+            oldFilename,
+            filename
+          )
         } else {
           // If old name doesn't exist create new file
-          await disk.saveFileContent(state.diskPath, filename, contents)
+          await disk.saveFileContent(
+            state.diskPath + '/' + state.diskNavigation,
+            filename,
+            contents
+          )
         }
         state.isEditingFilename = false
         emitter.emit('update-files')
@@ -449,7 +480,6 @@ function store(state, emitter) {
     }
     emitter.emit('update-files')
   })
-
 
   emitter.on('message', (text, timeout) => {
     log('message', text)

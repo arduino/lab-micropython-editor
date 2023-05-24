@@ -65,6 +65,7 @@ function store(state, emitter) {
     state.isTerminalOpen = false
     state.serialFiles = []
 
+    // When you disconnect with a serial file selected, keep the editor content
     if (state.selectedDevice === 'serial') {
       state.selectedDevice = 'disk'
       state.selectedFile = null
@@ -81,6 +82,7 @@ function store(state, emitter) {
     await serial.stop()
     // This must be set after the serial operations
     state.serialPath = path
+    state.serialNavigation = '/'
 
     let term = state.cache(XTerm, 'terminal').term
     if (!state.isTerminalBound) {
@@ -143,11 +145,18 @@ function store(state, emitter) {
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
     if (state.selectedDevice === 'serial') {
-      await serial.saveFileContent(state.serialNavigation + '/' + filename, contents)
+      await serial.saveFileContent(
+        cleanPath(state.serialNavigation + '/' + filename),
+        contents
+      )
     }
 
     if (state.selectedDevice === 'disk' && state.diskPath) {
-      await disk.saveFileContent(state.diskPath + '/' + state.diskNavigation, filename, contents)
+      await disk.saveFileContent(
+        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        filename,
+        contents
+      )
     }
 
     emitter.emit('update-files')
@@ -188,15 +197,14 @@ function store(state, emitter) {
 
     let content = ''
     if (state.selectedDevice === 'serial') {
-      const nav = state.serialNavigation === '/' ? '' : state.serialNavigation
       content = await serial.loadFile(
-        nav + '/' + filename
+        cleanPath(state.serialNavigation + '/' + filename)
       )
     }
 
     if (state.selectedDevice === 'disk') {
       content = await disk.loadFile(
-        state.diskPath + '/' + state.diskNavigation,
+        cleanPath(state.diskPath + '/' + state.diskNavigation),
         filename
       )
     }
@@ -220,8 +228,6 @@ function store(state, emitter) {
   })
   emitter.on('update-files', async () => {
     log('update-files')
-    // console.log(state.diskPath, state.diskNavigation)
-    // console.log(state.serialPath, state.serialNavigation)
     function sortFoldersFirst(allFiles) {
       let folders = allFiles.filter(f => f.type === 'folder')
       let files = allFiles.filter(f => f.type === 'file')
@@ -233,7 +239,7 @@ function store(state, emitter) {
       await serial.stop()
       try {
         const files = await serial.ilistFiles(
-          state.serialNavigation
+          cleanPath(state.serialNavigation)
         )
         state.serialFiles = files.map(f => ({
           path: f[0],
@@ -259,7 +265,7 @@ function store(state, emitter) {
     if (state.diskPath) {
       try {
         state.diskFiles = await disk.ilistFiles(
-          state.diskPath + '/' + state.diskNavigation
+          cleanPath(state.diskPath + '/' + state.diskNavigation)
         )
         // Filter out dot files
         state.diskFiles = state.diskFiles.filter(f => f.path.indexOf('.') !== 0)
@@ -282,15 +288,23 @@ function store(state, emitter) {
   emitter.on('upload', async () => {
     log('upload')
     let confirmation = true
-    if (state.serialFiles.indexOf(state.selectedFile) !== -1) {
+    if (state.serialFiles.find(f => f.path === state.selectedFile)) {
       confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on board?`)
     }
     if (confirmation) {
       emitter.emit('message', 'Uploading file... Please wait')
       let editor = state.cache(AceEditor, 'editor').editor
       let contents = editor.getValue()
-      await disk.saveFileContent(state.diskPath, state.selectedFile, contents)
-      await serial.uploadFile(state.diskPath, state.selectedFile)
+      await disk.saveFileContent(
+        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        state.selectedFile,
+        contents
+      )
+      await serial.uploadFile(
+        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        cleanPath(state.serialNavigation),
+        state.selectedFile
+      )
       emitter.emit('message', 'File uploaded!', 500)
       emitter.emit('update-files')
       emitter.emit('render')
@@ -299,15 +313,22 @@ function store(state, emitter) {
   emitter.on('download', async () => {
     log('download')
     let confirmation = true
-    if (state.diskFiles.indexOf(state.selectedFile) !== -1) {
+    if (state.diskFiles.find(f => f.path === state.selectedFile)) {
       confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on disk?`)
     }
     if (confirmation) {
       emitter.emit('message', 'Downloading file... Please wait')
       let editor = state.cache(AceEditor, 'editor').editor
       let contents = editor.getValue()
-      await serial.saveFileContent(state.selectedFile, contents)
-      await serial.downloadFile(state.diskPath, state.selectedFile)
+      await serial.saveFileContent(
+        cleanPath(state.serialNavigation + '/' + state.selectedFile),
+        contents
+      )
+      await serial.downloadFile(
+        cleanPath(state.serialNavigation),
+        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        state.selectedFile
+      )
       emitter.emit('message', 'File downloaded!', 500)
       emitter.emit('update-files')
       emitter.emit('render')
@@ -383,21 +404,20 @@ function store(state, emitter) {
       }
 
       if (confirmation) {
-        const nav = state.serialNavigation === '/' ? '' : state.serialNavigation
         if (state.serialFiles.find(f => f.path === oldFilename)) {
           // If old name exists, save old file and rename
           await serial.saveFileContent(
-            nav + '/' + oldFilename,
+            cleanPath(state.serialNavigation + '/' + oldFilename),
             contents
           )
           await serial.renameFile(
-            nav + '/' + oldFilename,
+            cleanPath(state.serialNavigation + '/' + oldFilename),
             filename
           )
         } else {
           // If old name doesn't exist create new file
           await serial.saveFileContent(
-            nav + '/' + filename,
+            cleanPath(state.serialNavigation + '/' + oldFilename),
             contents
           )
         }
@@ -407,6 +427,7 @@ function store(state, emitter) {
 
         emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
       } else {
+        state.selectedFile = oldFilename
         state.isEditingFilename = false
         emitter.emit('render')
       }
@@ -416,26 +437,25 @@ function store(state, emitter) {
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.diskFiles.find((f) => f.path === filename)) {
-      // if (state.diskFiles.indexOf(filename) !== -1) {
         confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
       if (confirmation) {
         if (state.diskFiles.find((f) => f.path === oldFilename)) {
           // If old name exists, save old file and rename
           await disk.saveFileContent(
-            state.diskPath + '/' + state.diskNavigation,
+            cleanPath(state.diskPath + '/' + state.diskNavigation),
             oldFilename,
             contents
           )
           await disk.renameFile(
-            state.diskPath + '/' + state.diskNavigation,
+            cleanPath(state.diskPath + '/' + state.diskNavigation),
             oldFilename,
             filename
           )
         } else {
           // If old name doesn't exist create new file
           await disk.saveFileContent(
-            state.diskPath + '/' + state.diskNavigation,
+            cleanPath(state.diskPath + '/' + state.diskNavigation),
             filename,
             contents
           )
@@ -446,6 +466,7 @@ function store(state, emitter) {
 
         emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
       } else {
+        state.selectedFile = oldFilename
         state.isEditingFilename = false
         emitter.emit('render')
       }
@@ -460,11 +481,11 @@ function store(state, emitter) {
     fullPath = fullPath || '/'
     if (device === 'serial') {
       state.serialNavigation += '/' + fullPath
-      state.serialNavigation = cleanNavigation(state.serialNavigation)
+      state.serialNavigation = cleanPath(state.serialNavigation)
     }
     if (device === 'disk') {
       state.diskNavigation += '/' + fullPath
-      state.diskNavigation = cleanNavigation(state.diskNavigation)
+      state.diskNavigation = cleanPath(state.diskNavigation)
     }
     emitter.emit('update-files')
   })
@@ -473,14 +494,14 @@ function store(state, emitter) {
     if (device === 'serial') {
       const navArray = state.serialNavigation.split('/')
       navArray.pop()
-      state.serialNavigation = cleanNavigation(
+      state.serialNavigation = cleanPath(
         '/' + navArray.join('/')
       )
     }
     if (device === 'disk') {
       const navArray = state.diskNavigation.split('/')
       navArray.pop()
-      state.diskNavigation = cleanNavigation(
+      state.diskNavigation = cleanPath(
         '/' + navArray.join('/')
       )
     }
@@ -518,6 +539,6 @@ function resizeEditor(state) {
   }
 }
 
-function cleanNavigation(path) {
-  return path.split('/').filter(f => f).join('/')
+function cleanPath(path) {
+  return '/' + path.split('/').filter(f => f).join('/')
 }

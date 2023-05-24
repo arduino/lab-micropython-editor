@@ -64,14 +64,14 @@ const Serial = {
   saveFileContent: async (filename, content) => {
     return board.fs_save(content || ' ', filename)
   },
-  uploadFile: async (folder, filename) => {
-    let src = `${folder}/${filename}`
-    let dest = filename
+  uploadFile: async (diskFolder, serialFolder, filename) => {
+    let src = `${diskFolder}/${filename}`
+    let dest = `${serialFolder}/${filename}`
     return board.fs_put(src, dest)
   },
-  downloadFile: async (folder, filename) => {
-    let contents = await Serial.loadFile(filename)
-    return ipcRenderer.invoke('save-file', folder, filename, contents)
+  downloadFile: async (serialFolder, diskFolder, filename) => {
+    let contents = await Serial.loadFile(`${serialFolder}/${filename}`)
+    return ipcRenderer.invoke('save-file', diskFolder, filename, contents)
   },
   renameFile: async (oldName, newName) => {
     return board.fs_rename(oldName, newName)

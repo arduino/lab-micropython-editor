@@ -417,7 +417,7 @@ function store(state, emitter) {
         } else {
           // If old name doesn't exist create new file
           await serial.saveFileContent(
-            cleanPath(state.serialNavigation + '/' + oldFilename),
+            cleanPath(state.serialNavigation + '/' + filename),
             contents
           )
         }

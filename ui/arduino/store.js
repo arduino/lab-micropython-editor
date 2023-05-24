@@ -487,6 +487,9 @@ function store(state, emitter) {
       state.diskNavigation += '/' + fullPath
       state.diskNavigation = cleanPath(state.diskNavigation)
     }
+    if (state.selectedDevice === device) {
+      state.selectedFile = null
+    }
     emitter.emit('update-files')
   })
   emitter.on('navigate-to-parent', (device) => {
@@ -504,6 +507,9 @@ function store(state, emitter) {
       state.diskNavigation = cleanPath(
         '/' + navArray.join('/')
       )
+    }
+    if (state.selectedDevice === device) {
+      state.selectedFile = null
     }
     emitter.emit('update-files')
   })

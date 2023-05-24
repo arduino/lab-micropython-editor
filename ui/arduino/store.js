@@ -159,7 +159,7 @@ function store(state, emitter) {
       )
     }
 
-    emitter.emit('update-files')
+    setTimeout(() => emitter.emit('update-files'), 1000)
     emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
   })
   emitter.on('remove', async () => {
@@ -306,7 +306,7 @@ function store(state, emitter) {
         state.selectedFile
       )
       emitter.emit('message', 'File uploaded!', 500)
-      emitter.emit('update-files')
+      setTimeout(() => emitter.emit('update-files'), 500)
       emitter.emit('render')
     }
   })
@@ -330,7 +330,7 @@ function store(state, emitter) {
         state.selectedFile
       )
       emitter.emit('message', 'File downloaded!', 500)
-      emitter.emit('update-files')
+      setTimeout(() => emitter.emit('update-files'), 500)
       emitter.emit('render')
     }
   })
@@ -534,7 +534,6 @@ function store(state, emitter) {
   })
 
 }
-
 
 function resizeEditor(state) {
   const el = state.cache(AceEditor, 'editor').element

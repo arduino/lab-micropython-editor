@@ -33,8 +33,10 @@ function PanelFiles(state, emit) {
   let canRemoveSerial = state.isConnected
                     && state.selectedDevice === 'serial'
                     && state.selectedFile !== null
+                    && state.serialFiles.find(f => f.path === state.selectedFile)
   let canRemoveDisk = state.selectedDevice === 'disk'
                     && state.selectedFile !== null
+                    && state.diskFiles.find(f => f.path === state.selectedFile)
 
   let upload = Button({
     icon: 'icons/Copy-Left.svg',

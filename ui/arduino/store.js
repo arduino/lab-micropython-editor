@@ -191,6 +191,9 @@ function store(state, emitter) {
       }
       emitter.emit('update-files')
       emitter.emit('render')
+    } else {
+      state.blocking = false
+      emitter.emit('render')
     }
   })
   emitter.on('select-file', async (device, filename) => {
@@ -333,6 +336,9 @@ function store(state, emitter) {
       emitter.emit('message', 'File uploaded!', 500)
       setTimeout(() => emitter.emit('update-files'), 500)
       emitter.emit('render')
+    } else {
+      state.blocking = false
+      emitter.emit('render')
     }
   })
   emitter.on('download', async () => {
@@ -358,6 +364,9 @@ function store(state, emitter) {
       )
       emitter.emit('message', 'File downloaded!', 500)
       setTimeout(() => emitter.emit('update-files'), 500)
+      emitter.emit('render')
+    } else {
+      state.blocking = false
       emitter.emit('render')
     }
   })
@@ -458,6 +467,7 @@ function store(state, emitter) {
       } else {
         state.selectedFile = oldFilename
         state.isEditingFilename = false
+        state.blocking = false
         emitter.emit('render')
       }
     }

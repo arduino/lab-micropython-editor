@@ -2,6 +2,7 @@
 
 :root {
   --teal: #008184;
+  --light-teal: #ecf1f1;
   --white: rgb(255, 255, 255);
   --white-faded: rgba(255, 255, 255, 0.8);
   --black: #000;
@@ -195,7 +196,7 @@ img {
   align-items: center;
 }
 
-#panel #handle .panel-button {
+#panel #handle .button {
   border: none;
   cursor: pointer !important;
   align-items: center;
@@ -244,17 +245,29 @@ img {
   color: var(--black);
   display: flex;
   flex-direction: row;
+  align-items: center;
   width: 100%;
   font-size: 1rem;
   padding: 0.5rem 0;
+}
+#files .file-list .path img {
+  height: 1.25rem;
 }
 #files .file-list .path a {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+#files .file-list .path a:link,
+#files .file-list .path a:visited,
+#files .file-list .path a:active,
+#files .file-list .path a:hover {
+  text-decoration: none;
+  color: var(--black);
+}
 #files .file-list .path .full {
   width: 100%;
+  padding: 0 0.5rem;
 }
 #files .file-list .path .button {
   height: 1.5rem;
@@ -264,25 +277,29 @@ img {
 }
 
 #files .file-list ul {
-  border: solid 0.1rem var(--teal);
+  background: var(--light-teal);
   width: 100%;
   height: 100%;
   padding: 0.5rem;
-  background: var(--white);
   overflow-x: none;
   overflow-y: scroll;
 }
 #files .file-list ul li {
   padding: 0.25rem 0.5rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 #files .file-list ul li.selected {
-  background: var(--teal);
-  color: var(--white);
+  background: var(--white);
+  color: var(--black);
 }
 #files .file-list ul li:hover {
-  background: var(--teal);
-  color: var(--white);
+  background: var(--white);
+  color: var(--black);
+}
+#files .file-list ul li img {
+  padding-right: 0.5rem;
 }
 
 #files .file-controls {
@@ -295,9 +312,16 @@ img {
 }
 
 #files .file-controls .button {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
   padding: 0;
+}
+#files .file-controls .button.primary {
+  background: var(--teal);
+}
+
+#files .file-controls .button.primary img {
+  filter: invert(1);
 }
 
 #message {

@@ -16,7 +16,7 @@ function PanelFiles(state, emit) {
         onclick=${onClick}
         class=${selectedClass}
         >
-        ${file.type === 'folder' ? '📁' : '📄'}
+        ${file.type === 'folder' ? Icon('icons/Folder.svg') : Icon('icons/File.svg')}
         ${file.path}
       </li>
     `
@@ -41,12 +41,14 @@ function PanelFiles(state, emit) {
   let upload = Button({
     icon: 'icons/Copy-Left.svg',
     onclick: () => emit('upload'),
-    disabled: !uploadEnabled
+    disabled: !uploadEnabled,
+    className: 'primary'
   })
   let download = Button({
     icon: 'icons/Copy-Right.svg',
     onclick: () => emit('download'),
-    disabled: !downloadEnabled
+    disabled: !downloadEnabled,
+    className: 'primary'
   })
   let refresh = Button({
     icon: 'icons/Reboot.svg',
@@ -80,9 +82,9 @@ function PanelFiles(state, emit) {
     <div id="files">
       <div class="file-list">
         <div class="path">
+          ${state.isConnected ? Icon('icons/Connect.svg') : Icon('icons/Disconnect.svg')}
           <a class="full" href="#" onclick=${() => emit('open-port-dialog')}>
-            <span>${state.isConnected ? Icon('icons/Connect.svg') : Icon('icons/Disconnect.svg')}</span>
-            <span>${state.isConnected ? state.serialPath : 'Connect'}</span>
+            ${state.isConnected ? state.serialPath : 'Connect'}
           </a>
           ${removeSerial}
           ${newSerial}
@@ -101,8 +103,8 @@ function PanelFiles(state, emit) {
       </div>
       <div class="file-list">
         <div class="path">
+          ${Icon('icons/Computer.svg')}
           <a class="full" href="#" onclick=${() => emit('open-folder')}>
-            <span>${Icon('icons/Open.svg')}</span>
             <span>${state.diskPath ? state.diskPath : 'Select Folder'}</span>
           </a>
           ${removeDisk}

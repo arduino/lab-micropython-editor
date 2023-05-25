@@ -4,7 +4,7 @@ function Button(param) {
     disabled = false,
     label = '',
     icon = '',
-    color = 'default',
+    className = '',
     selected = false
   } = param || {}
   return html`
@@ -13,7 +13,7 @@ function Button(param) {
       onclick=${onclick}
       >
       <button
-        class="button"
+        class="button ${className}"
         disabled=${disabled}
         >
         ${Icon(icon)}

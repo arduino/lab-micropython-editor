@@ -34,6 +34,8 @@ function store(state, emitter) {
   state.isTerminalBound = false // XXX
   state.panelHeight = null
 
+  state.blocking = false
+
   // SERIAL CONNECTION
   emitter.on('load-ports', async () => {
     log('load-ports')
@@ -78,7 +80,7 @@ function store(state, emitter) {
     log('connect', path)
 
     await serial.connect(path)
-    emitter.emit('message', 'Connected', 150)
+    emitter.emit('message', 'Connected', 1000)
     await serial.stop()
     // This must be set after the serial operations
     state.serialPath = path
@@ -144,11 +146,16 @@ function store(state, emitter) {
     let filename = state.selectedFile || 'undefined'
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
+
     if (state.selectedDevice === 'serial') {
+      state.blocking = true
+      emitter.emit('message', `Saving ${filename} on ${deviceName}`)
       await serial.saveFileContent(
         cleanPath(state.serialNavigation + '/' + filename),
         contents
       )
+      setTimeout(() => emitter.emit('update-files'), 1000)
+      emitter.emit('message', `Saved`, 1000)
     }
 
     if (state.selectedDevice === 'disk' && state.diskPath) {
@@ -157,14 +164,19 @@ function store(state, emitter) {
         filename,
         contents
       )
+      setTimeout(() => emitter.emit('update-files'), 100)
+      emitter.emit('message', `Saved`, 500)
     }
 
-    setTimeout(() => emitter.emit('update-files'), 1000)
-    emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
+
   })
   emitter.on('remove', async () => {
     log('remove')
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+
+    state.blocking = true
+    emitter.emit('render')
+
     if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
       if (state.selectedDevice === 'serial') {
         await serial.removeFile(state.serialNavigation + '/' + state.selectedFile)
@@ -196,10 +208,16 @@ function store(state, emitter) {
     state.selectedFile = filename
 
     let content = ''
+    let renderDelay = 0
     if (state.selectedDevice === 'serial') {
+      renderDelay = setTimeout(() => {
+        state.blocking = true
+        emitter.emit('render')
+      }, 50)
       content = await serial.loadFile(
         cleanPath(state.serialNavigation + '/' + filename)
       )
+      clearTimeout(renderDelay)
     }
 
     if (state.selectedDevice === 'disk') {
@@ -212,6 +230,7 @@ function store(state, emitter) {
     let editor = state.cache(AceEditor, 'editor').editor
     editor.setValue(content)
 
+    state.blocking = false
     emitter.emit('render')
   })
   emitter.on('open-folder', async () => {
@@ -228,6 +247,8 @@ function store(state, emitter) {
   })
   emitter.on('update-files', async () => {
     log('update-files')
+    // state.blocking = true
+    // emitter.emit('render')
     function sortFoldersFirst(allFiles) {
       let folders = allFiles.filter(f => f.type === 'folder')
       let files = allFiles.filter(f => f.type === 'file')
@@ -261,6 +282,7 @@ function store(state, emitter) {
         state.serialFiles = []
         console.log('error', e)
       }
+
     }
     if (state.diskPath) {
       try {
@@ -283,10 +305,13 @@ function store(state, emitter) {
         console.log('error', e)
       }
     }
+    state.blocking = false
     emitter.emit('render')
   })
   emitter.on('upload', async () => {
     log('upload')
+    state.blocking = true
+    emitter.emit('render')
     let confirmation = true
     if (state.serialFiles.find(f => f.path === state.selectedFile)) {
       confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on board?`)
@@ -312,6 +337,8 @@ function store(state, emitter) {
   })
   emitter.on('download', async () => {
     log('download')
+    state.blocking = true
+    emitter.emit('render')
     let confirmation = true
     if (state.diskFiles.find(f => f.path === state.selectedFile)) {
       confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on disk?`)
@@ -389,6 +416,8 @@ function store(state, emitter) {
   })
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
+    state.blocking = true
+    emitter.emit('render')
     let oldFilename = state.selectedFile
     state.selectedFile = filename
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
@@ -425,7 +454,7 @@ function store(state, emitter) {
         emitter.emit('update-files')
         emitter.emit('render')
 
-        emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
+        emitter.emit('message', `Saved`, 500)
       } else {
         state.selectedFile = oldFilename
         state.isEditingFilename = false
@@ -464,7 +493,8 @@ function store(state, emitter) {
         emitter.emit('update-files')
         emitter.emit('render')
 
-        emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
+        // emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
+        mitter.emit('message', `Saved`, 500)
       } else {
         state.selectedFile = oldFilename
         state.isEditingFilename = false

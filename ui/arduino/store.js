@@ -147,9 +147,10 @@ function store(state, emitter) {
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
 
+    state.blocking = true
+    emitter.emit('message', `Saving ${filename} on ${deviceName}`)
+
     if (state.selectedDevice === 'serial') {
-      state.blocking = true
-      emitter.emit('message', `Saving ${filename} on ${deviceName}`)
       await serial.saveFileContent(
         cleanPath(state.serialNavigation + '/' + filename),
         contents
@@ -210,17 +211,14 @@ function store(state, emitter) {
 
     state.selectedFile = filename
 
+    state.blocking = true
+    emitter.emit('render')
+
     let content = ''
-    let renderDelay = 0
     if (state.selectedDevice === 'serial') {
-      renderDelay = setTimeout(() => {
-        state.blocking = true
-        emitter.emit('render')
-      }, 50)
       content = await serial.loadFile(
         cleanPath(state.serialNavigation + '/' + filename)
       )
-      clearTimeout(renderDelay)
     }
 
     if (state.selectedDevice === 'disk') {
@@ -518,6 +516,8 @@ function store(state, emitter) {
   // NAVIGATION
   emitter.on('navigate-to', (device, fullPath) => {
     log('navigate-to', device, fullPath)
+    state.blocking = true
+    emitter.emit('render')
     fullPath = fullPath || '/'
     if (device === 'serial') {
       state.serialNavigation += '/' + fullPath
@@ -534,6 +534,8 @@ function store(state, emitter) {
   })
   emitter.on('navigate-to-parent', (device) => {
     log('navigate-to-parent', device)
+    state.blocking = true
+    emitter.emit('render')
     if (device === 'serial') {
       const navArray = state.serialNavigation.split('/')
       navArray.pop()

@@ -350,6 +350,13 @@ img {
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--white-faded);
-  z-index: 100;
+  pointer-events: none;
+  transition-property: all;
+  transition-duration: 0.2s;
+  transition-delay: 0.2s;
+  cursor: wait;
+}
+#blocking.active {
+  z-index: 999;
+  pointer-events: all;
 }

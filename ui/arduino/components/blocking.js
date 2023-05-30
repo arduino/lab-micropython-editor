@@ -1,9 +1,7 @@
 function Blocking(state, emit) {
-  let blocking = null
+  let blocking = html`<div id="blocking"></div>`
   if (state.blocking) {
-    blocking = html`
-      <div id="blocking"></div>
-    `
+    blocking.classList.add('active')
   }
   return blocking
 }

@@ -321,7 +321,8 @@ function store(state, emitter) {
     if (confirmation) {
       emitter.emit('message', 'Uploading file... Please wait')
       let editor = state.cache(AceEditor, 'editor').editor
-      let contents = editor.getValue()
+      let contents = cleanCharacters(editor.getValue())
+      editor.setValue(contents)
       await disk.saveFileContent(
         cleanPath(state.diskPath + '/' + state.diskNavigation),
         state.selectedFile,
@@ -351,7 +352,8 @@ function store(state, emitter) {
     if (confirmation) {
       emitter.emit('message', 'Downloading file... Please wait')
       let editor = state.cache(AceEditor, 'editor').editor
-      let contents = editor.getValue()
+      let contents = cleanCharacters(editor.getValue())
+      editor.setValue(contents)
       await serial.saveFileContent(
         cleanPath(state.serialNavigation + '/' + state.selectedFile),
         contents

@@ -441,26 +441,18 @@ function store(state, emitter) {
 
       if (confirmation) {
         if (state.serialFiles.find(f => f.path === oldFilename)) {
+          const oldPath = cleanPath(state.serialNavigation + '/' + oldFilename)
           // If old name exists, save old file and rename
-          await serial.saveFileContent(
-            cleanPath(state.serialNavigation + '/' + oldFilename),
-            contents
-          )
-          await serial.renameFile(
-            cleanPath(state.serialNavigation + '/' + oldFilename),
-            filename
-          )
+          await serial.saveFileContent(oldPath, contents)
+          await serial.renameFile(oldPath, filename)
         } else {
+          const newPath = cleanPath(state.serialNavigation + '/' + filename)
           // If old name doesn't exist create new file
-          await serial.saveFileContent(
-            cleanPath(state.serialNavigation + '/' + filename),
-            contents
-          )
+          // First create an empty file
+          await serial.saveFileContent(newPath, '')
+          await serial.saveFileContent(newPath, contents)
         }
         state.isEditingFilename = false
-        emitter.emit('update-files')
-        emitter.emit('render')
-
         emitter.emit('message', `Saved`, 500)
       } else {
         state.selectedFile = oldFilename
@@ -471,6 +463,7 @@ function store(state, emitter) {
     }
 
     if (state.diskPath !== null && state.selectedDevice === 'disk') {
+      const diskPath = cleanPath(state.diskPath + '/' + state.diskNavigation)
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.diskFiles.find((f) => f.path === filename)) {
@@ -479,30 +472,14 @@ function store(state, emitter) {
       if (confirmation) {
         if (state.diskFiles.find((f) => f.path === oldFilename)) {
           // If old name exists, save old file and rename
-          await disk.saveFileContent(
-            cleanPath(state.diskPath + '/' + state.diskNavigation),
-            oldFilename,
-            contents
-          )
-          await disk.renameFile(
-            cleanPath(state.diskPath + '/' + state.diskNavigation),
-            oldFilename,
-            filename
-          )
+          await disk.saveFileContent(diskPath, oldFilename, contents)
+          await disk.renameFile(diskPath, oldFilename, filename)
         } else {
           // If old name doesn't exist create new file
-          await disk.saveFileContent(
-            cleanPath(state.diskPath + '/' + state.diskNavigation),
-            filename,
-            contents
-          )
+          await disk.saveFileContent(diskPath, filename, contents)
         }
         state.isEditingFilename = false
-        emitter.emit('update-files')
-        emitter.emit('render')
-
-        // emitter.emit('message', `${filename} is saved on ${deviceName}.`, 1000)
-        mitter.emit('message', `Saved`, 500)
+        emitter.emit('message', `Saved`, 500)
       } else {
         state.selectedFile = oldFilename
         state.isEditingFilename = false
@@ -510,7 +487,7 @@ function store(state, emitter) {
       }
     }
 
-
+    emitter.emit('update-files')
   })
 
   // NAVIGATION

@@ -289,6 +289,8 @@ img {
   cursor: pointer;
   display: flex;
   align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #files .file-list ul li.selected {
   background: var(--white);

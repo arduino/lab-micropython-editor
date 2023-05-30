@@ -142,7 +142,8 @@ function store(state, emitter) {
   emitter.on('save', async () => {
     log('save')
     let editor = state.cache(AceEditor, 'editor').editor
-    let contents = editor.getValue()
+    let contents = cleanCharacters(editor.getValue())
+    editor.setValue(contents)
     let filename = state.selectedFile || 'undefined'
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
@@ -229,7 +230,7 @@ function store(state, emitter) {
     }
 
     let editor = state.cache(AceEditor, 'editor').editor
-    editor.setValue(content)
+    editor.setValue(cleanCharacters(content))
 
     state.blocking = false
     emitter.emit('render')
@@ -431,7 +432,8 @@ function store(state, emitter) {
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
     let editor = state.cache(AceEditor, 'editor').editor
-    let contents = editor.getValue()
+    let contents = cleanCharacters(editor.getValue())
+    editor.setValue(contents)
 
     if (state.selectedDevice === 'serial') {
       // Ask for confirmation to overwrite existing file
@@ -568,4 +570,8 @@ function resizeEditor(state) {
 
 function cleanPath(path) {
   return '/' + path.split('/').filter(f => f).join('/')
+}
+
+function cleanCharacters(str) {
+  return str.replace(/[\u{0080}-\u{FFFF}]/gu,"")
 }

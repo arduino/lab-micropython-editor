@@ -424,7 +424,7 @@ function store(state, emitter) {
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
     state.blocking = true
-    emitter.emit('message', `Renaming`)
+    emitter.emit('render')
 
     let oldFilename = state.selectedFile
     state.selectedFile = filename
@@ -441,6 +441,7 @@ function store(state, emitter) {
       }
 
       if (confirmation) {
+        emitter.emit('message', `Renaming`)
         if (state.serialFiles.find(f => f.path === oldFilename)) {
           const oldPath = cleanPath(state.serialNavigation + '/' + oldFilename)
           // If old name exists, save old file and rename
@@ -471,6 +472,7 @@ function store(state, emitter) {
         confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
       }
       if (confirmation) {
+        emitter.emit('message', `Renaming`)
         if (state.diskFiles.find((f) => f.path === oldFilename)) {
           // If old name exists, save old file and rename
           await disk.saveFileContent(diskPath, oldFilename, contents)

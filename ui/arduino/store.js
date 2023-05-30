@@ -424,7 +424,8 @@ function store(state, emitter) {
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
     state.blocking = true
-    emitter.emit('render')
+    emitter.emit('message', `Renaming`)
+
     let oldFilename = state.selectedFile
     state.selectedFile = filename
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'

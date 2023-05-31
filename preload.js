@@ -78,6 +78,9 @@ const Serial = {
   },
   onDisconnect: async (fn) => {
     board.serial.on('close', fn)
+  },
+  createFolder: async (folder) => {
+    return await board.fs_mkdir(folder)
   }
 }
 

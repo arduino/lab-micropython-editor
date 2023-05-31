@@ -81,13 +81,18 @@ function store(state, emitter) {
   emitter.on('connect', async (path) => {
     log('connect', path)
 
-    await serial.connect(path)
-    emitter.emit('message', 'Connected', 1000)
-    await serial.stop()
-    // This must be set after the serial operations
-    state.serialPath = path
-    state.serialNavigation = '/'
+    state.blocking = true
+    emitter.emit('message', 'Connecting')
 
+    await serial.connect(path)
+    await serial.stop()
+    state.isConnected = true
+    emitter.emit('close-port-dialog')
+
+    // Make sure there is a lib folder
+    await serial.createFolder('lib')
+
+    // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     if (!state.isTerminalBound) {
       state.isTerminalBound = true
@@ -101,9 +106,12 @@ function store(state, emitter) {
       term.scrollToBottom()
     })
     serial.onDisconnect(() => emitter.emit('disconnect'))
-    state.isConnected = true
+
+    state.serialPath = path
+    state.serialNavigation = '/'
     emitter.emit('update-files')
-    emitter.emit('close-port-dialog')
+
+    emitter.emit('message', 'Connected', 1000)
     if (!state.isFilesOpen) {
       emitter.emit('show-terminal')
     }
@@ -212,8 +220,6 @@ function store(state, emitter) {
     */
     if (state.selectedDevice === 'serial' && state.isEditingFilename) return
 
-    state.selectedFile = filename
-
     state.blocking = true
     emitter.emit('render')
 
@@ -231,6 +237,7 @@ function store(state, emitter) {
       )
     }
 
+    state.selectedFile = filename
     let editor = state.cache(AceEditor, 'editor').editor
     editor.setValue(cleanCharacters(content))
 

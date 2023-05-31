@@ -428,6 +428,14 @@ function store(state, emitter) {
   })
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
+
+    // no changes
+    if (state.selectedFile === filename) {
+      state.isEditingFilename = false
+      emitter.emit('render')
+      return
+    }
+
     state.blocking = true
     emitter.emit('render')
 

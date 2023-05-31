@@ -35,6 +35,7 @@ function store(state, emitter) {
   state.panelHeight = null
 
   state.blocking = false
+  state.unsavedChanges = false
 
   // SERIAL CONNECTION
   emitter.on('load-ports', async () => {
@@ -145,6 +146,7 @@ function store(state, emitter) {
     state.selectedDevice = dev
     let editor = state.cache(AceEditor, 'editor').editor
     state.selectedFile = null
+    state.unsavedChanges = false
     editor.setValue('')
     emitter.emit('close-new-file-dialog')
     emitter.emit('render')
@@ -157,7 +159,6 @@ function store(state, emitter) {
     let filename = state.selectedFile || 'undefined'
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
-
     state.blocking = true
     emitter.emit('message', `Saving ${filename} on ${deviceName}`)
 
@@ -167,6 +168,7 @@ function store(state, emitter) {
         contents
       )
       setTimeout(() => emitter.emit('update-files'), 1000)
+      state.unsavedChanges = false
       emitter.emit('message', `Saved`, 1000)
     }
 
@@ -177,6 +179,7 @@ function store(state, emitter) {
         contents
       )
       setTimeout(() => emitter.emit('update-files'), 100)
+      state.unsavedChanges = false
       emitter.emit('message', `Saved`, 500)
     }
 
@@ -210,7 +213,10 @@ function store(state, emitter) {
   })
   emitter.on('select-file', async (device, filename) => {
     log('select-file')
-
+    if (state.unsavedChanges) {
+      let response = confirm(`Loading a new file will discard any unsaved changes.\nPress OK to accept or Cancel to abort.`)
+      if (!response) return
+    }
     state.selectedDevice = device
 
     /*
@@ -237,10 +243,11 @@ function store(state, emitter) {
       )
     }
 
-    state.selectedFile = filename
     let editor = state.cache(AceEditor, 'editor').editor
     editor.setValue(cleanCharacters(content))
 
+    state.selectedFile = filename
+    state.unsavedChanges = false
     state.blocking = false
     emitter.emit('render')
   })
@@ -381,6 +388,11 @@ function store(state, emitter) {
     }
   })
 
+  emitter.on('code-change', () => {
+    log('code-changed')
+    state.unsavedChanges = true
+  })
+
   // PANEL MANAGEMENT
   emitter.on('show-terminal', () => {
     log('show-terminal')
@@ -481,6 +493,7 @@ function store(state, emitter) {
         state.selectedFile = oldFilename
         state.isEditingFilename = false
         state.blocking = false
+        state.unsavedChanges = false
         emitter.emit('render')
       }
     }
@@ -530,6 +543,7 @@ function store(state, emitter) {
     }
     if (state.selectedDevice === device) {
       state.selectedFile = null
+      state.unsavedChanges = false
     }
     emitter.emit('update-files')
   })
@@ -553,6 +567,7 @@ function store(state, emitter) {
     }
     if (state.selectedDevice === device) {
       state.selectedFile = null
+      state.unsavedChanges = false
     }
     emitter.emit('update-files')
   })

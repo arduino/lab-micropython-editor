@@ -56,7 +56,7 @@ function store(state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('disconnect', () => {
+  emitter.on('disconnect', async () => {
     log('disconnect')
     if (state.isConnected) {
       emitter.emit('message', 'Disconnected')
@@ -72,6 +72,8 @@ function store(state, emitter) {
       state.selectedDevice = 'disk'
       state.selectedFile = null
     }
+
+    await serial.disconnect()
 
     emitter.emit('render')
     resizeEditor(state)

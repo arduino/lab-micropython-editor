@@ -390,7 +390,9 @@ function store(state, emitter) {
 
   emitter.on('code-change', () => {
     log('code-changed')
-    state.unsavedChanges = true
+    if (!state.blocking) {
+      state.unsavedChanges = true
+    }
   })
 
   // PANEL MANAGEMENT

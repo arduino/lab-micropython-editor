@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 const Micropython = require('micropython.js')
 const board = new Micropython()
+board.chunk_size = 192
+board.chunk_sleep = 200
 
 const Serial = {
   loadPorts: async () => {

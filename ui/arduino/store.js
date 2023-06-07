@@ -478,7 +478,7 @@ function store(state, emitter) {
       }
 
       if (confirmation) {
-        emitter.emit('message', `Saving.`)
+        emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
         if (state.serialFiles.find(f => f.path === oldFilename)) {
           const oldPath = cleanPath(state.serialNavigation + '/' + oldFilename)
           // If old name exists, save old file and rename

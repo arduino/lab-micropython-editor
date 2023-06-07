@@ -160,12 +160,13 @@ function store(state, emitter) {
     let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
 
     state.blocking = true
-    emitter.emit('message', `Saving ${filename} on ${deviceName}`)
+    emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
 
     if (state.selectedDevice === 'serial') {
       await serial.saveFileContent(
         cleanPath(state.serialNavigation + '/' + filename),
-        contents
+        contents,
+        (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
       )
       setTimeout(() => emitter.emit('update-files'), 1000)
       state.unsavedChanges = false
@@ -335,7 +336,7 @@ function store(state, emitter) {
       confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on board?`)
     }
     if (confirmation) {
-      emitter.emit('message', 'Uploading file... Please wait')
+      emitter.emit('message', 'Uploading file...')
       let editor = state.cache(AceEditor, 'editor').editor
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
@@ -347,7 +348,8 @@ function store(state, emitter) {
       await serial.uploadFile(
         cleanPath(state.diskPath + '/' + state.diskNavigation),
         cleanPath(state.serialNavigation),
-        state.selectedFile
+        state.selectedFile,
+        (e) => emitter.emit('message', `Uploading file... ${e}`)
       )
       emitter.emit('message', 'File uploaded!', 500)
       setTimeout(() => emitter.emit('update-files'), 500)
@@ -476,11 +478,15 @@ function store(state, emitter) {
       }
 
       if (confirmation) {
-        emitter.emit('message', `Renaming`)
+        emitter.emit('message', `Saving.`)
         if (state.serialFiles.find(f => f.path === oldFilename)) {
           const oldPath = cleanPath(state.serialNavigation + '/' + oldFilename)
           // If old name exists, save old file and rename
-          await serial.saveFileContent(oldPath, contents)
+          await serial.saveFileContent(
+            oldPath,
+            contents,
+            (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
+          )
           await serial.renameFile(oldPath, filename)
         } else {
           const newPath = cleanPath(state.serialNavigation + '/' + filename)

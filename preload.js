@@ -61,13 +61,13 @@ const Serial = {
   removeFile: async (file) => {
     return board.fs_rm(file)
   },
-  saveFileContent: async (filename, content) => {
-    return board.fs_save(content || ' ', filename)
+  saveFileContent: async (filename, content, dataConsumer) => {
+    return board.fs_save(content || ' ', filename, dataConsumer)
   },
-  uploadFile: async (diskFolder, serialFolder, filename) => {
+  uploadFile: async (diskFolder, serialFolder, filename, dataConsumer) => {
     let src = `${diskFolder}/${filename}`
     let dest = `${serialFolder}/${filename}`
-    return board.fs_put(src, dest)
+    return board.fs_put(src, dest, dataConsumer)
   },
   downloadFile: async (serialFolder, diskFolder, filename) => {
     let contents = await Serial.loadFile(`${serialFolder}/${filename}`)

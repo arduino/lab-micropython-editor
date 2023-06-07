@@ -487,7 +487,7 @@ function store(state, emitter) {
             contents,
             (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
           )
-          await serial.renameFile(oldPath, filename)
+          await serial.renameFile(oldPath, state.serialNavigation + '/' + filename)
         } else {
           const newPath = cleanPath(state.serialNavigation + '/' + filename)
           // If old name doesn't exist create new file

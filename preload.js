@@ -83,6 +83,10 @@ const Serial = {
   },
   createFolder: async (folder) => {
     return await board.fs_mkdir(folder)
+  },
+  exit_raw_repl: async () => {
+    board.in_raw_repl = true
+    return await board.exit_raw_repl()
   }
 }
 

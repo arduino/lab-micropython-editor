@@ -86,7 +86,12 @@ function store(state, emitter) {
     emitter.emit('message', 'Connecting')
 
     await serial.connect(path)
+
+    // Stop whatever is going on
     await serial.stop()
+    // Recover from getting stuck in raw repl
+    await serial.exit_raw_repl()
+
     state.isConnected = true
     emitter.emit('close-port-dialog')
 
@@ -213,7 +218,7 @@ function store(state, emitter) {
     }
   })
   emitter.on('select-file', async (device, filename) => {
-    log('select-file')
+    log('select-file', device, filename)
     if (state.unsavedChanges) {
       let response = confirm(`Loading a new file will discard any unsaved changes.\nPress OK to accept or Cancel to abort.`)
       if (!response) return

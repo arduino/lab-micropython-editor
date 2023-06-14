@@ -96,7 +96,19 @@ function store(state, emitter) {
     emitter.emit('close-port-dialog')
 
     // Make sure there is a lib folder
+    log('creating lib folder')
     await serial.createFolder('lib')
+
+    state.serialPath = path
+    state.serialNavigation = '/'
+    emitter.emit('update-files')
+
+    emitter.emit('message', 'Connected', 1000)
+
+    if (!state.isFilesOpen) {
+      emitter.emit('show-terminal')
+    }
+    emitter.emit('render')
 
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
@@ -112,16 +124,6 @@ function store(state, emitter) {
       term.scrollToBottom()
     })
     serial.onDisconnect(() => emitter.emit('disconnect'))
-
-    state.serialPath = path
-    state.serialNavigation = '/'
-    emitter.emit('update-files')
-
-    emitter.emit('message', 'Connected', 1000)
-    if (!state.isFilesOpen) {
-      emitter.emit('show-terminal')
-    }
-    emitter.emit('render')
   })
 
   // CODE EXECUTION
@@ -149,9 +151,9 @@ function store(state, emitter) {
   emitter.on('new-file', (dev) => {
     log('new-file', dev)
     state.selectedDevice = dev
-    let editor = state.cache(AceEditor, 'editor').editor
     state.selectedFile = null
     state.unsavedChanges = false
+    let editor = state.cache(AceEditor, 'editor').editor
     editor.setValue('')
     emitter.emit('close-new-file-dialog')
     emitter.emit('render')
@@ -162,7 +164,7 @@ function store(state, emitter) {
     let contents = cleanCharacters(editor.getValue())
     editor.setValue(contents)
     let filename = state.selectedFile || 'undefined'
-    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+    let deviceName = getDeviceName(state.selectedDevice)
 
     state.blocking = true
     emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
@@ -193,7 +195,7 @@ function store(state, emitter) {
   })
   emitter.on('remove', async () => {
     log('remove')
-    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+    let deviceName = getDeviceName(state.selectedDevice)
 
     state.blocking = true
     emitter.emit('render')
@@ -469,7 +471,7 @@ function store(state, emitter) {
 
     let oldFilename = state.selectedFile
     state.selectedFile = filename
-    let deviceName = state.selectedDevice === 'serial' ? 'board' : 'disk'
+    let deviceName = getDeviceName(state.selectedDevice)
 
     let editor = state.cache(AceEditor, 'editor').editor
     let contents = cleanCharacters(editor.getValue())
@@ -621,4 +623,8 @@ function cleanPath(path) {
 
 function cleanCharacters(str) {
   return str.replace(/[\u{0080}-\u{FFFF}]/gu,"")
+}
+
+function getDeviceName(dev) {
+  return dev === 'serial' ? 'board' : 'disk'
 }

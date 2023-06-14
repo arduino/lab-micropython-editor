@@ -18,9 +18,7 @@ const Serial = {
     return await board.close()
   },
   run: async (code) => {
-    if (board.in_raw_repl) {
-      await board.exit_raw_repl()
-    }
+    await board.exit_raw_repl()
     await board.enter_raw_repl()
     // Prevent executing empty string
     let result = await board.exec_raw({ command: code || '#' })
@@ -28,21 +26,13 @@ const Serial = {
     return Promise.resolve(result)
   },
   stop: async () => {
-    if (board.in_raw_repl) {
-      await board.stop()
-      return board.exit_raw_repl()
-    } else {
-      return board.stop()
-    }
+    await board.stop()
+    return board.exit_raw_repl()
   },
   reset: async () => {
-    if (board.in_raw_repl) {
-      await board.stop()
-      await board.exit_raw_repl()
-      return board.reset()
-    } else {
-      return board.reset()
-    }
+    await board.stop()
+    await board.exit_raw_repl()
+    return board.reset()
   },
   eval: (d) => {
     return board.eval(d)

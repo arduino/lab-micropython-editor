@@ -353,12 +353,12 @@ img {
   left: 0;
   right: 0;
   pointer-events: none;
-  transition-property: all;
-  transition-duration: 0.2s;
-  transition-delay: 0.2s;
-  cursor: wait;
+  cursor: auto;
+  z-index: -1;
 }
 #blocking.active {
+  /* background: rgba(255, 255, 255, 0.1); */
   z-index: 999;
-  pointer-events: all;
+  cursor: wait !important;
+  pointer-events: all; /* this will capture all clicks */
 }

@@ -8,7 +8,7 @@ board.chunk_sleep = 200
 
 const Serial = {
   loadPorts: async () => {
-    let ports = await board.listPorts()
+    let ports = await board.list_ports()
     return ports.filter(p => p.vendorId && p.productId)
   },
   connect: async (path) => {
@@ -21,18 +21,20 @@ const Serial = {
     await board.exit_raw_repl()
     await board.enter_raw_repl()
     // Prevent executing empty string
-    let result = await board.exec_raw({ command: code || '#' })
+    let result = await board.exec_raw(code || '#')
     await board.exit_raw_repl()
     return Promise.resolve(result)
   },
   stop: async () => {
     await board.stop()
-    return board.exit_raw_repl()
+    await board.exit_raw_repl()
+    return Promise.resolve()
   },
   reset: async () => {
     await board.stop()
     await board.exit_raw_repl()
-    return board.reset()
+    await board.reset()
+    return Promise.resolve()
   },
   eval: (d) => {
     return board.eval(d)
@@ -41,10 +43,10 @@ const Serial = {
     board.serial.on('data', fn)
   },
   listFiles: async (folder) => {
-    return await board.fs_ls(folder)
+    return board.fs_ls(folder)
   },
   ilistFiles: async (folder) => {
-    return await board.fs_ils(folder)
+    return board.fs_ils(folder)
   },
   loadFile: async (file) => {
     const output = await board.fs_cat(file)
@@ -75,8 +77,7 @@ const Serial = {
     return await board.fs_mkdir(folder)
   },
   exit_raw_repl: async () => {
-    board.in_raw_repl = true
-    return await board.exit_raw_repl()
+    return board.exit_raw_repl()
   }
 }
 

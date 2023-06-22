@@ -18,12 +18,7 @@ const Serial = {
     return await board.close()
   },
   run: async (code) => {
-    await board.exit_raw_repl()
-    await board.enter_raw_repl()
-    // Prevent executing empty string
-    let result = await board.exec_raw(code || '#')
-    await board.exit_raw_repl()
-    return Promise.resolve(result)
+    return board.run(code)
   },
   stop: async () => {
     await board.stop()

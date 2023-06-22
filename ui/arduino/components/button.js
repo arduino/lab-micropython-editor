@@ -4,16 +4,16 @@ function Button(param) {
     disabled = false,
     label = '',
     icon = '',
-    color = 'default',
+    className = '',
     selected = false
   } = param || {}
   return html`
     <div
-      class="toolbar-button-wrapper ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}"
+      class="button-wrapper ${disabled ? 'disabled' : ''} ${selected ? 'selected' : ''}"
       onclick=${onclick}
       >
       <button
-        class="toolbar-button"
+        class="button ${className}"
         disabled=${disabled}
         >
         ${Icon(icon)}

@@ -95,8 +95,6 @@ function Toolbar(state, emit) {
       ${stop}
       ${reset}
       <div class="toolbar-spacing"></div>
-      ${newFile}
-      ${openFolder}
       ${save}
       <div class="toolbar-spacing"></div>
       ${terminal}

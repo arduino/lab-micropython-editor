@@ -1,6 +1,8 @@
 function Editor(state, emit) {
+  const el = state.cache(AceEditor, 'editor')
+  el.codeChange = () => emit('code-change')
   return html`
-    ${state.cache(AceEditor, 'editor').render()}
+    ${el.render()}
   `
 }
 
@@ -23,6 +25,7 @@ for i in range(0, 10):
     sleep(0.1)
 
 `)
+    this.editor.session.on('change', () => this.codeChange())
   }
 
   createElement(content) {
@@ -31,9 +34,12 @@ for i in range(0, 10):
 
   update(newContent) {
     if (newContent) {
+      console.log('newContent', newContent)
       this.editor.setValue(newContent)
     }
     setTimeout(() => this.editor.resize(), 10)
     return false
   }
+
+  codeChange() { return }
 }

@@ -12,16 +12,23 @@ function Panel(state, emit) {
 }
 
 function PanelHandle(state, emit) {
+  const copy = Button({
+    icon: 'icons/Copy.svg',
+    onclick: () => document.execCommand('copy')
+  })
+  const paste = Button({
+    icon: 'icons/Paste.svg',
+    onclick: () => document.execCommand('paste')
+  })
+  const cleanTerminal = Button({
+    icon: 'icons/Delete.svg',
+    onclick: () => emit('clean-terminal')
+  })
+
   let termControls = html`
-    <button class="panel-button" onclick=${() => document.execCommand('copy')}>
-      ${Icon("icons/Copy.svg")}
-    </button>
-    <button class="panel-button" onclick=${() => document.execCommand('paste')}>
-      ${Icon("icons/Paste.svg")}
-    </button>
-    <button class="panel-button" onclick=${() => emit('clean-terminal')}>
-      ${Icon("icons/Delete.svg")}
-    </button>
+    ${copy}
+    ${paste}
+    ${cleanTerminal}
   `
   return html`
     <div id="handle" onmousedown=${() => emit('start-resizing-panel')}>

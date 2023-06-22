@@ -2,6 +2,7 @@
 
 :root {
   --teal: #008184;
+  --light-teal: #ecf1f1;
   --white: rgb(255, 255, 255);
   --white-faded: rgba(255, 255, 255, 0.8);
   --black: #000;
@@ -19,7 +20,7 @@ body {
   height: 100vh;
   overflow: hidden;
   position: relative;
-  font-family: monospace;
+  font-family: 'Roboto Mono', monospace;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -53,7 +54,7 @@ img {
   padding: 0.5rem 0.5rem 0.75rem 0.5rem;
 }
 
-.toolbar-button-wrapper {
+.button-wrapper {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -62,22 +63,22 @@ img {
   cursor: pointer;
 }
 
-.toolbar-button-wrapper.selected .toolbar-button {
+.button-wrapper.selected .button {
   background: none;
   box-shadow: 0 0 0 0.15rem var(--white);
 }
-.toolbar-button-wrapper.selected .toolbar-button img {
+.button-wrapper.selected .button img {
   filter: invert(1);
 }
-.toolbar-button-wrapper.selected .toolbar-label {
+.button-wrapper.selected .toolbar-label {
   font-weight: bold;
 }
-.toolbar-button-wrapper.disabled {
+.button-wrapper.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
 
-.toolbar-button {
+.button {
   border: none;
   cursor: pointer !important;
   align-items: center;
@@ -94,16 +95,16 @@ img {
   background: var(--white-faded);
 }
 
-.toolbar-button[disabled] {
+.button[disabled] {
   pointer-events: none;
   background: var(--white-faded);
 }
-.toolbar-button:hover,
-.toolbar-button:active {
+.button:hover,
+.button:active {
   background: var(--white);
 }
 
-.toolbar-button img {
+.button img {
   width: 90%;
   height: 90%;
   margin-top: 0.1rem;
@@ -151,7 +152,8 @@ img {
 /* EDITOR */
 #editor {
   height: 100%;
-  font-family: monospace;
+  font-family: 'Roboto Mono', monospace;
+  line-height: 1.5em;
 }
 
 .editor-filename {
@@ -194,7 +196,7 @@ img {
   align-items: center;
 }
 
-#panel #handle .panel-button {
+#panel #handle .button {
   border: none;
   cursor: pointer !important;
   align-items: center;
@@ -231,47 +233,75 @@ img {
 }
 
 #files .file-list {
-  width: 100%;
+  width: 47.5%;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 0 1rem 1rem 1rem;
-  width: 45%;
 }
 
 #files .file-list .path {
-  /* height: 2.5rem; */
   color: var(--black);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.5rem 0;
+}
+#files .file-list .path img {
+  height: 1.25rem;
+}
+#files .file-list .path a {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: 0.5rem;
-  padding: 0.25rem 0;
 }
-
-#files .toolbar-label {
+#files .file-list .path a:link,
+#files .file-list .path a:visited,
+#files .file-list .path a:active,
+#files .file-list .path a:hover {
+  text-decoration: none;
   color: var(--black);
+}
+#files .file-list .path .full {
+  width: 100%;
+  padding: 0 0.5rem;
+}
+#files .file-list .path .button {
+  height: 1.5rem;
+  width: 1.5rem;
+  padding: 0;
+  margin: 0;
 }
 
 #files .file-list ul {
-  border: solid 0.1rem var(--teal);
+  background: var(--light-teal);
   width: 100%;
   height: 100%;
   padding: 0.5rem;
-  background: var(--white);
   overflow-x: none;
   overflow-y: scroll;
 }
 #files .file-list ul li {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #files .file-list ul li.selected {
-  background: var(--teal);
-  color: var(--white);
+  background: var(--white);
+  color: var(--black);
 }
 #files .file-list ul li:hover {
-  background: var(--teal);
-  color: var(--white);
+  background: var(--white);
+  color: var(--black);
+}
+#files .file-list ul li img {
+  padding-right: 0.5rem;
 }
 
 #files .file-controls {
@@ -280,13 +310,20 @@ img {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 10%;
+  width: 5%;
 }
 
-#files .file-controls .toolbar-button {
-  width: 1.25rem;
-  height: 1.25rem;
+#files .file-controls .button {
+  width: 1.5rem;
+  height: 1.5rem;
   padding: 0;
+}
+#files .file-controls .button.primary {
+  background: var(--teal);
+}
+
+#files .file-controls .button.primary img {
+  filter: invert(1);
 }
 
 #message {
@@ -306,4 +343,22 @@ img {
 #message.show {
   opacity: 1;
   transform: translate(-50%, 0%);
+}
+
+/* BLOCKING */
+#blocking {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  cursor: auto;
+  z-index: -1;
+}
+#blocking.active {
+  /* background: rgba(255, 255, 255, 0.1); */
+  z-index: 999;
+  cursor: wait !important;
+  pointer-events: all; /* this will capture all clicks */
 }

@@ -3,10 +3,12 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 const Micropython = require('micropython.js')
 const board = new Micropython()
+board.chunk_size = 192
+board.chunk_sleep = 200
 
 const Serial = {
   loadPorts: async () => {
-    let ports = await board.listPorts()
+    let ports = await board.list_ports()
     return ports.filter(p => p.vendorId && p.productId)
   },
   connect: async (path) => {
@@ -16,30 +18,18 @@ const Serial = {
     return await board.close()
   },
   run: async (code) => {
-    if (board.in_raw_repl) {
-      await board.exit_raw_repl()
-    }
-    await board.enter_raw_repl()
-    let result = await board.exec_raw({ command: code })
-    await board.exit_raw_repl()
-    return Promise.resolve(result)
+    return board.run(code)
   },
   stop: async () => {
-    if (board.in_raw_repl) {
-      await board.stop()
-      return board.exit_raw_repl()
-    } else {
-      return board.stop()
-    }
+    await board.stop()
+    await board.exit_raw_repl()
+    return Promise.resolve()
   },
   reset: async () => {
-    if (board.in_raw_repl) {
-      await board.stop()
-      await board.exit_raw_repl()
-      return board.reset()
-    } else {
-      return board.reset()
-    }
+    await board.stop()
+    await board.exit_raw_repl()
+    await board.reset()
+    return Promise.resolve()
   },
   eval: (d) => {
     return board.eval(d)
@@ -47,9 +37,11 @@ const Serial = {
   onData: (fn) => {
     board.serial.on('data', fn)
   },
-  listFiles: async () => {
-    const output = await board.fs_ls()
-    return output
+  listFiles: async (folder) => {
+    return board.fs_ls(folder)
+  },
+  ilistFiles: async (folder) => {
+    return board.fs_ils(folder)
   },
   loadFile: async (file) => {
     const output = await board.fs_cat(file)
@@ -58,23 +50,29 @@ const Serial = {
   removeFile: async (file) => {
     return board.fs_rm(file)
   },
-  saveFileContent: async (filename, content) => {
-    return board.fs_save(content || ' ', filename)
+  saveFileContent: async (filename, content, dataConsumer) => {
+    return board.fs_save(content || ' ', filename, dataConsumer)
   },
-  uploadFile: async (folder, filename) => {
-    let src = `${folder}/${filename}`
-    let dest = filename
-    return board.fs_put(src, dest)
+  uploadFile: async (diskFolder, serialFolder, filename, dataConsumer) => {
+    let src = `${diskFolder}/${filename}`
+    let dest = `${serialFolder}/${filename}`
+    return board.fs_put(src, dest, dataConsumer)
   },
-  downloadFile: async (folder, filename) => {
-    let contents = await Serial.loadFile(filename)
-    return ipcRenderer.invoke('save-file', folder, filename, contents)
+  downloadFile: async (serialFolder, diskFolder, filename) => {
+    let contents = await Serial.loadFile(`${serialFolder}/${filename}`)
+    return ipcRenderer.invoke('save-file', diskFolder, filename, contents)
   },
   renameFile: async (oldName, newName) => {
     return board.fs_rename(oldName, newName)
   },
   onDisconnect: async (fn) => {
     board.serial.on('close', fn)
+  },
+  createFolder: async (folder) => {
+    return await board.fs_mkdir(folder)
+  },
+  exit_raw_repl: async () => {
+    return board.exit_raw_repl()
   }
 }
 
@@ -84,6 +82,9 @@ const Disk = {
   },
   listFiles: async (folder) => {
     return ipcRenderer.invoke('list-files', folder)
+  },
+  ilistFiles: async (folder) => {
+    return ipcRenderer.invoke('ilist-files', folder)
   },
   loadFile: async (folder, file) => {
     let content = await ipcRenderer.invoke('load-file', folder, file)

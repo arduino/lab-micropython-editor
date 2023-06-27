@@ -545,18 +545,17 @@ function store(state, emitter) {
   })
 
   // NAVIGATION
-  emitter.on('navigate-to', async (device, fullPath) => {
-    log('navigate-to', device, fullPath)
+  emitter.on('navigate-to', async (device, localPath) => {
+    log('navigate-to', device, localPath)
     state.blocking = true
     emitter.emit('render')
-    fullPath = fullPath || '/'
+    // localPath = localPath || '/'
     if (device === 'serial') {
-      state.serialNavigation += '/' + fullPath
+      state.serialNavigation += '/' + localPath
       state.serialNavigation = serial.cleanPath(state.serialNavigation)
     }
     if (device === 'disk') {
-      state.diskNavigation += '/' + fullPath
-      state.diskNavigation = await disk.cleanPath(state.diskNavigation)
+      state.diskNavigation = await disk.cleanPath(state.diskNavigation + '/' + localPath)
     }
     if (state.selectedDevice === device) {
       state.selectedFile = null

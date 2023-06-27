@@ -171,7 +171,7 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'serial') {
       await serial.saveFileContent(
-        cleanPath(state.serialNavigation + '/' + filename),
+        serial.cleanPath(state.serialNavigation + '/' + filename),
         contents,
         (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
       )
@@ -182,7 +182,7 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'disk' && state.diskPath) {
       await disk.saveFileContent(
-        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        await disk.cleanPath(state.diskPath + '/' + state.diskNavigation),
         filename,
         contents
       )
@@ -240,13 +240,13 @@ function store(state, emitter) {
     let content = ''
     if (state.selectedDevice === 'serial') {
       content = await serial.loadFile(
-        cleanPath(state.serialNavigation + '/' + filename)
+        serial.cleanPath(state.serialNavigation + '/' + filename)
       )
     }
 
     if (state.selectedDevice === 'disk') {
       content = await disk.loadFile(
-        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        await disk.cleanPath(state.diskPath + '/' + state.diskNavigation),
         filename
       )
     }
@@ -286,7 +286,7 @@ function store(state, emitter) {
       await serial.stop()
       try {
         const files = await serial.ilistFiles(
-          cleanPath(state.serialNavigation)
+          serial.cleanPath(state.serialNavigation)
         )
         state.serialFiles = files.map(f => ({
           path: f[0],
@@ -313,7 +313,7 @@ function store(state, emitter) {
     if (state.diskPath) {
       try {
         state.diskFiles = await disk.ilistFiles(
-          cleanPath(state.diskPath + '/' + state.diskNavigation)
+          await disk.cleanPath(state.diskPath + '/' + state.diskNavigation)
         )
         // Filter out dot files
         state.diskFiles = state.diskFiles.filter(f => f.path.indexOf('.') !== 0)
@@ -348,13 +348,13 @@ function store(state, emitter) {
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
       await disk.saveFileContent(
-        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        await disk.cleanPath(state.diskPath + '/' + state.diskNavigation),
         state.selectedFile,
         contents
       )
       await serial.uploadFile(
-        cleanPath(state.diskPath + '/' + state.diskNavigation),
-        cleanPath(state.serialNavigation),
+        serial.cleanPath(state.diskPath + '/' + state.diskNavigation),
+        serial.cleanPath(state.serialNavigation),
         state.selectedFile,
         (e) => emitter.emit('message', `Uploading file... ${e}`)
       )
@@ -380,12 +380,12 @@ function store(state, emitter) {
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
       await serial.saveFileContent(
-        cleanPath(state.serialNavigation + '/' + state.selectedFile),
+        serial.cleanPath(state.serialNavigation + '/' + state.selectedFile),
         contents
       )
       await serial.downloadFile(
-        cleanPath(state.serialNavigation),
-        cleanPath(state.diskPath + '/' + state.diskNavigation),
+        serial.cleanPath(state.serialNavigation),
+        serial.cleanPath(state.diskPath + '/' + state.diskNavigation),
         state.selectedFile
       )
       emitter.emit('message', 'File downloaded!', 500)
@@ -487,16 +487,16 @@ function store(state, emitter) {
       if (confirmation) {
         emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
         if (state.serialFiles.find(f => f.path === oldFilename)) {
-          const oldPath = cleanPath(state.serialNavigation + '/' + oldFilename)
+          const oldPath = serial.cleanPath(state.serialNavigation + '/' + oldFilename)
           // If old name exists, save old file and rename
           await serial.saveFileContent(
             oldPath,
             contents,
             (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
           )
-          await serial.renameFile(oldPath, cleanPath(state.serialNavigation + '/' + filename))
+          await serial.renameFile(oldPath, serial.cleanPath(state.serialNavigation + '/' + filename))
         } else {
-          const newPath = cleanPath(state.serialNavigation + '/' + filename)
+          const newPath = serial.cleanPath(state.serialNavigation + '/' + filename)
           // If old name doesn't exist create new file
           await serial.saveFileContent(
             newPath,
@@ -516,7 +516,7 @@ function store(state, emitter) {
     }
 
     if (state.diskPath !== null && state.selectedDevice === 'disk') {
-      const diskPath = cleanPath(state.diskPath + '/' + state.diskNavigation)
+      const diskPath = await disk.cleanPath(state.diskPath + '/' + state.diskNavigation)
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.diskFiles.find((f) => f.path === filename)) {
@@ -545,18 +545,18 @@ function store(state, emitter) {
   })
 
   // NAVIGATION
-  emitter.on('navigate-to', (device, fullPath) => {
+  emitter.on('navigate-to', async (device, fullPath) => {
     log('navigate-to', device, fullPath)
     state.blocking = true
     emitter.emit('render')
     fullPath = fullPath || '/'
     if (device === 'serial') {
       state.serialNavigation += '/' + fullPath
-      state.serialNavigation = cleanPath(state.serialNavigation)
+      state.serialNavigation = serial.cleanPath(state.serialNavigation)
     }
     if (device === 'disk') {
       state.diskNavigation += '/' + fullPath
-      state.diskNavigation = cleanPath(state.diskNavigation)
+      state.diskNavigation = await disk.cleanPath(state.diskNavigation)
     }
     if (state.selectedDevice === device) {
       state.selectedFile = null
@@ -564,21 +564,21 @@ function store(state, emitter) {
     }
     emitter.emit('update-files')
   })
-  emitter.on('navigate-to-parent', (device) => {
+  emitter.on('navigate-to-parent', async (device) => {
     log('navigate-to-parent', device)
     state.blocking = true
     emitter.emit('render')
     if (device === 'serial') {
       const navArray = state.serialNavigation.split('/')
       navArray.pop()
-      state.serialNavigation = cleanPath(
+      state.serialNavigation = serial.cleanPath(
         '/' + navArray.join('/')
       )
     }
     if (device === 'disk') {
       const navArray = state.diskNavigation.split('/')
       navArray.pop()
-      state.diskNavigation = cleanPath(
+      state.diskNavigation = await disk.cleanPath(
         '/' + navArray.join('/')
       )
     }
@@ -619,9 +619,7 @@ function resizeEditor(state) {
   }
 }
 
-function cleanPath(path) {
-  return '/' + path.split('/').filter(f => f).join('/')
-}
+
 
 function cleanCharacters(str) {
   return str.replace(/[\u{0080}-\u{FFFF}]/gu,"")

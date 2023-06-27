@@ -73,6 +73,9 @@ const Serial = {
   },
   exit_raw_repl: async () => {
     return board.exit_raw_repl()
+  },
+  cleanPath: (filePath) => {
+    return '/' + filePath.split('/').filter(f => f).join('/')
   }
 }
 
@@ -98,6 +101,9 @@ const Disk = {
   },
   renameFile: async (folder, oldName, newName) => {
     return ipcRenderer.invoke('rename-file', folder, oldName, newName)
+  },
+  cleanPath: async (filePath) => {
+    return ipcRenderer.invoke('clean-path', filePath)
   }
 }
 

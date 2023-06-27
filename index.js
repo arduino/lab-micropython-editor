@@ -40,6 +40,9 @@ function ilistFolder(folder, filesOnly) {
   return files
 }
 
+function cleanPath(filePath) {
+  return path.resolve(filePath)
+}
 
 // LOCAL FILE SYSTEM ACCESS
 ipcMain.handle('open-folder', async (event) => {
@@ -103,6 +106,15 @@ ipcMain.handle('rename-file', (event, folder, filename, newFilename) => {
   fs.renameSync(filePath, newFilePath)
   return newFilename
 })
+
+ipcMain.handle('clean-path', (event, filePath) => {
+  console.log('ipcMain', 'cleanPath', filePath)
+  const resolvedPath = cleanPath(filePath)
+  console.log('resolved path', resolvedPath)
+  return resolvedPath
+})
+
+// WINDOW MANAGEMENT
 
 ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {
   console.log('ipcMain', 'set-window-size', minWidth, minHeight)

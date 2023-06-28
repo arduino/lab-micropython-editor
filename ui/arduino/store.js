@@ -287,7 +287,6 @@ function store(state, emitter) {
     if (folder !== 'null' && folder !== null) {
       localStorage.setItem('diskPath', folder)
       state.diskPath = folder
-      // state.diskFiles = files
     }
     if (!state.isFilesOpen) emitter.emit('show-files')
     emitter.emit('update-files')
@@ -616,7 +615,6 @@ function store(state, emitter) {
     log('navigate-to', device, localPath)
     state.blocking = true
     emitter.emit('render')
-    // localPath = localPath || '/'
     if (device === 'serial') {
       state.serialNavigation = serial.getNavigationPath(
         state.serialNavigation, localPath

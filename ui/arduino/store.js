@@ -417,26 +417,27 @@ function store(state, emitter) {
       let editor = state.cache(AceEditor, 'editor').editor
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
-      await serial.saveFileContent(
-        serial.getFullPath(
-          state.serialPath,
-          state.serialNavigation,
-          state.selectedFile
-        ),
-        contents
-      )
-      await serial.downloadFile(
-        serial.getFullPath(
-          state.serialPath,
-          state.serialNavigation,
-          state.selectedFile
-        ),
+      if (state.unsavedChanges) {
+        await serial.saveFileContent(
+          serial.getFullPath(
+            state.serialPath,
+            state.serialNavigation,
+            state.selectedFile
+          ),
+          contents,
+          (e) => emitter.emit('message', `Saving ${state.selectedFile} on ${getDeviceName('serial')}. ${e}`)
+        )
+        state.unsavedChanges = false
+      }
+      await disk.saveFileContent(
         disk.getFullPath(
           state.diskPath,
           state.diskNavigation,
           state.selectedFile
-        )
+        ),
+        contents
       )
+
       emitter.emit('message', 'File downloaded!', 500)
       setTimeout(() => emitter.emit('update-files'), 500)
       emitter.emit('render')

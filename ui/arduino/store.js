@@ -384,7 +384,7 @@ function store(state, emitter) {
         contents
       )
       await serial.uploadFile(
-        serial.getFullPath(
+        disk.getFullPath(
           state.diskPath,
           state.diskNavigation,
           state.selectedFile
@@ -431,7 +431,7 @@ function store(state, emitter) {
           state.serialNavigation,
           state.selectedFile
         ),
-        serial.getFullPath(
+        disk.getFullPath(
           state.diskPath,
           state.diskNavigation,
           state.selectedFile

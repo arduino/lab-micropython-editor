@@ -79,7 +79,7 @@ const Serial = {
   getFullPath: (root, navigation, file) => {
     return path.posix.join('/', navigation, file)
   },
-  getParentPath: (filePath) => {
+  getParentPath: (navigation) => {
     return path.posix.dirname(navigation)
   }
 }

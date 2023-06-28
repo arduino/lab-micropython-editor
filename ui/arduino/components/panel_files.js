@@ -84,7 +84,7 @@ function PanelFiles(state, emit) {
         <div class="path">
           ${state.isConnected ? Icon('icons/Connect.svg') : Icon('icons/Disconnect.svg')}
           <a class="full" href="#" onclick=${() => emit('open-port-dialog')}>
-            ${state.isConnected ? state.serialPath : 'Connect'}
+            ${state.isConnected ? state.serialPort : 'Connect'}
           </a>
           ${removeSerial}
           ${newSerial}

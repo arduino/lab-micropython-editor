@@ -1,5 +1,6 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
+const path = require('path')
 
 const Micropython = require('micropython.js')
 const board = new Micropython()
@@ -53,14 +54,12 @@ const Serial = {
   saveFileContent: async (filename, content, dataConsumer) => {
     return board.fs_save(content || ' ', filename, dataConsumer)
   },
-  uploadFile: async (diskFolder, serialFolder, filename, dataConsumer) => {
-    let src = `${diskFolder}/${filename}`
-    let dest = `${serialFolder}/${filename}`
+  uploadFile: async (src, dest, dataConsumer) => {
     return board.fs_put(src, dest, dataConsumer)
   },
-  downloadFile: async (serialFolder, diskFolder, filename) => {
-    let contents = await Serial.loadFile(`${serialFolder}/${filename}`)
-    return ipcRenderer.invoke('save-file', diskFolder, filename, contents)
+  downloadFile: async (src, dest) => {
+    let contents = await Serial.loadFile(src)
+    return ipcRenderer.invoke('save-file', dest, contents)
   },
   renameFile: async (oldName, newName) => {
     return board.fs_rename(oldName, newName)
@@ -73,6 +72,15 @@ const Serial = {
   },
   exit_raw_repl: async () => {
     return board.exit_raw_repl()
+  },
+  getNavigationPath: (navigation, target) => {
+    return [navigation, target].filter(p => p).join('/')
+  },
+  getFullPath: (root, navigation, file) => {
+    return root + [navigation, file].filter(p => p).join('/')
+  },
+  getParentPath: (filePath) => {
+    return filePath.split('/').slice(0, -1).join('/')
   }
 }
 
@@ -86,18 +94,27 @@ const Disk = {
   ilistFiles: async (folder) => {
     return ipcRenderer.invoke('ilist-files', folder)
   },
-  loadFile: async (folder, file) => {
-    let content = await ipcRenderer.invoke('load-file', folder, file)
+  loadFile: async (filePath) => {
+    let content = await ipcRenderer.invoke('load-file', filePath)
     return new TextDecoder().decode(content)
   },
-  removeFile: async (folder, file) => {
-    return ipcRenderer.invoke('remove-file', folder, file)
+  removeFile: async (filePath) => {
+    return ipcRenderer.invoke('remove-file', filePath)
   },
-  saveFileContent: async (folder, file, content) => {
-    return ipcRenderer.invoke('save-file', folder, file, content)
+  saveFileContent: async (filePath, content) => {
+    return ipcRenderer.invoke('save-file', filePath, content)
   },
-  renameFile: async (folder, oldName, newName) => {
-    return ipcRenderer.invoke('rename-file', folder, oldName, newName)
+  renameFile: async (oldName, newName) => {
+    return ipcRenderer.invoke('rename-file', oldName, newName)
+  },
+  getNavigationPath: (navigation, target) => {
+    return path.join(navigation, target)
+  },
+  getFullPath: (root, navigation, file) => {
+    return path.resolve(path.join(root, navigation, file))
+  },
+  getParentPath: (navigation) => {
+    return path.dirname(navigation)
   }
 }
 

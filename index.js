@@ -40,10 +40,6 @@ function ilistFolder(folder, filesOnly) {
   return files
 }
 
-function cleanPath(filePath) {
-  return path.resolve(filePath)
-}
-
 // LOCAL FILE SYSTEM ACCESS
 ipcMain.handle('open-folder', async (event) => {
   console.log('ipcMain', 'open-folder')

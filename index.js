@@ -22,8 +22,12 @@ function listFolder(folder) {
   return files
 }
 
-function ilistFolder(folder, filesOnly) {
+function ilistFolder(folder) {
   let files = fs.readdirSync(path.resolve(folder))
+  files = files.filter(f => {
+    let filePath = path.resolve(folder, f)
+    return !fs.lstatSync(filePath).isSymbolicLink()
+  })
   files = files.map(f => {
     let filePath = path.resolve(folder, f)
     return {

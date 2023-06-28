@@ -99,7 +99,7 @@ ipcMain.handle('remove-file', (event, filePath) => {
 ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
   console.log('ipcMain', 'rename-file', filePath, newFilePath)
   fs.renameSync(filePath, newFilePath)
-  return newFilename
+  return true
 })
 
 // WINDOW MANAGEMENT

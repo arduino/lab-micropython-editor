@@ -74,13 +74,13 @@ const Serial = {
     return board.exit_raw_repl()
   },
   getNavigationPath: (navigation, target) => {
-    return [navigation, target].filter(p => p).join('/')
+    return path.posix.join(navigation, target)
   },
   getFullPath: (root, navigation, file) => {
-    return root + [navigation, file].filter(p => p).join('/')
+    return path.posix.join(root, navigation, file)
   },
-  getParentPath: (filePath) => {
-    return filePath.split('/').slice(0, -1).join('/')
+  getParentPath: (navigation) => {
+    return path.posix.dirname(navigation)
   }
 }
 

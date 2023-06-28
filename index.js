@@ -31,10 +31,6 @@ function ilistFolder(folder, filesOnly) {
       type: fs.lstatSync(filePath).isDirectory() ? 'folder' : 'file'
     }
   })
-  // Filter out directories
-  if (filesOnly) {
-    files = files.filter(f => f.type === 'file')
-  }
   // Filter out dot files
   files = files.filter(f => f.path.indexOf('.') !== 0)
   return files

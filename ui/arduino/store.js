@@ -15,11 +15,15 @@ function store(state, emitter) {
   state.selectedFile = null
   state.selectedDevice = 'disk'
 
-  state.diskPath = localStorage.getItem('diskPath')
-  state.serialPath = null
-
-  state.diskNavigation = '/'
-  state.serialNavigation = '/'
+  // No trailing slashes
+  state.diskPath = localStorage.getItem('diskPath') == 'null'
+    ? null
+    : localStorage.getItem('diskPath')
+  state.serialPath = '/' // this never changes
+  state.serialPort = null
+  // no slashes on the start or end
+  state.diskNavigation = ''
+  state.serialNavigation = ''
 
   state.isConnected = false
   state.isPortDialogOpen = false
@@ -62,9 +66,9 @@ function store(state, emitter) {
     if (state.isConnected) {
       emitter.emit('message', 'Disconnected')
     }
+    state.serialPort = null
     state.isConnected = false
-    state.serialNavigation = '/'
-    state.serialPath = null
+    state.serialNavigation = ''
     state.isTerminalOpen = false
     state.serialFiles = []
 
@@ -98,9 +102,8 @@ function store(state, emitter) {
     // Make sure there is a lib folder
     log('creating lib folder')
     await serial.createFolder('lib')
-
-    state.serialPath = path
-    state.serialNavigation = '/'
+    state.serialPort = path
+    state.serialNavigation = ''
     emitter.emit('update-files')
 
     emitter.emit('message', 'Connected', 1000)
@@ -171,10 +174,15 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'serial') {
       await serial.saveFileContent(
-        serial.cleanPath(state.serialNavigation + '/' + filename),
+        serial.getFullPath(
+          state.serialPath,
+          state.serialNavigation,
+          filename
+        ),
         contents,
         (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
       )
+      // XXX: This one second delay may be shorter
       setTimeout(() => emitter.emit('update-files'), 1000)
       state.unsavedChanges = false
       emitter.emit('message', `Saved`, 1000)
@@ -182,8 +190,11 @@ function store(state, emitter) {
 
     if (state.selectedDevice === 'disk' && state.diskPath) {
       await disk.saveFileContent(
-        await disk.cleanPath(state.diskPath + '/' + state.diskNavigation),
-        filename,
+        disk.getFullPath(
+          state.diskPath,
+          state.diskNavigation,
+          filename
+        ),
         contents
       )
       setTimeout(() => emitter.emit('update-files'), 100)
@@ -207,8 +218,11 @@ function store(state, emitter) {
       }
       if (state.selectedDevice === 'disk') {
         await disk.removeFile(
-          state.diskPath + '/' + state.diskNavigation,
-          state.selectedFile
+          disk.getFullPath(
+            state.diskPath,
+            state.diskNavigation,
+            state.selectedFile
+          )
         )
         emitter.emit('new-file', 'disk')
       }
@@ -240,14 +254,21 @@ function store(state, emitter) {
     let content = ''
     if (state.selectedDevice === 'serial') {
       content = await serial.loadFile(
-        serial.cleanPath(state.serialNavigation + '/' + filename)
+        serial.getFullPath(
+          state.serialPath,
+          state.serialNavigation,
+          filename
+        )
       )
     }
 
     if (state.selectedDevice === 'disk') {
       content = await disk.loadFile(
-        await disk.cleanPath(state.diskPath + '/' + state.diskNavigation),
-        filename
+        disk.getFullPath(
+          state.diskPath,
+          state.diskNavigation,
+          filename
+        )
       )
     }
 
@@ -262,11 +283,11 @@ function store(state, emitter) {
   emitter.on('open-folder', async () => {
     log('open-folder')
     let { folder, files } = await disk.openFolder()
-    state.diskNavigation = '/'
+    state.diskNavigation = ''
     if (folder !== 'null' && folder !== null) {
       localStorage.setItem('diskPath', folder)
       state.diskPath = folder
-      state.diskFiles = files
+      // state.diskFiles = files
     }
     if (!state.isFilesOpen) emitter.emit('show-files')
     emitter.emit('update-files')
@@ -286,7 +307,11 @@ function store(state, emitter) {
       await serial.stop()
       try {
         const files = await serial.ilistFiles(
-          serial.cleanPath(state.serialNavigation)
+          serial.getFullPath(
+            state.serialPath,
+            state.serialNavigation,
+            ''
+          )
         )
         state.serialFiles = files.map(f => ({
           path: f[0],
@@ -303,8 +328,7 @@ function store(state, emitter) {
         // Sort folders first
         state.serialFiles = sortFoldersFirst(state.serialFiles)
       } catch (e) {
-        state.serialNavigation = '/'
-        state.serialPath = null
+        state.serialNavigation = ''
         state.serialFiles = []
         console.log('error', e)
       }
@@ -313,7 +337,11 @@ function store(state, emitter) {
     if (state.diskPath) {
       try {
         state.diskFiles = await disk.ilistFiles(
-          await disk.cleanPath(state.diskPath + '/' + state.diskNavigation)
+          disk.getFullPath(
+            state.diskPath,
+            state.diskNavigation,
+            ''
+          )
         )
         // Filter out dot files
         state.diskFiles = state.diskFiles.filter(f => f.path.indexOf('.') !== 0)
@@ -324,7 +352,7 @@ function store(state, emitter) {
         // Sort folders first
         state.diskFiles = sortFoldersFirst(state.diskFiles)
       } catch (e) {
-        state.diskNavigation = '/'
+        state.diskNavigation = ''
         state.diskPath = null
         state.diskFiles = []
         localStorage.setItem('diskPath', null)
@@ -348,14 +376,24 @@ function store(state, emitter) {
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
       await disk.saveFileContent(
-        await disk.cleanPath(state.diskPath + '/' + state.diskNavigation),
-        state.selectedFile,
+        disk.getFullPath(
+          state.diskPath,
+          state.diskNavigation,
+          state.selectedFile
+        ),
         contents
       )
       await serial.uploadFile(
-        serial.cleanPath(state.diskPath + '/' + state.diskNavigation),
-        serial.cleanPath(state.serialNavigation),
-        state.selectedFile,
+        serial.getFullPath(
+          state.diskPath,
+          state.diskNavigation,
+          state.selectedFile
+        ),
+        serial.getFullPath(
+          state.serialPath,
+          state.serialNavigation,
+          state.selectedFile
+        ),
         (e) => emitter.emit('message', `Uploading file... ${e}`)
       )
       emitter.emit('message', 'File uploaded!', 500)
@@ -380,13 +418,24 @@ function store(state, emitter) {
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
       await serial.saveFileContent(
-        serial.cleanPath(state.serialNavigation + '/' + state.selectedFile),
+        serial.getFullPath(
+          state.serialPath,
+          state.serialNavigation,
+          state.selectedFile
+        ),
         contents
       )
       await serial.downloadFile(
-        serial.cleanPath(state.serialNavigation),
-        serial.cleanPath(state.diskPath + '/' + state.diskNavigation),
-        state.selectedFile
+        serial.getFullPath(
+          state.serialPath,
+          state.serialNavigation,
+          state.selectedFile
+        ),
+        serial.getFullPath(
+          state.diskPath,
+          state.diskNavigation,
+          state.selectedFile
+        )
       )
       emitter.emit('message', 'File downloaded!', 500)
       setTimeout(() => emitter.emit('update-files'), 500)
@@ -487,16 +536,31 @@ function store(state, emitter) {
       if (confirmation) {
         emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
         if (state.serialFiles.find(f => f.path === oldFilename)) {
-          const oldPath = serial.cleanPath(state.serialNavigation + '/' + oldFilename)
+          const oldPath = serial.getFullPath(
+            state.serialPath,
+            state.serialNavigation,
+            oldFilename
+          )
           // If old name exists, save old file and rename
           await serial.saveFileContent(
             oldPath,
             contents,
             (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
           )
-          await serial.renameFile(oldPath, serial.cleanPath(state.serialNavigation + '/' + filename))
+          await serial.renameFile(
+            oldPath,
+            serial.getFullPath(
+              state.serialPath,
+              state.serialNavigation,
+              filename
+            )
+          )
         } else {
-          const newPath = serial.cleanPath(state.serialNavigation + '/' + filename)
+          const newPath = serial.getFullPath(
+            state.serialPath,
+            state.serialNavigation,
+            filename
+          )
           // If old name doesn't exist create new file
           await serial.saveFileContent(
             newPath,
@@ -516,7 +580,6 @@ function store(state, emitter) {
     }
 
     if (state.diskPath !== null && state.selectedDevice === 'disk') {
-      const diskPath = await disk.cleanPath(state.diskPath + '/' + state.diskNavigation)
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.diskFiles.find((f) => f.path === filename)) {
@@ -526,11 +589,36 @@ function store(state, emitter) {
         emitter.emit('message', `Renaming`)
         if (state.diskFiles.find((f) => f.path === oldFilename)) {
           // If old name exists, save old file and rename
-          await disk.saveFileContent(diskPath, oldFilename, contents)
-          await disk.renameFile(diskPath, oldFilename, filename)
+          await disk.saveFileContent(
+            disk.getFullPath(
+              state.diskPath,
+              state.diskNavigation,
+              oldFilename
+            ),
+            contents
+          )
+          await disk.renameFile(
+            disk.getFullPath(
+              state.diskPath,
+              state.diskNavigation,
+              oldFilename
+            ),
+            disk.getFullPath(
+              state.diskPath,
+              state.diskNavigation,
+              filename
+            )
+          )
         } else {
           // If old name doesn't exist create new file
-          await disk.saveFileContent(diskPath, filename, contents)
+          await disk.saveFileContent(
+            disk.getFullPath(
+              state.diskPath,
+              state.diskNavigation,
+              filename
+            ),
+            contents
+          )
         }
         state.isEditingFilename = false
         emitter.emit('message', `Saved`, 500)
@@ -551,11 +639,14 @@ function store(state, emitter) {
     emitter.emit('render')
     // localPath = localPath || '/'
     if (device === 'serial') {
-      state.serialNavigation += '/' + localPath
-      state.serialNavigation = serial.cleanPath(state.serialNavigation)
+      state.serialNavigation = serial.getNavigationPath(
+        state.serialNavigation, localPath
+      )
     }
     if (device === 'disk') {
-      state.diskNavigation = await disk.cleanPath(state.diskNavigation + '/' + localPath)
+      state.diskNavigation = disk.getNavigationPath(
+        state.diskNavigation, localPath
+      )
     }
     if (state.selectedDevice === device) {
       state.selectedFile = null
@@ -564,27 +655,21 @@ function store(state, emitter) {
     emitter.emit('update-files')
   })
   emitter.on('navigate-to-parent', async (device) => {
-    log('navigate-to-parent', device)
+    log('navigate-to-parent', device, state.serialNavigation, state.diskNavigation)
     state.blocking = true
     emitter.emit('render')
-    if (device === 'serial') {
-      const navArray = state.serialNavigation.split('/')
-      navArray.pop()
-      state.serialNavigation = serial.cleanPath(
-        '/' + navArray.join('/')
-      )
-    }
     if (device === 'disk') {
-      const navArray = state.diskNavigation.split('/')
-      navArray.pop()
-      state.diskNavigation = await disk.cleanPath(
-        '/' + navArray.join('/')
-      )
+      state.diskNavigation = disk.getParentPath(state.diskNavigation)
     }
+    if (device === 'serial') {
+      state.serialNavigation = serial.getParentPath(state.serialNavigation)
+    }
+
     if (state.selectedDevice === device) {
       state.selectedFile = null
       state.unsavedChanges = false
     }
+
     emitter.emit('update-files')
   })
 

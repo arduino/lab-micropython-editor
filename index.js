@@ -67,16 +67,14 @@ ipcMain.handle('ilist-files', async (event, folder) => {
   return ilistFolder(folder)
 })
 
-ipcMain.handle('load-file', (event, folder, filename) => {
-  console.log('ipcMain', 'load-file', folder, filename )
-  let filePath = path.resolve(folder, filename)
+ipcMain.handle('load-file', (event, filePath) => {
+  console.log('ipcMain', 'load-file', filePath)
   let content = fs.readFileSync(filePath)
   return content
 })
 
-ipcMain.handle('save-file', (event, folder, filename, content) => {
-  console.log('ipcMain', 'save-file', folder, filename, content)
-  let filePath = path.resolve(folder, filename)
+ipcMain.handle('save-file', (event, filePath, content) => {
+  console.log('ipcMain', 'save-file', filePath, content)
   fs.writeFileSync(filePath, content, 'utf8')
   return true
 })
@@ -92,9 +90,8 @@ ipcMain.handle('update-folder', (event, folder) => {
   return { folder, files }
 })
 
-ipcMain.handle('remove-file', (event, folder, filename) => {
-  console.log('ipcMain', 'remove-file', folder, filename)
-  let filePath = path.resolve(folder, filename)
+ipcMain.handle('remove-file', (event, filePath) => {
+  console.log('ipcMain', 'remove-file', filePath)
   fs.unlinkSync(filePath)
   return true
 })
@@ -105,13 +102,6 @@ ipcMain.handle('rename-file', (event, folder, filename, newFilename) => {
   let newFilePath = path.resolve(folder, newFilename)
   fs.renameSync(filePath, newFilePath)
   return newFilename
-})
-
-ipcMain.handle('clean-path', (event, filePath) => {
-  console.log('ipcMain', 'cleanPath', filePath)
-  const resolvedPath = cleanPath(filePath)
-  console.log('resolved path', resolvedPath)
-  return resolvedPath
 })
 
 // WINDOW MANAGEMENT

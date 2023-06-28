@@ -23,6 +23,9 @@ const Serial = {
   },
   stop: async () => {
     await board.stop()
+    return Promise.resolve()
+  },
+  exit_raw_repl: async () => {
     await board.exit_raw_repl()
     return Promise.resolve()
   },
@@ -69,9 +72,6 @@ const Serial = {
   },
   createFolder: async (folder) => {
     return await board.fs_mkdir(folder)
-  },
-  exit_raw_repl: async () => {
-    return board.exit_raw_repl()
   },
   getNavigationPath: (navigation, target) => {
     return path.posix.join(navigation, target)

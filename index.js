@@ -96,10 +96,8 @@ ipcMain.handle('remove-file', (event, filePath) => {
   return true
 })
 
-ipcMain.handle('rename-file', (event, folder, filename, newFilename) => {
-  console.log('ipcMain', 'rename-file', folder, filename, newFilename)
-  let filePath = path.resolve(folder, filename)
-  let newFilePath = path.resolve(folder, newFilename)
+ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
+  console.log('ipcMain', 'rename-file', filePath, newFilePath)
   fs.renameSync(filePath, newFilePath)
   return newFilename
 })

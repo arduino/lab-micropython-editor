@@ -7,7 +7,7 @@
 	"scripts": {
 		"post-set-shell": "npm config set script-shell bash",
 		"rebuild": "electron-rebuild",
-		"dev": "electron ./",
+		"dev": "electron --inspect ./",
 		"build": "npm run post-set-shell && electron-builder $(if [ $(uname -m) =  arm64 ]; then echo --mac --x64; fi)",
 		"postinstall": "npm run post-set-shell && npm run rebuild"
 	},
@@ -38,7 +38,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"about-window": "^1.15.2",
-		"micropython.js": "github:arduino/micropython.js#v1.4.0"
+		"micropython-ctl-cont": "^1.15.3"
 	},
 	"engines": {
 		"node": "18"

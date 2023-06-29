@@ -2,76 +2,65 @@ console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
 
-const Micropython = require('micropython.js')
+const Micropython = require('micropython-ctl-cont').MicroPythonDevice
 const board = new Micropython()
-board.chunk_size = 192
-board.chunk_sleep = 200
 
 const Serial = {
   loadPorts: async () => {
-    let ports = await board.list_ports()
-    return ports.filter(p => p.vendorId && p.productId)
+    // let ports = await board.list_ports()
+    // return ports.filter(p => p.vendorId && p.productId)
+    return ipcRenderer.invoke('serial-list-ports')
   },
   connect: async (path) => {
-    return await board.open(path)
+    return ipcRenderer.invoke('serial-connect', path)
   },
   disconnect: async () => {
-    return await board.close()
+    return ipcRenderer.invoke('serial-disconnect')
   },
   run: async (code) => {
-    return board.run(code)
+    return ipcRenderer.invoke('serial-run', code)
   },
   stop: async () => {
-    await board.stop()
-    return Promise.resolve()
-  },
-  exit_raw_repl: async () => {
-    await board.exit_raw_repl()
-    return Promise.resolve()
+    return ipcRenderer.invoke('serial-stop')
   },
   reset: async () => {
-    await board.stop()
-    await board.exit_raw_repl()
-    await board.reset()
-    return Promise.resolve()
+    await ipcRenderer.invoke('serial-reset')
   },
   eval: (d) => {
-    return board.eval(d)
+    return ipcRenderer.invoke('serial-eval', d)
   },
   onData: (fn) => {
-    board.serial.on('data', fn)
-  },
-  listFiles: async (folder) => {
-    return board.fs_ls(folder)
-  },
-  ilistFiles: async (folder) => {
-    return board.fs_ils(folder)
-  },
-  loadFile: async (file) => {
-    const output = await board.fs_cat(file)
-    return output || ''
-  },
-  removeFile: async (file) => {
-    return board.fs_rm(file)
-  },
-  saveFileContent: async (filename, content, dataConsumer) => {
-    return board.fs_save(content || ' ', filename, dataConsumer)
-  },
-  uploadFile: async (src, dest, dataConsumer) => {
-    return board.fs_put(src, dest, dataConsumer)
-  },
-  downloadFile: async (src, dest) => {
-    let contents = await Serial.loadFile(src)
-    return ipcRenderer.invoke('save-file', dest, contents)
-  },
-  renameFile: async (oldName, newName) => {
-    return board.fs_rename(oldName, newName)
+    ipcRenderer.on('terminal-data', (_e, data) => fn(data))
   },
   onDisconnect: async (fn) => {
-    board.serial.on('close', fn)
+    ipcRenderer.on('disconnect', (_e) => fn())
+  },
+  listFiles: async (folder) => {
+    return ipcRenderer.invoke('serial-list-files', folder)
+  },
+  ilistFiles: async (folder) => {
+    return ipcRenderer.invoke('serial-ilist-files', folder)
+  },
+  loadFile: async (file) => {
+    return ipcRenderer.invoke('serial-load-file', file)
+  },
+  removeFile: async (file) => {
+    return ipcRenderer.invoke('serial-remove-file', file)
+  },
+  saveFileContent: async (filename, content) => {
+    return ipcRenderer.invoke('serial-save-file', filename, content)
+  },
+  uploadFile: async (src, dest) => {
+    return ipcRenderer.invoke('serial-upload', src, dest)
+  },
+  downloadFile: async (src, dest) => {
+    return ipcRenderer.invoke('serial-download', src, dest)
+  },
+  renameFile: async (oldName, newName) => {
+    return ipcRenderer.invoke('serial-rename-file', oldName, newName)
   },
   createFolder: async (folder) => {
-    return await board.fs_mkdir(folder)
+    return ipcRenderer.invoke('serial-create-folder', folder)
   },
   getNavigationPath: (navigation, target) => {
     return path.posix.join(navigation, target)

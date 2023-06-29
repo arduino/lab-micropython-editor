@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
+const Micropython = require('micropython-ctl-cont').MicroPythonDevice
 const path = require('path')
 const fs = require('fs')
 const openAboutWindow = require('about-window').default
@@ -98,8 +99,121 @@ ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
   return true
 })
 
-// WINDOW MANAGEMENT
+// MICROPYTHON
+const board = new Micropython()
+ipcMain.handle('serial-list-ports', (event) => {
+  console.log('ipcMain', 'serial-list-ports')
+  return [
+    { path: '/dev/ttyACM0' },
+    { path: '/dev/ttyACM1' },
+    { path: '/dev/ttyUSB0' },
+    { path: '/dev/ttyUSB1' },
+  ]
+})
+ipcMain.handle('serial-connect', async (event, path) => {
+  console.log('ipcMain', 'serial-connect', path)
+  await board.disconnect()
+  await board.connectSerial(path)
+  board.sendData(Buffer.from('\x03\x03'))
+  board.onTerminalData = (d) => {
+    win.webContents.send('terminal-data', d)
+  }
+  board.onclose = () => {
+    win.webContents.send('disconnect')
+  }
+})
+ipcMain.handle('serial-disconnect', async (event) => {
+  console.log('ipcMain', 'serial-disconnect')
+  await board.disconnect()
+})
+ipcMain.handle('serial-run', async (event, code) => {
+  console.log('ipcMain', 'serial-run', code)
+  win.webContents.send('terminal-data', '\r\n')
+  try {
+    const output = await board.runScript(code , {
+      disableDedent: true,
+      broadcastOutputAsTerminalData: true
+    })
+  } catch(err) {
+    console.log(err)
+  }
+  board.sendData('\r\n')
+  return Promise.resolve(output)
+})
+ipcMain.handle('serial-stop', async (event) => {
+  console.log('ipcMain', 'serial-stop')
+  board.sendData(Buffer.from('\r\x03\x03'))
+  try {
+    await board.readUntil('>>>', 5)
+  } catch {
+    // Might be stuck in raw repl. Try to exit into friendly repl with Ctrl+B
+    try {
+      await board.sendData('\r\x03\x02\r')
+    } catch {
+      console.log('could not stop')
+    }
+  }
+})
+ipcMain.handle('serial-reset', async (event) => {
+  console.log('ipcMain', 'serial-reset')
+  await board.reset()
+})
+ipcMain.handle('serial-eval', async (event, data) => {
+  // console.log('ipcMain', 'serial-eval', data)
+  board.sendData(Buffer.from(data))
+})
+ipcMain.handle('serial-list-files', async (event, folder) => {
+  console.log('ipcMain', 'serial-list-files', folder)
+  return await board.listFiles(folder)
+})
+ipcMain.handle('serial-ilist-files', async (event, folder) => {
+  console.log('ipcMain', 'serial-ilist-files', folder)
+  let files = await board.listFiles(folder)
+  files = files.map(f => ({
+    path: f.filename.slice(1),
+    type: f.isDir ? 'folder' : 'file'
+  }))
+  // console.log('yolo', files)
+  return files
+})
+ipcMain.handle('serial-load-file', async (event, filePath) => {
+  console.log('ipcMain', 'serial-load-file', filePath)
+  const output = await board.getFile(filePath)
+  return output.toString()
+})
+ipcMain.handle('serial-remove-file', async (event, filePath) => {
+  console.log('ipcMain', 'serial-remove-file', filePath)
+  await board.remove(filePath)
+})
+ipcMain.handle('serial-save-file', async (event, filePath, content) => {
+  console.log('ipcMain', 'serial-save-file', filePath, content)
+  await board.putFile(filePath, Buffer.from(content))
+})
+ipcMain.handle('serial-upload', async (event, src, dest) => {
+  console.log('ipcMain', 'serial-upload-file', src, dest)
+  const content = fs.readFileSync(src)
+  await board.putFile(dest, content)
+})
+ipcMain.handle('serial-download', async (event, src, dest) => {
+  console.log('ipcMain', 'serial-download-file', src, dest)
+  const content = await board.getFile(src)
+  fs.writeFileSync(dest, content)
+})
+ipcMain.handle('serial-rename-file', async (event, src, dest) => {
+  console.log('ipcMain', 'serial-rename-file', src, dest)
+  await board.rename(src, dest)
+})
+ipcMain.handle('serial-create-folder', async (event, folder) => {
+  console.log('ipcMain', 'serial-create-folder', folder)
+  try {
+    await board.mkdir(folder)
+  } catch(err) {
+    console.log('error', err)
+  }
+})
 
+
+// WINDOW MANAGEMENT
 ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {
   console.log('ipcMain', 'set-window-size', minWidth, minHeight)
   if (!win) {

@@ -93,8 +93,6 @@ function store(state, emitter) {
 
     // Stop whatever is going on
     await serial.stop()
-    // Recover from getting stuck in raw repl
-    await serial.exit_raw_repl()
 
     state.isConnected = true
     emitter.emit('close-port-dialog')
@@ -106,6 +104,7 @@ function store(state, emitter) {
     state.serialNavigation = ''
     emitter.emit('update-files')
 
+    state.blocking = false
     emitter.emit('message', 'Connected', 1000)
 
     if (!state.isFilesOpen) {
@@ -121,12 +120,14 @@ function store(state, emitter) {
         serial.eval(data)
         term.scrollToBottom()
       })
+      serial.onData((data) => {
+        console.log('received data', data)
+        term.write(data)
+        term.scrollToBottom()
+      })
     }
-    serial.onData((data) => {
-      term.write(data)
-      term.scrollToBottom()
-    })
     serial.onDisconnect(() => emitter.emit('disconnect'))
+    await serial.stop()
   })
 
   // CODE EXECUTION
@@ -142,11 +143,11 @@ function store(state, emitter) {
   emitter.on('stop', async () => {
     log('stop')
     await serial.stop()
-    await serial.exit_raw_repl()
     emitter.emit('render')
   })
   emitter.on('reset', async () => {
     log('reset')
+    await serial.stop()
     await serial.reset()
     emitter.emit('update-files')
     emitter.emit('render')
@@ -310,17 +311,13 @@ function store(state, emitter) {
     if (state.isConnected) {
       await serial.stop()
       try {
-        const files = await serial.ilistFiles(
+        state.serialFiles = await serial.ilistFiles(
           serial.getFullPath(
             state.serialPath,
             state.serialNavigation,
             ''
           )
         )
-        state.serialFiles = files.map(f => ({
-          path: f[0],
-          type: f[1] === 0x4000 ? 'folder' : 'file'
-        }))
         // Filter out dot files
         state.serialFiles = state.serialFiles.filter(
           f => f.path.indexOf('.') !== 0

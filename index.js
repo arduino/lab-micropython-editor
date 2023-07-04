@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const Micropython = require('micropython-ctl-cont').MicroPythonDevice
+const { SerialPort } = require('serialport')
 const path = require('path')
 const fs = require('fs')
 const openAboutWindow = require('about-window').default
@@ -42,7 +43,7 @@ function ilistFolder(folder) {
 }
 
 // LOCAL FILE SYSTEM ACCESS
-ipcMain.handle('open-folder', async (event) => {
+ipcMain.handle('disk-open-folder', async (event) => {
   console.log('ipcMain', 'open-folder')
   const folder = await openFolderDialog()
   let files = []
@@ -52,31 +53,31 @@ ipcMain.handle('open-folder', async (event) => {
   return { folder, files }
 })
 
-ipcMain.handle('list-files', async (event, folder) => {
+ipcMain.handle('disk-list-files', async (event, folder) => {
   console.log('ipcMain', 'list-files', folder)
   if (!folder) return []
   return listFolder(folder)
 })
 
-ipcMain.handle('ilist-files', async (event, folder) => {
+ipcMain.handle('disk-ilist-files', async (event, folder) => {
   console.log('ipcMain', 'ilist-files', folder)
   if (!folder) return []
   return ilistFolder(folder)
 })
 
-ipcMain.handle('load-file', (event, filePath) => {
+ipcMain.handle('disk-load-file', (event, filePath) => {
   console.log('ipcMain', 'load-file', filePath)
   let content = fs.readFileSync(filePath)
   return content
 })
 
-ipcMain.handle('save-file', (event, filePath, content) => {
+ipcMain.handle('disk-save-file', (event, filePath, content) => {
   console.log('ipcMain', 'save-file', filePath, content)
   fs.writeFileSync(filePath, content, 'utf8')
   return true
 })
 
-ipcMain.handle('update-folder', (event, folder) => {
+ipcMain.handle('disk-update-folder', (event, folder) => {
   console.log('ipcMain', 'update-folder', folder)
   let files = fs.readdirSync(path.resolve(folder))
   // Filter out directories
@@ -87,13 +88,13 @@ ipcMain.handle('update-folder', (event, folder) => {
   return { folder, files }
 })
 
-ipcMain.handle('remove-file', (event, filePath) => {
+ipcMain.handle('disk-remove-file', (event, filePath) => {
   console.log('ipcMain', 'remove-file', filePath)
   fs.unlinkSync(filePath)
   return true
 })
 
-ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
+ipcMain.handle('disk-rename-file', (event, filePath, newFilePath) => {
   console.log('ipcMain', 'rename-file', filePath, newFilePath)
   fs.renameSync(filePath, newFilePath)
   return true
@@ -103,12 +104,7 @@ ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
 const board = new Micropython()
 ipcMain.handle('serial-list-ports', (event) => {
   console.log('ipcMain', 'serial-list-ports')
-  return [
-    { path: '/dev/ttyACM0' },
-    { path: '/dev/ttyACM1' },
-    { path: '/dev/ttyUSB0' },
-    { path: '/dev/ttyUSB1' },
-  ]
+  return SerialPort.list()
 })
 ipcMain.handle('serial-connect', async (event, path) => {
   console.log('ipcMain', 'serial-connect', path)
@@ -134,11 +130,12 @@ ipcMain.handle('serial-run', async (event, code) => {
       disableDedent: true,
       broadcastOutputAsTerminalData: true
     })
+    board.sendData('\r\n')
+    return Promise.resolve(output)
   } catch(err) {
     console.log(err)
+    return Promise.reject(err)
   }
-  board.sendData('\r\n')
-  return Promise.resolve(output)
 })
 ipcMain.handle('serial-stop', async (event) => {
   console.log('ipcMain', 'serial-stop')
@@ -170,10 +167,9 @@ ipcMain.handle('serial-ilist-files', async (event, folder) => {
   console.log('ipcMain', 'serial-ilist-files', folder)
   let files = await board.listFiles(folder)
   files = files.map(f => ({
-    path: f.filename.slice(1),
+    path: f.filename.split('/').pop(),
     type: f.isDir ? 'folder' : 'file'
   }))
-  // console.log('yolo', files)
   return files
 })
 ipcMain.handle('serial-load-file', async (event, filePath) => {
@@ -214,7 +210,7 @@ ipcMain.handle('serial-create-folder', async (event, folder) => {
 
 
 // WINDOW MANAGEMENT
-ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {
+ipcMain.handle('window-set-minimum-size', (event, minWidth, minHeight) => {
   console.log('ipcMain', 'set-window-size', minWidth, minHeight)
   if (!win) {
     console.log('No window defined')

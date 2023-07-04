@@ -38,7 +38,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"about-window": "^1.15.2",
-		"micropython-ctl-cont": "^1.15.3"
+		"micropython-ctl-cont": "^1.15.3",
+		"serialport": "^11.0.0"
 	},
 	"engines": {
 		"node": "18"

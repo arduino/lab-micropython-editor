@@ -2,14 +2,10 @@ console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
 
-const Micropython = require('micropython-ctl-cont').MicroPythonDevice
-const board = new Micropython()
-
 const Serial = {
   loadPorts: async () => {
-    // let ports = await board.list_ports()
-    // return ports.filter(p => p.vendorId && p.productId)
-    return ipcRenderer.invoke('serial-list-ports')
+    let ports = await ipcRenderer.invoke('serial-list-ports')
+    return ports.filter(p => p.vendorId && p.productId)
   },
   connect: async (path) => {
     return ipcRenderer.invoke('serial-connect', path)
@@ -75,26 +71,26 @@ const Serial = {
 
 const Disk = {
   openFolder: async () => {
-    return ipcRenderer.invoke('open-folder')
+    return ipcRenderer.invoke('disk-open-folder')
   },
   listFiles: async (folder) => {
-    return ipcRenderer.invoke('list-files', folder)
+    return ipcRenderer.invoke('disk-list-files', folder)
   },
   ilistFiles: async (folder) => {
-    return ipcRenderer.invoke('ilist-files', folder)
+    return ipcRenderer.invoke('disk-ilist-files', folder)
   },
   loadFile: async (filePath) => {
-    let content = await ipcRenderer.invoke('load-file', filePath)
+    let content = await ipcRenderer.invoke('disk-load-file', filePath)
     return new TextDecoder().decode(content)
   },
   removeFile: async (filePath) => {
-    return ipcRenderer.invoke('remove-file', filePath)
+    return ipcRenderer.invoke('disk-remove-file', filePath)
   },
   saveFileContent: async (filePath, content) => {
-    return ipcRenderer.invoke('save-file', filePath, content)
+    return ipcRenderer.invoke('disk-save-file', filePath, content)
   },
   renameFile: async (oldName, newName) => {
-    return ipcRenderer.invoke('rename-file', oldName, newName)
+    return ipcRenderer.invoke('disk-rename-file', oldName, newName)
   },
   getNavigationPath: (navigation, target) => {
     return path.join(navigation, target)
@@ -109,7 +105,7 @@ const Disk = {
 
 const Window = {
   setWindowSize: (minWidth, minHeight) => {
-    ipcRenderer.invoke('set-window-size', minWidth, minHeight)
+    ipcRenderer.invoke('window-set-minimum-size', minWidth, minHeight)
   }
 }
 

@@ -92,9 +92,8 @@ function store(state, emitter) {
     await serial.connect(path)
 
     // Stop whatever is going on
-    await serial.stop()
     // Recover from getting stuck in raw repl
-    await serial.exit_raw_repl()
+    await serial.get_prompt()
 
     state.isConnected = true
     emitter.emit('close-port-dialog')
@@ -135,14 +134,13 @@ function store(state, emitter) {
     if (!state.isTerminalOpen) emitter.emit('show-terminal')
     let editor = state.cache(AceEditor, 'editor').editor
     let code = editor.getValue()
-    await serial.stop()
-    await serial.run(code)
+    await serial.get_prompt()
+    serial.run(code)
     emitter.emit('render')
   })
   emitter.on('stop', async () => {
     log('stop')
-    await serial.stop()
-    await serial.exit_raw_repl()
+    await serial.get_prompt()
     emitter.emit('render')
   })
   emitter.on('reset', async () => {
@@ -175,7 +173,7 @@ function store(state, emitter) {
     emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
 
     if (state.selectedDevice === 'serial') {
-      await serial.stop()
+      await serial.get_prompt()
       await serial.saveFileContent(
         serial.getFullPath(
           state.serialPath,
@@ -216,7 +214,7 @@ function store(state, emitter) {
 
     if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
       if (state.selectedDevice === 'serial') {
-        await serial.stop()
+        await serial.get_prompt()
         await serial.removeFile(state.serialNavigation + '/' + state.selectedFile)
         emitter.emit('new-file', 'serial')
       }
@@ -257,7 +255,7 @@ function store(state, emitter) {
 
     let content = ''
     if (state.selectedDevice === 'serial') {
-      await serial.stop()
+      await serial.get_prompt()
       content = await serial.loadFile(
         serial.getFullPath(
           state.serialPath,
@@ -308,7 +306,7 @@ function store(state, emitter) {
       return folders.concat(files)
     }
     if (state.isConnected) {
-      await serial.stop()
+      await serial.get_prompt()
       try {
         const files = await serial.ilistFiles(
           serial.getFullPath(
@@ -422,7 +420,7 @@ function store(state, emitter) {
       let contents = cleanCharacters(editor.getValue())
       editor.setValue(contents)
       if (state.unsavedChanges) {
-        await serial.stop()
+        await serial.get_prompt()
         await serial.saveFileContent(
           serial.getFullPath(
             state.serialPath,
@@ -533,7 +531,7 @@ function store(state, emitter) {
     editor.setValue(contents)
 
     if (state.isConnected && state.selectedDevice === 'serial') {
-      await serial.stop()
+      await serial.get_prompt()
       // Ask for confirmation to overwrite existing file
       let confirmation = true
       if (state.serialFiles.find(f => f.path === filename)) {

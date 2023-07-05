@@ -21,12 +21,11 @@ const Serial = {
   run: async (code) => {
     return board.run(code)
   },
-  stop: async () => {
-    await board.stop()
-    return Promise.resolve()
+  get_prompt: async () => {
+    return board.get_prompt()
   },
-  exit_raw_repl: async () => {
-    await board.exit_raw_repl()
+  keyboard_interrupt: async () => {
+    await board.stop()
     return Promise.resolve()
   },
   reset: async () => {

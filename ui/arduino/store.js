@@ -166,7 +166,7 @@ function store(state, emitter) {
     let editor = state.cache(AceEditor, 'editor').editor
     let contents = cleanCharacters(editor.getValue())
     editor.setValue(contents)
-    let filename = state.selectedFile || 'undefined'
+    let filename = cleanCharacters(state.selectedFile) || 'undefined'
     let deviceName = getDeviceName(state.selectedDevice)
 
     state.blocking = true
@@ -511,7 +511,7 @@ function store(state, emitter) {
   })
   emitter.on('save-filename', async (filename) => {
     log('save-filename', filename)
-
+    filename = cleanCharacters(filename)
     // no changes
     if (state.selectedFile === filename) {
       state.isEditingFilename = false
@@ -684,8 +684,6 @@ function resizeEditor(state) {
     el.style.height = '100%'
   }
 }
-
-
 
 function cleanCharacters(str) {
   return str.replace(/[\u{0080}-\u{FFFF}]/gu,"")

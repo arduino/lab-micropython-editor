@@ -166,7 +166,7 @@ function store(state, emitter) {
     let editor = state.cache(AceEditor, 'editor').editor
     let contents = cleanCharacters(editor.getValue())
     editor.setValue(contents)
-    let filename = cleanCharacters(state.selectedFile) || 'undefined'
+    let filename = cleanCharacters(state.selectedFile || 'undefined')
     let deviceName = getDeviceName(state.selectedDevice)
 
     state.blocking = true

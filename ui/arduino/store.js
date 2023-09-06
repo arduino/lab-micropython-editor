@@ -100,6 +100,7 @@ function store(state, emitter) {
 
     // Make sure there is a lib folder
     log('creating lib folder')
+    await serial.run('import uos; uos.chdir(\'/\')')
     await serial.createFolder('lib')
     state.serialPort = path
     state.serialNavigation = ''

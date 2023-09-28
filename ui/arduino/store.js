@@ -689,6 +689,9 @@ function store(state, emitter) {
       emitter.emit('reset')
     }
   })
+  ShortcutListeners.onSave(() => {
+    emitter.emit('save')
+  })
   ShortcutListeners.onConnect(() => {
     emitter.emit('open-port-dialog')
   })

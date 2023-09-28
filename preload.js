@@ -132,4 +132,5 @@ contextBridge.exposeInMainWorld('ShortcutListeners', {
   onStop: (callback) => ipcRenderer.on('stop', callback),
   onReset: (callback) => ipcRenderer.on('reset', callback),
   onConnect: (callback) => ipcRenderer.on('connect', callback),
+  onSave: (callback) => ipcRenderer.on('save', callback),
 })

@@ -1,4 +1,12 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  ipcMain,
+  dialog,
+  globalShortcut,
+  webContents
+} = require('electron')
 const path = require('path')
 const fs = require('fs')
 const openAboutWindow = require('about-window').default
@@ -127,6 +135,31 @@ function createWindow () {
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
 }
+
+app.on('browser-window-focus', function () {
+    globalShortcut.register("CommandOrControl+R", () => {
+      win.webContents.send('run')
+    });
+    globalShortcut.register("CommandOrControl+S", () => {
+      win.webContents.send('save')
+    });
+    globalShortcut.register("CommandOrControl+E", () => {
+      win.webContents.send('stop')
+    });
+    globalShortcut.register("CommandOrControl+W", () => {
+      win.webContents.send('reset')
+    });
+    globalShortcut.register("CommandOrControl+Q", () => {
+      win.webContents.send('connect')
+    });
+});
+app.on('browser-window-blur', function () {
+  globalShortcut.unregister('CommandOrControl+R');
+  globalShortcut.unregister('CommandOrControl+S');
+  globalShortcut.unregister('CommandOrControl+E');
+  globalShortcut.unregister('CommandOrControl+W');
+  globalShortcut.unregister('CommandOrControl+Q');
+});
 
 // TODO: Loading splash screen
 

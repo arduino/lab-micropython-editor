@@ -674,6 +674,25 @@ function store(state, emitter) {
     state.cache(AceEditor, 'editor').render()
   })
 
+  ShortcutListeners.onRun(() => {
+    if (state.isConnected) {
+      emitter.emit('run')
+    }
+  })
+  ShortcutListeners.onStop(() => {
+    if (state.isConnected) {
+      emitter.emit('stop')
+    }
+  })
+  ShortcutListeners.onReset(() => {
+    if (state.isConnected) {
+      emitter.emit('reset')
+    }
+  })
+  ShortcutListeners.onConnect(() => {
+    emitter.emit('open-port-dialog')
+  })
+
 }
 
 function resizeEditor(state) {

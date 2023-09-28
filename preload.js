@@ -126,3 +126,10 @@ const Window = {
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)
 contextBridge.exposeInMainWorld('BridgeWindow', Window)
+
+contextBridge.exposeInMainWorld('ShortcutListeners', {
+  onRun: (callback) => ipcRenderer.on('run', callback),
+  onStop: (callback) => ipcRenderer.on('stop', callback),
+  onReset: (callback) => ipcRenderer.on('reset', callback),
+  onConnect: (callback) => ipcRenderer.on('connect', callback),
+})

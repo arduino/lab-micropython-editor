@@ -26087,7 +26087,8 @@
        ]);
    }
 
-   window.createEditor = (el) => new EditorView({
+   window.createEditor = (doc, el) => new EditorView({
+     doc: doc || '',
      extensions: [basicSetup, python()],
      parent: el
    });

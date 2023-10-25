@@ -26099,6 +26099,7 @@
      extensions: [
        basicSetup,
        keymap.of([indentWithTab]),
+       keymap.of([defaultKeymap]),
        python()
      ],
      parent: el

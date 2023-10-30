@@ -1,43 +1,33 @@
 function Toolbar(state, emit) {
+
+  const isConnected = state.isConnected
+
+
+
   return html`
-  <div class="toolbar">
-    <div class="button">
-      <button><img class="icon" src="media/disconnect.svg" /></button>
-      <div class="tooltip">Connect</div>
-    </div>
+    <div class="toolbar">
 
-    <div class="separator"></div>
+      ${Button({
+        icon: isConnected ? 'connect.svg' : 'disconnect.svg',
+        tooltip: isConnected ? 'Disconnect' : 'Connect',
+        onClick: () => emit('open-connection-dialog')
+      })}
 
-    <div class="button">
-      <button disabled><img class="icon" src="media/run.svg" /></button>
-      <div class="tooltip">Run</div>
-    </div>
-    <div class="button">
-      <button disabled><img class="icon" src="media/stop.svg" /></button>
-      <div class="tooltip">Stop</div>
-    </div>
-    <div class="button">
-      <button disabled><img class="icon" src="media/reboot.svg" /></button>
-      <div class="tooltip">Reset</div>
-    </div>
+      <div class="separator"></div>
 
-    <div class="separator"></div>
+      ${Button({ icon: 'run.svg', tooltip: 'Run', disabled: true })}
+      ${Button({ icon: 'stop.svg', tooltip: 'Stop', disabled: true })}
+      ${Button({ icon: 'reboot.svg', tooltip: 'Reset', disabled: true })}
 
-    <div class="button">
-      <button><img class="icon" src="media/save.svg" /></button>
-      <div class="tooltip">Save</div>
-    </div>
+      <div class="separator"></div>
 
-    <div class="separator"></div>
+      ${Button({ icon: 'save.svg', tooltip: 'Save' })}
 
-    <div class="button">
-      <button class="active"><img class="icon" src="media/console.svg" /></button>
-      <div class="tooltip">Editor and REPL</div>
+      <div class="separator"></div>
+
+      ${Button({ icon: 'console.svg', tooltip: 'Editor and REPL' })}
+      ${Button({ icon: 'files.svg', tooltip: 'File Manager' })}
+
     </div>
-    <div class="button">
-      <button><img class="icon" src="media/files.svg" /></button>
-      <div class="tooltip">File Manager</div>
-    </div>
-  </div>
   `
 }

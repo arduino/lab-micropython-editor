@@ -10,14 +10,30 @@ function Toolbar(state, emit) {
       ${Button({
         icon: isConnected ? 'connect.svg' : 'disconnect.svg',
         tooltip: isConnected ? 'Disconnect' : 'Connect',
-        onClick: () => emit('open-connection-dialog')
+        onClick: () => emit('open-connection-dialog'),
+        active: isConnected
       })}
 
       <div class="separator"></div>
 
-      ${Button({ icon: 'run.svg', tooltip: 'Run', disabled: true })}
-      ${Button({ icon: 'stop.svg', tooltip: 'Stop', disabled: true })}
-      ${Button({ icon: 'reboot.svg', tooltip: 'Reset', disabled: true })}
+      ${Button({
+        icon: 'run.svg',
+        tooltip: 'Run',
+        disabled: !state.isConnected,
+        onClick: () => emit('run')
+      })}
+      ${Button({
+        icon: 'stop.svg',
+        tooltip: 'Stop',
+        disabled: !state.isConnected,
+        onClick: () => emit('stop')
+      })}
+      ${Button({
+        icon: 'reboot.svg',
+        tooltip: 'Reset',
+        disabled: !state.isConnected, 
+        onClick: () => emit('reset')
+      })}
 
       <div class="separator"></div>
 
@@ -25,8 +41,16 @@ function Toolbar(state, emit) {
 
       <div class="separator"></div>
 
-      ${Button({ icon: 'console.svg', tooltip: 'Editor and REPL' })}
-      ${Button({ icon: 'files.svg', tooltip: 'File Manager' })}
+      ${Button({
+        icon: 'console.svg',
+        tooltip: 'Editor and REPL',
+        active: true
+      })}
+      ${Button({
+        icon: 'files.svg',
+        tooltip: 'File Manager',
+        active: false
+      })}
 
     </div>
   `

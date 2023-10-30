@@ -3,13 +3,13 @@ const PANEL_HEIGHT = 320
 class XTerm extends Component {
   constructor(id, state, emit) {
     super(id)
-    this.term = new Terminal()
+    this.term = state.term
     this.resizeTerm = this.resizeTerm.bind(this)
   }
 
   load(element) {
     this.term.open(element)
-    this.term.write("Read, Evaluate, Print and Loop! ;)\r\n>>>")
+    this.term.write("\r\nRead, Evaluate, Print and Loop! ;)\r\n>>> ")
     this.resizeTerm()
     window.addEventListener('resize', this.resizeTerm)
   }
@@ -24,16 +24,13 @@ class XTerm extends Component {
   }
 
   resizeTerm() {
-    if (
-      this.term._core._renderService.dimensions.actualCellWidth == 0
-      || this.term._core._renderService.dimensions.actualCellHeight == 0
-    ) {
+    console.log('resize term')
+    if (document.querySelector('.panel')) {
       let handleSize = 45
-      const parentStyle = window.getComputedStyle(document.querySelector('#panel'))
+      const parentStyle = window.getComputedStyle(document.querySelector('.panel'))
       const parentWidth = parseInt(parentStyle.getPropertyValue('width'))
-      const parentHeight = parseInt(parentStyle.getPropertyValue('height'))
-      const cols = Math.floor(parentWidth / this.term._core._renderService.dimensions.actualCellWidth)
-      const rows = Math.floor((parentHeight-handleSize) / this.term._core._renderService.dimensions.actualCellHeight) - 1
+      const cols = Math.floor(parentWidth / this.term._core._renderService.dimensions.actualCellWidth) - 6
+      const rows = Math.floor((PANEL_HEIGHT-handleSize) / this.term._core._renderService.dimensions.actualCellHeight) - 2
       this.term.resize(cols, rows)
     }
   }
@@ -54,17 +51,20 @@ function ReplPanel(state, emit) {
           ${Button({
             icon: 'copy.svg',
             size: 'small',
-            tooltip: 'Copy'
+            tooltip: 'Copy',
+            onClick: () => document.execCommand('copy')
           })}
           ${Button({
             icon: 'paste.svg',
             size: 'small',
-            tooltip: 'Paste'
+            tooltip: 'Paste',
+            onClick: () => document.execCommand('paste')
           })}
           ${Button({
             icon: 'delete.svg',
             size: 'small',
-            tooltip: 'Clean'
+            tooltip: 'Clean',
+            onClick: () => emit('clean-terminal')
           })}
         </div>
 
@@ -75,21 +75,8 @@ function ReplPanel(state, emit) {
         })}
 
       </div>
-      ${terminalEl.render()}
+
+      ${state.isConnected ? terminalEl.render(): ''}
     </div>
   `
-
-  //
-  // } else {
-  //   return html`
-  //     <div class="panel" style="height: 45px">
-  //       <div class="panel-bar">
-  //         <div class="button">
-  //           <button class="small" onclick=${onToggle}><img class="icon" src="media/arrow-up.svg" /></button>
-  //         </div>
-  //       </div>
-  //       ${terminalEl.render()}
-  //     </div>
-  //   `
-  // }
 }

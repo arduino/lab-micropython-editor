@@ -22,21 +22,17 @@ class CodeMirrorEditor extends Component {
 }
 
 function CodeEditor(state, emit) {
-  const el = state.cache(CodeMirrorEditor, 'editor')
-  el.codeChange = () => emit('code-change')
-  setTimeout(() => {
-    el.render('ra')
-  }, 500)
-  return html`${el.render(defaultCode)}`
+  return html`${state.editor.render(defaultCode)}`
 }
 
 const defaultCode = `from alvik import *
 
 def setup():
-    pass
+  print('Start:')
 
 def loop():
-    pass
+  print('.', end='')
+  sleep_ms(100)
 
 start(setup=setup, loop=loop)
 

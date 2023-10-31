@@ -251,8 +251,6 @@ button.small .icon {
   transition-delay: 0.15s;
 }
 
-
-
 .terminal-wrapper {
   color: white;
   width: 97%;
@@ -261,6 +259,15 @@ button.small .icon {
   position: absolute;
   top: 60px; /* 45 + 15 */
   height: calc(100% - 75px);
+}
+
+.terminal-enabled,
+.terminal-disabled {
+  width: 100%;
+}
+.terminal-disabled {
+  opacity: 0.5;
+  /* pointer-events: none; */
 }
 
 .dialog {

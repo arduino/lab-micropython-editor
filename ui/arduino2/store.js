@@ -2,12 +2,8 @@ function store(state, emitter) {
   const log = console.log
   const serial = window.BridgeSerial
 
-  state.editor = state.cache(CodeMirrorEditor, 'editor')
-  state.editor.codeChange = () => emit('code-change')
 
-  emitter.on('code-changed', (e) => {
-    console.log(e)
-  })
+  state.editor = state.cache(CodeMirrorEditor, 'editor')
 
   // TERMINAL PANEL
   const term = new Terminal();
@@ -26,7 +22,7 @@ function store(state, emitter) {
   emitter.on('clean-terminal', () => {
     state.cache(XTerm, 'terminal').term.clear()
   })
-  
+
 
   // DIALOGS
   state.dialogs = {}
@@ -112,7 +108,6 @@ function store(state, emitter) {
     log('run')
     state.isPanelOpen = true
     const code = state.editor.editor.state.doc.text.join('\n')
-    console.log(code)
     await serial.get_prompt()
     serial.run(code)
     emitter.emit('render')

@@ -24,7 +24,6 @@ class XTerm extends Component {
   }
 
   resizeTerm() {
-    console.log('resize term')
     if (document.querySelector('.panel')) {
       let handleSize = 45
       const parentStyle = window.getComputedStyle(document.querySelector('.panel'))
@@ -34,6 +33,29 @@ class XTerm extends Component {
       this.term.resize(cols, rows)
     }
   }
+}
+
+function ReplOperations(state, emit) {
+  return [
+    Button({
+      icon: 'copy.svg',
+      size: 'small',
+      tooltip: 'Copy',
+      onClick: () => document.execCommand('copy')
+    }),
+    Button({
+      icon: 'paste.svg',
+      size: 'small',
+      tooltip: 'Paste',
+      onClick: () => document.execCommand('paste')
+    }),
+    Button({
+      icon: 'delete.svg',
+      size: 'small',
+      tooltip: 'Clean',
+      onClick: () => emit('clean-terminal')
+    })
+  ]
 }
 
 function ReplPanel(state, emit) {
@@ -46,37 +68,20 @@ function ReplPanel(state, emit) {
   return html`
     <div class="panel" style="height: ${height}px">
       <div class="panel-bar">
-
         <div class="term-operations ${termOperationsVisibility}">
-          ${Button({
-            icon: 'copy.svg',
-            size: 'small',
-            tooltip: 'Copy',
-            onClick: () => document.execCommand('copy')
-          })}
-          ${Button({
-            icon: 'paste.svg',
-            size: 'small',
-            tooltip: 'Paste',
-            onClick: () => document.execCommand('paste')
-          })}
-          ${Button({
-            icon: 'delete.svg',
-            size: 'small',
-            tooltip: 'Clean',
-            onClick: () => emit('clean-terminal')
-          })}
+          ${ReplOperations(state, emit)}
         </div>
-
         ${Button({
           icon: `arrow-${state.isPanelOpen ? 'down' : 'up'}.svg`,
           size: 'small',
           onClick: onToggle
         })}
-
       </div>
 
-      ${state.isConnected ? terminalEl.render(): ''}
+      <div class="${state.isConnected ? 'terminal-enabled' : 'terminal-disabled'}">
+        ${terminalEl.render()}
+      </div>
+
     </div>
   `
 }

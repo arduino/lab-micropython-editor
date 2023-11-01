@@ -265,7 +265,6 @@ button.small .icon {
   height: calc(100% - 75px);
 }
 
-<<<<<<< Updated upstream
 /* .terminal-enabled,
 .terminal-disabled {
   width: 100%;
@@ -274,8 +273,6 @@ button.small .icon {
   opacity: 0.5;
 } */
 
-=======
->>>>>>> Stashed changes
 .dialog {
   display: flex;
   flex-direction: column;

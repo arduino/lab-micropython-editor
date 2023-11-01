@@ -16,11 +16,7 @@ function App(state, emit) {
   if (state.diskFiles == null) {
     emit('load-disk-files')
     return html`
-<<<<<<< Updated upstream
-      <div id="app" onclick=${() => emit('open-folder')} style="cursor: pointer;">
-=======
       <div id="app">
->>>>>>> Stashed changes
         <p>
           Loading files...
         </p>

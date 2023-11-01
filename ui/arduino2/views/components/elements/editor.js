@@ -1,19 +1,5 @@
 class CodeMirrorEditor extends Component {
   constructor() {
-<<<<<<< Updated upstream
-    super()
-    this.editor = null
-    this.content = ''
-  }
-
-  load(el) {
-    this.editor = createEditor(this.content, el)
-  }
-
-  createElement(content) {
-    this.content = content
-=======
-    console.log('cm construct')
     super()
     this.editor = null
     this.content = '# empty file'
@@ -32,15 +18,11 @@ class CodeMirrorEditor extends Component {
   createElement(content) {
     console.log('cm create')
     if (content) this.content = content
->>>>>>> Stashed changes
     return html`<div class="code-editor"></div>`
   }
 
   update() {
-<<<<<<< Updated upstream
-=======
     console.log('cm update')
->>>>>>> Stashed changes
     return false
   }
 

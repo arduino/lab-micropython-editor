@@ -166,10 +166,7 @@ async function store(state, emitter) {
           state.diskNavigationRoot + '/' + state.diskFiles[i].path
         )
         state.diskFiles[i].editor = state.cache(CodeMirrorEditor, `editor_${state.diskFiles[i].id}`)
-<<<<<<< Updated upstream
-=======
         state.diskFiles[i].editor.render(state.diskFiles[i].content)
->>>>>>> Stashed changes
         // Temporary: Open all the files
         state.openedFiles.push(state.diskFiles[i].id)
       }

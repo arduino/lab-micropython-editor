@@ -1,6 +1,6 @@
 function Tabs(state, emit) {
   return html`
-    <div class="tabs">
+    <div id="tabs">
       ${state.openedFiles.map((id) => {
         const file = state.diskFiles.find(f => f.id === id)
         return Tab({

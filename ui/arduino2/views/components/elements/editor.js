@@ -6,7 +6,6 @@ class CodeMirrorEditor extends Component {
   }
 
   load(el) {
-    console.log('cm load')
     const onCodeChange = (update) => {
       this.content = update.state.doc.toString()
       console.log('code change', this.content)
@@ -16,15 +15,11 @@ class CodeMirrorEditor extends Component {
   }
 
   createElement(content) {
-    console.log('cm create')
     if (content) this.content = content
-    return html`<div class="code-editor"></div>`
+    return html`<div id="code-editor"></div>`
   }
 
   update() {
-    console.log('cm update')
     return false
   }
-
-  codeChange() { return }
 }

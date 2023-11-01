@@ -1,7 +1,6 @@
 function Toolbar(state, emit) {
   return html`
-    <div class="toolbar">
-
+    <div id="toolbar">
       ${Button({
         icon: state.isConnected ? 'connect.svg' : 'disconnect.svg',
         tooltip: state.isConnected ? 'Disconnect' : 'Connect',
@@ -47,7 +46,6 @@ function Toolbar(state, emit) {
         active: false,
         disabled: true
       })}
-
     </div>
   `
 }

@@ -101,7 +101,7 @@ button.small .icon {
   flex-shrink: 0;
 }
 
-.toolbar {
+#toolbar {
   display: flex;
   padding: 20px;
   align-items: center;
@@ -110,7 +110,7 @@ button.small .icon {
   background: #008184;
 }
 
-.tabs {
+#tabs {
   display: flex;
   padding: 10px 10px 0px 40px;
   align-items: center;
@@ -165,7 +165,7 @@ button.small .icon {
   cursor: pointer;
 }
 
-.code-editor {
+#code-editor {
   flex: 1 0 0;
   align-self: stretch;
   font-size: 14px;
@@ -173,50 +173,50 @@ button.small .icon {
   overflow: hidden;
 }
 
-.code-editor .cm-editor {
+#code-editor .cm-editor {
   width: 100%;
   height: 100%;
   outline: none;
 }
 
-.code-editor .cm-content {
+#code-editor .cm-content {
   padding-top: 16px;
 }
-.code-editor .cm-line {
+#code-editor .cm-line {
   padding-left: 16px;
 }
 
-.code-editor .cm-gutters {
+#code-editor .cm-gutters {
   background-color: #ECF1F1;
   border-right: none;
   width: 40px;
   font-size: 14px;
 }
 
-.code-editor .cm-activeLineGutter {
+#code-editor .cm-activeLineGutter {
   background-color: #DAE3E3;
 }
 
-.code-editor .cm-gutter {
+#code-editor .cm-gutter {
   width: 75%;
 }
-.code-editor .cm-foldGutter {
+#code-editor .cm-foldGutter {
   width: 25%;
 }
-.code-editor .cm-gutterElement {
+#code-editor .cm-gutterElement {
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
-.code-editor .cm-gutterElement span[title="Fold line"] {
+#code-editor .cm-gutterElement span[title="Fold line"] {
   padding-bottom: 8px;
 }
 
-.code-editor .cm-activeLine {
+#code-editor .cm-activeLine {
   background-color: transparent;
 }
 
-.panel {
+#panel {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -224,6 +224,14 @@ button.small .icon {
   position: relative;
   background: black;
   transition: height 0.15s;
+}
+
+#panel.closed {
+  height: 45px;
+}
+
+#panel.open {
+  height: 320px;
 }
 
 .panel-bar {
@@ -255,7 +263,7 @@ button.small .icon {
   transition-delay: 0.15s;
 }
 
-#terminal-wrapper {
+.terminal-wrapper {
   color: white;
   width: 97%;
   margin-left: 2%;
@@ -265,15 +273,15 @@ button.small .icon {
   height: calc(100% - 75px);
 }
 
-/* .terminal-enabled,
+.terminal-enabled,
 .terminal-disabled {
   width: 100%;
 }
 .terminal-disabled {
   opacity: 0.5;
-} */
+}
 
-.dialog {
+#dialog {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -293,13 +301,13 @@ button.small .icon {
   line-height: normal;
   background: rgba(236, 241, 241, 0.50);
 }
-.dialog.open {
+#dialog.open {
   opacity: 1;
   pointer-events: inherit;
   transition: opacity 0.15s;
 }
 
-.dialog .dialog-content {
+#dialog .dialog-content {
   display: flex;
   width: 576px;
   padding: 36px;
@@ -315,16 +323,16 @@ button.small .icon {
   transition: transform 0.15s;
 }
 
-.dialog.open .dialog-content {
+#dialog.open .dialog-content {
   transform: translateY(0px);
   transition: transform 0.15s;
 }
 
-.dialog .dialog-content > * {
+#dialog .dialog-content > * {
   width: 100%;
 }
 
-.dialog .dialog-content .item {
+#dialog .dialog-content .item {
   border-radius: 4.5px;
   display: flex;
   padding: 10px;
@@ -334,7 +342,7 @@ button.small .icon {
   cursor: pointer;
 }
 
-.dialog .dialog-content .item:hover {
+#dialog .dialog-content .item:hover {
   background: #008184;
   color: #ffffff;
 }

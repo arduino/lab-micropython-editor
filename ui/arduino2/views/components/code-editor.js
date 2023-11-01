@@ -4,7 +4,7 @@ function CodeEditor(state, emit) {
     return file.editor.render()
   } else {
     return html`
-      <div class="code-editor"></div>
+      <div id="code-editor"></div>
     `
   }
 }

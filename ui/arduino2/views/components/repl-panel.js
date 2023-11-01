@@ -2,10 +2,12 @@ function ReplPanel(state, emit) {
   let height = state.isPanelOpen ? PANEL_HEIGHT : 45
 
   const onToggle = () => emit('toggle-panel')
+  const panelOpenClass = state.isPanelOpen ? 'open' : 'closed'
   const termOperationsVisibility = state.isPanelOpen ? 'visible' : 'hidden'
+  const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'
 
   return html`
-    <div class="panel" style="height: ${height}px">
+    <div id="panel" class="${panelOpenClass}">
       <div class="panel-bar">
         <div class="term-operations ${termOperationsVisibility}">
           ${ReplOperations(state, emit)}
@@ -16,13 +18,12 @@ function ReplPanel(state, emit) {
           onClick: onToggle
         })}
       </div>
-      ${state.cache(XTerm, 'terminal').render()}
+      <div class=${terminalDisabledClass}>
+        ${state.cache(XTerm, 'terminal').render()}
+      </div>
     </div>
   `
 }
-
-// <div class="${state.isConnected ? 'terminal-enabled' : 'terminal-disabled'}">
-// </div>
 
 function ReplOperations(state, emit) {
   return [

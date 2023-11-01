@@ -26,7 +26,6 @@ async function store(state, emitter) {
     if (state.isConnected) {
       emitter.emit('disconnect')
     }
-    state.isPanelOpen = false
     state.dialogs['connection'] = true
     state.availablePorts = await serial.loadPorts()
     emitter.emit('render')
@@ -41,7 +40,6 @@ async function store(state, emitter) {
 
   // CONNECTION
   state.availablePorts = []
-  state.isTerminalBound = false
   emitter.on('load-ports', async () => {
     log('load-ports')
     state.availablePorts = await serial.loadPorts()
@@ -49,12 +47,8 @@ async function store(state, emitter) {
   })
   emitter.on('disconnect', async () => {
     log('disconnect')
-    if (state.isConnected) {
-      emitter.emit('message', 'Disconnected')
-    }
     state.serialPort = null
     state.isConnected = false
-    state.isPanelOpen = false
 
     await serial.disconnect()
 
@@ -63,8 +57,6 @@ async function store(state, emitter) {
   emitter.on('connect', async (port) => {
     const path = port.path
     log('connect', path)
-
-    emitter.emit('message', 'Connecting')
 
     await serial.connect(path)
 
@@ -81,10 +73,6 @@ async function store(state, emitter) {
     await serial.createFolder('lib')
     state.serialPort = path
 
-    emitter.emit('message', 'Connected', 1000)
-
-    emitter.emit('render')
-
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     if (!state.isTerminalBound) {
@@ -93,6 +81,7 @@ async function store(state, emitter) {
         serial.eval(data)
         term.scrollToBottom()
       })
+      serial.eval('\x02')
     }
     serial.onData((data) => {
       term.write(data)
@@ -128,6 +117,7 @@ async function store(state, emitter) {
   })
 
   // TERMINAL PANEL
+  state.isTerminalBound = false
   state.isPanelOpen = false
   emitter.on('toggle-panel', () => {
     log('toggle-panel')
@@ -144,10 +134,7 @@ async function store(state, emitter) {
   })
 
   // FILES
-  state.editingFile = null
   state.diskFiles = null
-  state.openedFiles = []
-  state.selectedFiles = []
   state.diskNavigationRoot = localStorage.getItem('diskNavigationRoot')
   if (!state.diskNavigationRoot || state.diskNavigationRoot == 'null') {
     state.diskNavigationRoot = null
@@ -191,6 +178,8 @@ async function store(state, emitter) {
   })
 
   // TABS
+  state.openedFiles = []
+  state.editingFile = null
   emitter.on('select-tab', (id) => {
     log('select-tab', id)
     if (state.editingFile !== id) {
@@ -210,6 +199,5 @@ async function store(state, emitter) {
     }
     emitter.emit('render')
   })
-
 
 }

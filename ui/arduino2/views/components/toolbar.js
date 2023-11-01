@@ -1,17 +1,12 @@
 function Toolbar(state, emit) {
-
-  const isConnected = state.isConnected
-
-
-
   return html`
     <div class="toolbar">
 
       ${Button({
-        icon: isConnected ? 'connect.svg' : 'disconnect.svg',
-        tooltip: isConnected ? 'Disconnect' : 'Connect',
+        icon: state.isConnected ? 'connect.svg' : 'disconnect.svg',
+        tooltip: state.isConnected ? 'Disconnect' : 'Connect',
         onClick: () => emit('open-connection-dialog'),
-        active: isConnected
+        active: state.isConnected
       })}
 
       <div class="separator"></div>

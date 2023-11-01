@@ -39,6 +39,7 @@ button.small {
 
 button[disabled] {
   opacity: 0.5;
+  cursor: not-allowed;
 }
 button:hover, button.active {
   background: rgba(255, 255, 255, 1);
@@ -152,6 +153,9 @@ button.small .icon {
   font-weight: 400;
   line-height: normal;
   flex: 1 0 0;
+  max-width: calc(100% - 46px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tab .options {
   display: flex;
@@ -261,14 +265,13 @@ button.small .icon {
   height: calc(100% - 75px);
 }
 
-.terminal-enabled,
+/* .terminal-enabled,
 .terminal-disabled {
   width: 100%;
 }
 .terminal-disabled {
   opacity: 0.5;
-  /* pointer-events: none; */
-}
+} */
 
 .dialog {
   display: flex;

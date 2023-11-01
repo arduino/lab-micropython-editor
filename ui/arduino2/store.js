@@ -1,34 +1,31 @@
-function store(state, emitter) {
+function MyFile(args) {
+  const {
+    type = null,
+    path = null,
+    content = null,
+    editor = null
+  } = args
+  return {
+    id: 'id_'+parseInt(Date.now()*Math.random()),
+    type: type,
+    path: path,
+    content: content,
+    editor: editor
+  }
+}
+
+async function store(state, emitter) {
   const log = console.log
   const serial = window.BridgeSerial
-
-
-  state.editor = state.cache(CodeMirrorEditor, 'editor')
-
-  // TERMINAL PANEL
-  const term = new Terminal();
-  state.term = term
-  state.isPanelOpen = false
-  emitter.on('toggle-panel', () => {
-    log('toggle-panel')
-    if (state.isPanelOpen) {
-      state.isPanelOpen = false
-    } else {
-      state.isPanelOpen = true
-    }
-    emitter.emit('render')
-    state.cache(XTerm, 'terminal').render()
-  })
-  emitter.on('clean-terminal', () => {
-    state.cache(XTerm, 'terminal').term.clear()
-  })
-
+  const disk = window.BridgeDisk
 
   // DIALOGS
   state.dialogs = {}
   emitter.on('open-connection-dialog', async () => {
     log('open-connection-dialog')
-    emitter.emit('disconnect')
+    if (state.isConnected) {
+      emitter.emit('disconnect')
+    }
     state.isPanelOpen = false
     state.dialogs['connection'] = true
     state.availablePorts = await serial.loadPorts()
@@ -44,7 +41,9 @@ function store(state, emitter) {
 
   // CONNECTION
   state.availablePorts = []
+  state.isTerminalBound = false
   emitter.on('load-ports', async () => {
+    log('load-ports')
     state.availablePorts = await serial.loadPorts()
     emitter.emit('render')
   })
@@ -65,7 +64,6 @@ function store(state, emitter) {
     const path = port.path
     log('connect', path)
 
-    state.blocking = true
     emitter.emit('message', 'Connecting')
 
     await serial.connect(path)
@@ -107,9 +105,14 @@ function store(state, emitter) {
   emitter.on('run', async () => {
     log('run')
     state.isPanelOpen = true
-    const code = state.editor.editor.state.doc.text.join('\n')
+    const file = state.diskFiles.find(f => f.id == state.editingFile)
+    const code = file.editor.editor.state.doc.toString()
     await serial.get_prompt()
-    serial.run(code)
+    try {
+      await serial.run(code)
+    } catch(e) {
+      console.log('error', e)
+    }
     emitter.emit('render')
   })
   emitter.on('stop', async () => {
@@ -123,4 +126,89 @@ function store(state, emitter) {
     emitter.emit('update-files')
     emitter.emit('render')
   })
+
+  // TERMINAL PANEL
+  state.isPanelOpen = false
+  emitter.on('toggle-panel', () => {
+    log('toggle-panel')
+    if (state.isPanelOpen) {
+      state.isPanelOpen = false
+    } else {
+      state.isPanelOpen = true
+    }
+    emitter.emit('render')
+  })
+  emitter.on('clean-terminal', () => {
+    log('clean-terminal')
+    state.cache(XTerm, 'terminal').term.clear()
+  })
+
+  // FILES
+  state.editingFile = null
+  state.diskFiles = null
+  state.openedFiles = []
+  state.selectedFiles = []
+  state.diskNavigationRoot = localStorage.getItem('diskNavigationRoot')
+  if (!state.diskNavigationRoot || state.diskNavigationRoot == 'null') {
+    state.diskNavigationRoot = null
+  }
+
+  emitter.on('load-disk-files', async () => {
+    log('load-disk-files')
+    if (!state.diskNavigationRoot) return false
+
+    const files = await disk.ilistFiles(state.diskNavigationRoot)
+    state.diskFiles = files.map(MyFile)
+    // Load file contents
+    for (let i in state.diskFiles) {
+      if (state.diskFiles[i].type == 'file') {
+        state.diskFiles[i].content = await disk.loadFile(
+          state.diskNavigationRoot + '/' + state.diskFiles[i].path
+        )
+        state.diskFiles[i].editor = state.cache(CodeMirrorEditor, `editor_${state.diskFiles[i].id}`)
+        // Temporary: Open all the files
+        state.openedFiles.push(state.diskFiles[i].id)
+      }
+    }
+    if (state.openedFiles && state.openedFiles.length > 0) {
+      // Temporary: Select first file
+      state.editingFile = state.openedFiles[0]
+    }
+    emitter.emit('render')
+  })
+  emitter.on('open-folder', async () => {
+    log('open-folder')
+    state.diskNavigationRoot = null
+    let { folder, files } = await disk.openFolder()
+    if (folder !== 'null' && folder !== null) {
+      localStorage.setItem('diskNavigationRoot', folder)
+      state.diskNavigationRoot = folder
+    }
+    state.diskFiles = await disk.ilistFiles(state.diskNavigationRoot)
+    emitter.emit('load-disk-files')
+    emitter.emit('render')
+  })
+
+  // TABS
+  emitter.on('select-tab', (id) => {
+    log('select-tab', id)
+    if (state.editingFile !== id) {
+      state.editingFile = id
+      emitter.emit('render')
+    }
+  })
+  emitter.on('close-tab', (id) => {
+    log('close-tab', id)
+    state.openedFiles = state.openedFiles.filter(f => f !== id)
+    if (state.editingFile === id) {
+      // Temporary: Select first file
+      state.editingFile = null
+    }
+    if (state.editingFile == null && state.openedFiles.length > 0) {
+      state.editingFile = state.openedFiles[0]
+    }
+    emitter.emit('render')
+  })
+
+
 }

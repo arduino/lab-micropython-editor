@@ -31,7 +31,7 @@ function Toolbar(state, emit) {
       ${Button({
         icon: 'reboot.svg',
         tooltip: 'Reset',
-        disabled: !state.isConnected, 
+        disabled: !state.isConnected,
         onClick: () => emit('reset')
       })}
 
@@ -49,7 +49,8 @@ function Toolbar(state, emit) {
       ${Button({
         icon: 'files.svg',
         tooltip: 'File Manager',
-        active: false
+        active: false,
+        disabled: true
       })}
 
     </div>

@@ -1,19 +1,16 @@
 function Tabs(state, emit) {
   return html`
     <div class="tabs">
-      <div class="tab active" tabindex="0">
-        <img class="icon" src="media/computer.svg" />
-        <div class="text">main.py</div>
-        <div class="options" tabindex="0">x</div>
-      </div>
-      <div class="tab disabled" tabindex="0">
-        <img class="icon" src="media/disconnect.svg" />
-        <div class="text">main.py</div>
-      </div>
-      <div class="tab" tabindex="0">
-        <img class="icon" src="media/computer.svg" />
-        <div class="text">test.py</div>
-      </div>
+      ${state.openedFiles.map((id) => {
+        const file = state.diskFiles.find(f => f.id === id)
+        return Tab({
+          text: file.path,
+          icon: 'media/computer.svg',
+          active: id === state.editingFile,
+          onSelectTab: () => emit('select-tab', id),
+          onCloseTab: () => emit('close-tab', id)
+        })
+      })}
       <div class="button">
         <button class="small">+</button>
       </div>

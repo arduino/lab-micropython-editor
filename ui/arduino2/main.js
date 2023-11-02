@@ -3,7 +3,11 @@ const PANEL_HEIGHT = 320
 function App(state, emit) {
   if (state.diskNavigationRoot == null) {
     return html`
-      <div id="app" onclick=${() => emit('open-folder')} style="cursor: pointer;">
+      <div
+        id="app"
+        onclick=${() => emit('select-disk-navigation-root')}
+        style="cursor: pointer;"
+        >
         <p>
           In order to use <strong>Lab for MicroPython Editor</strong>, <br>
           you must choose where to store your files. <br><br>
@@ -15,27 +19,10 @@ function App(state, emit) {
 
   if (state.diskFiles == null) {
     emit('load-disk-files')
-    return html`
-      <div id="app">
-        <p>
-          Loading files...
-        </p>
-      </div>
-    `
+    return html`<div id="app"><p>Loading files...</p></div>`
   }
 
-
-  return html`
-    <div id="app">
-      <div class="working-area">
-        ${Toolbar(state, emit)}
-        ${Tabs(state, emit)}
-        ${CodeEditor(state, emit)}
-        ${ReplPanel(state, emit)}
-      </div>
-      ${ConnectionDialog(state, emit)}
-    </div>
-  `
+  return state.view == 'editor' ? EditorView(state, emit) : FileManagerView(state, emit)
 }
 
 window.addEventListener('load', () => {

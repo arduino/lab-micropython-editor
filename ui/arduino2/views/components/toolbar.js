@@ -1,4 +1,6 @@
 function Toolbar(state, emit) {
+  const canSave = state.view === 'editor' && state.editingFile ? true : false
+
   return html`
     <div id="toolbar">
       ${Button({
@@ -31,20 +33,26 @@ function Toolbar(state, emit) {
 
       <div class="separator"></div>
 
-      ${Button({ icon: 'save.svg', tooltip: 'Save' })}
+      ${Button({
+        icon: 'save.svg',
+        tooltip: 'Save',
+        disabled: !canSave,
+        onClick: () => emit('save')
+      })}
 
       <div class="separator"></div>
 
       ${Button({
         icon: 'console.svg',
         tooltip: 'Editor and REPL',
-        active: true
+        active: state.view === 'editor',
+        onClick: () => emit('set-view', 'editor')
       })}
       ${Button({
         icon: 'files.svg',
         tooltip: 'File Manager',
-        active: false,
-        disabled: true
+        active: state.view === 'file-manager',
+        onClick: () => emit('set-view', 'file-manager')
       })}
     </div>
   `

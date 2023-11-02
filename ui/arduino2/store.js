@@ -9,6 +9,7 @@ function MyFile(args) {
     id: 'id_'+parseInt(Date.now()*Math.random()),
     type: type,
     path: path,
+    source: 'disk',
     content: content,
     editor: editor
   }
@@ -160,12 +161,12 @@ async function store(state, emitter) {
     }
     if (state.openedFiles && state.openedFiles.length > 0) {
       // Temporary: Select first file
-      state.editingFile = state.openedFiles[0]
+      emitter.emit('select-tab', state.openedFiles[0])
     }
     emitter.emit('render')
   })
-  emitter.on('open-folder', async () => {
-    log('open-folder')
+  emitter.on('select-disk-navigation-root', async () => {
+    log('select-disk-navigation-root')
     state.diskNavigationRoot = null
     let { folder, files } = await disk.openFolder()
     if (folder !== 'null' && folder !== null) {
@@ -200,4 +201,11 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
+  // VIEW AND ROUTING
+  state.view = 'editor'
+  emitter.on('set-view', (view) => {
+    log('set-view', view)
+    state.view = view
+    emitter.emit('render')
+  })
 }

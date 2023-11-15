@@ -1,5 +1,5 @@
 function Toolbar(state, emit) {
-  const canSave = state.view === 'editor' && state.editingFile ? true : false
+  const canSave = canSave(state)
 
   return html`
     <div id="toolbar">

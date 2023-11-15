@@ -27,6 +27,9 @@ async function store(state, emitter) {
   state.isPanelOpen = false
   state.isSaving = false
   state.savingProgress = 0
+  state.isTransferring = false
+  state.transferringProgress = 0
+  state.isRemoving = false
 
   state.isLoadingFiles = false
   state.dialogs = []
@@ -34,7 +37,7 @@ async function store(state, emitter) {
   state.isTerminalBound = false
 
   const newFile = createEmptyFile({
-    parentFolder: state.diskNavigationRoot,
+    parentFolder: null, // Null parent folder means not saved?
     source: 'disk'
   })
   state.openFiles.push(newFile)
@@ -48,11 +51,13 @@ async function store(state, emitter) {
       state.diskNavigationRoot = folder
       emitter.emit('refresh-files')
     }
-    state.selectedFiles = []
     emitter.emit('render')
   })
   emitter.on('change-view', (view) => {
     state.view = view
+    if (state.view === 'file-manager') {
+      emitter.emit('refresh-files')
+    }
     emitter.emit('render')
   })
 
@@ -98,7 +103,6 @@ async function store(state, emitter) {
       state.isPanelOpen = true
     }
     state.connectedPort = path
-    state.selectedFiles = []
 
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
@@ -125,7 +129,6 @@ async function store(state, emitter) {
     state.isConnected = false
     state.isPanelOpen = false
     state.boardFiles = []
-    state.selectedFiles = []
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
@@ -194,7 +197,11 @@ async function store(state, emitter) {
         if (openFile.source == 'board') {
           await serial.get_prompt()
           await serial.saveFileContent(
-            serial.getFullPath( '/', openFile.parentFolder, openFile.fileName ),
+            serial.getFullPath(
+              '/',
+              openFile.parentFolder,
+              openFile.fileName
+            ),
             contents,
             (e) => {
               state.savingProgress = e
@@ -204,7 +211,7 @@ async function store(state, emitter) {
         } else {
           await disk.saveFileContent(
             disk.getFullPath(
-              '',
+              state.diskNavigationRoot,
               openFile.parentFolder,
               openFile.fileName
             ),
@@ -216,6 +223,7 @@ async function store(state, emitter) {
       }
       state.isSaving = false
       state.savingProgress = 0
+      emitter.emit('refresh-files')
       emitter.emit('render')
     }
 
@@ -232,6 +240,7 @@ async function store(state, emitter) {
       })
     } else {
       fullPathExists = await checkDiskFile({
+        root: state.diskNavigationRoot,
         parentFolder: openFile.parentFolder,
         fileName: openFile.fileName
       })
@@ -262,6 +271,7 @@ async function store(state, emitter) {
       }
 
       if (willOverwrite) {
+        log('will overwrite')
         state.dialogs.push({
           description: html`Would you like to overwrite the file <strong>${openFile.fileName}</strong> on ${openFile.source}?`,
           options: [
@@ -325,9 +335,50 @@ async function store(state, emitter) {
         ''
       )
     )
+    emitter.emit('refresh-selected-files')
     emitter.emit('render')
   })
-  emitter.on('remove-file', () => {})
+  emitter.on('refresh-selected-files', () => {
+    state.selectedFiles = state.selectedFiles.filter(f => {
+      if (f.source === 'board') {
+        if (!state.isConnected) return false
+        return state.boardFiles.find(g => f.fileName === g.fileName)
+      } else {
+        return state.diskFiles.find(g => f.fileName === g.fileName)
+      }
+    })
+    emitter.emit('render')
+  })
+  emitter.on('remove-files', async () => {
+    state.isRemoving = true
+    emitter.emit('render')
+
+    for (let i in state.selectedFiles) {
+      const file = state.selectedFiles[i]
+      if (file.source === 'board') {
+        await serial.removeFile(
+          serial.getFullPath(
+            '/',
+            state.boardNavigationPath,
+            file.fileName
+          )
+        )
+      } else {
+        await disk.removeFile(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            file.fileName
+          )
+        )
+      }
+    }
+
+    emitter.emit('refresh-files')
+
+    state.isRemoving = false
+    emitter.emit('render')
+  })
   emitter.on('create-file', () => {})
   emitter.on('rename-file', () => {})
   emitter.on('finish-renaming', () => {})
@@ -356,7 +407,7 @@ async function store(state, emitter) {
     let files = []
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
-      let fileContent = '# empty empty ;)'
+      let fileContent = '# empty file)'
 
       if (selectedFile.source === 'board') {
         fileContent = await serial.loadFile(
@@ -368,7 +419,7 @@ async function store(state, emitter) {
         )
         files.push(
           createFile({
-            parentFolder: disk.getFullPath('/', state.boardNavigationPath, ''),
+            parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,
             source: selectedFile.source,
             content: fileContent
@@ -382,10 +433,9 @@ async function store(state, emitter) {
             selectedFile.fileName
           )
         )
-        console.log(fileContent)
         files.push(
           createFile({
-            parentFolder: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
+            parentFolder: state.diskNavigationPath,
             fileName: selectedFile.fileName,
             source: selectedFile.source,
             content: fileContent
@@ -413,7 +463,34 @@ async function store(state, emitter) {
   })
 
   // DOWNLOAD AND UPLOAD FILES
-  emitter.on('upload-files', () => {})
+  emitter.on('upload-files', async () => {
+    state.isTransferring = true
+    emitter.emit('render')
+
+    for (let i in state.selectedFiles) {
+      const file = state.selectedFiles[i]
+      await serial.uploadFile(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          file.fileName
+        ),
+        serial.getFullPath(
+          '/',
+          state.boardNavigationPath,
+          file.fileName
+        ),
+        (e) => {
+          state.transferringProgress = e
+          emitter.emit('render')
+        }
+      )
+    }
+
+    state.isTransferring = false
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
   emitter.on('download-files', () => {})
 
   // NAVIGATION
@@ -490,6 +567,7 @@ async function getAvailablePorts() {
 }
 
 async function getBoardFiles(path) {
+  await serial.get_prompt()
   const files = await serial.ilistFiles(path)
   return files.map(f => ({
     fileName: f[0],
@@ -553,12 +631,16 @@ function canExecute(state) {
 
 function canDownload({ isConnected, selectedFiles }) {
   const selectedDiskFiles = selectedFiles.filter((f) => f.source === 'disk')
-  return isConnected && selectedDiskFiles.length === 0
+  return isConnected
+      && selectedFiles.length > 0
+      && selectedDiskFiles.length === 0
 }
 
 function canUpload({ isConnected, selectedFiles }) {
   const selectedBoardFiles = selectedFiles.filter((f) => f.source === 'board')
-  return isConnected && selectedBoardFiles.length === 0
+  return isConnected
+      && selectedFiles.length > 0
+      && selectedBoardFiles.length === 0
 }
 
 function toggleFileSelection({ fileName, source, selectedFiles }) {
@@ -573,7 +655,7 @@ function toggleFileSelection({ fileName, source, selectedFiles }) {
     })
   } else {
     // push file
-    result = selectedFiles.push({ fileName, source })
+    selectedFiles.push({ fileName, source })
   }
   return result
 }

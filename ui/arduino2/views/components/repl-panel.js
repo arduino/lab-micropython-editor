@@ -1,7 +1,13 @@
 function ReplPanel(state, emit) {
   let height = state.isPanelOpen ? PANEL_HEIGHT : 45
 
-  const onToggle = () => emit('toggle-panel')
+  const onToggle = () => {
+    if (state.isPanelOpen) {
+      emit('close-panel')
+    } else {
+      emit('open-panel')
+    }
+  }
   const panelOpenClass = state.isPanelOpen ? 'open' : 'closed'
   const termOperationsVisibility = state.isPanelOpen ? 'visible' : 'hidden'
   const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'
@@ -43,7 +49,7 @@ function ReplOperations(state, emit) {
       icon: 'delete.svg',
       size: 'small',
       tooltip: 'Clean',
-      onClick: () => emit('clean-terminal')
+      onClick: () => emit('clear-terminal')
     })
   ]
 }

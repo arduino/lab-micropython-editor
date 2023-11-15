@@ -8,7 +8,7 @@ class CodeMirrorEditor extends Component {
   load(el) {
     const onCodeChange = (update) => {
       this.content = update.state.doc.toString()
-      console.log('code change', this.content)
+      // console.log('code change', this.content)
     }
     this.editor = createEditor(this.content, el, onCodeChange)
 

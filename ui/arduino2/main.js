@@ -8,8 +8,8 @@ function App(state, emit) {
         onclick=${() => emit('select-disk-navigation-root')}
         style="cursor: pointer;"
         >
-        <p>
-          In order to use <strong>Lab for MicroPython Editor</strong>, <br>
+        <p style="max-width: 420px">
+          In order to use <strong>Lab for MicroPython Editor</strong>
           you must choose where to store your files. <br><br>
           Click anywhere to select a folder on your computer.
         </p>
@@ -30,5 +30,9 @@ window.addEventListener('load', () => {
   app.use(store);
   app.route('*', App)
   app.mount('#app')
+
+  app.emitter.on('DOMContentLoaded', () => {
+    app.emitter.emit('refresh-files')
+  })
 
 })

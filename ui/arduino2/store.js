@@ -1,13 +1,14 @@
+const log = console.log
+const serial = window.BridgeSerial
+const disk = window.BridgeDisk
+
 async function store(state, emitter) {
-  const log = console.log
-  const serial = window.BridgeSerial
-  const disk = window.BridgeDisk
 
   state.view = 'editor'
   state.diskNavigationPath = '/'
-  state.diskNavigationRoot = null
+  state.diskNavigationRoot = getDiskNavigationRootFromStorage()
   state.diskFiles = []
-  state.serialNavigationPath = '/'
+  state.boardNavigationPath = '/'
   state.boardFiles = []
   state.openFiles = []
   state.selectedFiles = []
@@ -32,16 +33,22 @@ async function store(state, emitter) {
 
   state.isTerminalBound = false
 
+  const newFile = createEmptyFile({
+    parentFolder: state.diskNavigationRoot,
+    source: 'disk'
+  })
+  state.openFiles.push(newFile)
+  state.editingFile = newFile.id
+
   // START AND BASIC ROUTING
   emitter.on('select-disk-navigation-root', async () => {
-    let folder = getDiskNavigationRootFromStorage()
-    if (!folder) {
-      folder = await selectDiskFolder()
-      if (folder) {
-        saveDiskNavigationRootToStorage(folder)
-      }
+    const folder = await selectDiskFolder()
+    if (folder) {
+      saveDiskNavigationRootToStorage(folder)
+      state.diskNavigationRoot = folder
+      emitter.emit('refresh-files')
     }
-    state.diskNavigationRoot = folder
+    state.selectedFiles = []
     emitter.emit('render')
   })
   emitter.on('change-view', (view) => {
@@ -50,7 +57,9 @@ async function store(state, emitter) {
   })
 
   // CONNECTION DIALOG
-  emitter.on('open-connection-dialog', () => {
+  emitter.on('open-connection-dialog', async () => {
+    log('open-connection-dialog')
+    emitter.emit('disconnect')
     state.availablePorts = await getAvailablePorts()
     state.isConnectionDialogOpen = true
     emitter.emit('render')
@@ -59,7 +68,7 @@ async function store(state, emitter) {
     state.isConnectionDialogOpen = false
     emitter.emit('render')
   })
-  emitter.on('update-ports', () => {
+  emitter.on('update-ports', async () => {
     state.availablePorts = await getAvailablePorts()
     emitter.emit('render')
   })
@@ -89,6 +98,7 @@ async function store(state, emitter) {
       state.isPanelOpen = true
     }
     state.connectedPort = path
+    state.selectedFiles = []
 
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
@@ -106,14 +116,20 @@ async function store(state, emitter) {
     })
     serial.onDisconnect(() => emitter.emit('disconnect'))
 
+
     emitter.emit('close-connection-dialog')
+    emitter.emit('refresh-files')
     emitter.emit('render')
   })
   emitter.on('disconnect', async () => {
     state.isConnected = false
     state.isPanelOpen = false
+    state.boardFiles = []
+    state.selectedFiles = []
+    emitter.emit('refresh-files')
+    emitter.emit('render')
   })
-  emitter.on('connection-timeout', () => {
+  emitter.on('connection-timeout', async () => {
     state.isConnected = false
     state.isConnecting = false
     state.availablePorts = await getAvailablePorts()
@@ -125,25 +141,26 @@ async function store(state, emitter) {
   emitter.on('run', async () => {
     log('run')
     state.isPanelOpen = true
-    const file = state.diskFiles.find(f => f.id == state.editingFile)
-    const code = file.editor.editor.state.doc.toString()
-    await serial.get_prompt()
+    const openFile = state.openFiles.find(f => f.id == state.editingFile)
+    const code = openFile.editor.editor.state.doc.toString()
+    emitter.emit('render')
     try {
+      await serial.get_prompt()
       await serial.run(code)
     } catch(e) {
       log('error', e)
     }
-    emitter.emit('render')
   })
   emitter.on('stop', async () => {
     log('stop')
     state.isPanelOpen = true
-    await serial.get_prompt()
     emitter.emit('render')
+    await serial.get_prompt()
   })
   emitter.on('reset', async () => {
     log('reset')
     state.isPanelOpen = true
+    emitter.emit('render')
     await serial.reset()
     emitter.emit('update-files')
     emitter.emit('render')
@@ -163,15 +180,153 @@ async function store(state, emitter) {
   })
 
   // SAVING
-  emitter.on('save', () => {})
-  emitter.on('saved', () => {})
+  emitter.on('save', async () => {
+    log('save')
+    if (!canSave(state)) {
+      log("can't save")
+      return
+    }
+
+    const save = async () => {
+      state.isSaving = true
+      emitter.emit('render')
+      try {
+        if (openFile.source == 'board') {
+          await serial.get_prompt()
+          await serial.saveFileContent(
+            serial.getFullPath( '/', openFile.parentFolder, openFile.fileName ),
+            contents,
+            (e) => {
+              state.savingProgress = e
+              emitter.emit('render')
+            }
+          )
+        } else {
+          await disk.saveFileContent(
+            disk.getFullPath(
+              '',
+              openFile.parentFolder,
+              openFile.fileName
+            ),
+            contents
+          )
+        }
+      } catch(e) {
+        log('error', e)
+      }
+      state.isSaving = false
+      state.savingProgress = 0
+      emitter.emit('render')
+    }
+
+    // Get open file
+    let openFile = state.openFiles.find(f => f.id === state.editingFile)
+    const contents = openFile.editor.editor.state.doc.toString()
+
+    // does full path exist?
+    let fullPathExists = false
+    if (openFile.source == 'board') {
+      fullPathExists = await checkBoardFile({
+        parentFolder: openFile.parentFolder,
+        fileName: openFile.fileName
+      })
+    } else {
+      fullPathExists = await checkDiskFile({
+        parentFolder: openFile.parentFolder,
+        fileName: openFile.fileName
+      })
+    }
+
+    if (fullPathExists) {
+      save()
+    } else {
+      // Make current navigation the parentFolder
+      if (openFile.source == 'board') {
+        openFile.parentFolder = state.boardNavigationPath
+      } else {
+        openFile.parentFolder = state.boardNavigationPath
+      }
+
+      // is there a file file on the parent path with the same name?
+      let willOverwrite = false
+      if (openFile.source == 'board') {
+        willOverwrite = await checkBoardFile({
+          parentFolder: openFile.parentFolder,
+          fileName: openFiles.fileName
+        })
+      } else {
+        willOverwrite = await checkDiskFile({
+          parentFolder: openFile.parentFolder,
+          fileName: openFile.fileName
+        })
+      }
+
+      if (willOverwrite) {
+        state.dialogs.push({
+          description: html`Would you like to overwrite the file <strong>${openFile.fileName}</strong> on ${openFile.source}?`,
+          options: [
+            { text: `Yes`, onClick: () => save() },
+            { text: `No`, onClick: () => {
+                state.dialogs.shift()
+                emitter.emit('render')
+              }
+            },
+          ]
+        })
+        emitter.emit('render')
+      } else {
+        save()
+      }
+    }
+  })
+  emitter.on('saved', () => {
+    // do I need this?
+  })
 
   // TABS
-  emitter.on('select-tab', () => {})
-  emitter.on('close-tab', () => {})
+  emitter.on('select-tab', (id) => {
+    state.editingFile = id
+    emitter.emit('render')
+  })
+  emitter.on('close-tab', (id) => {
+    state.openFiles = state.openFiles.filter(f => f.id !== id)
+    state.editingFile = null
+
+    if(state.openFiles.length > 0) {
+      state.editingFile = state.openFiles[0].id
+    } else {
+      const newFile = createEmptyFile({
+        source: 'disk',
+        parentFolder: state.diskNavigationPath
+      })
+      state.openFiles.push(newFile)
+      state.editingFile = newFile.id
+    }
+
+    emitter.emit('render')
+  })
 
   // FILE OPERATIONS
-  emitter.on('refresh-files', () => {})
+  emitter.on('refresh-files', async () => {
+    log('refresh-files')
+    if (state.isConnected) {
+      state.boardFiles = await getBoardFiles(
+        serial.getFullPath(
+          '/',
+          state.boardNavigationPath,
+          ''
+        )
+      )
+    }
+    state.diskFiles = await getDiskFiles(
+      disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        ''
+      )
+    )
+    emitter.emit('render')
+  })
   emitter.on('remove-file', () => {})
   emitter.on('create-file', () => {})
   emitter.on('rename-file', () => {})
@@ -179,6 +334,83 @@ async function store(state, emitter) {
   emitter.on('finish-creating', () => {})
   emitter.on('open-file-options', () => {})
   emitter.on('close-file-options', () => {})
+
+  emitter.on('toggle-file-selection', (file, source) => {
+    const isSelected = state.selectedFiles.find((f) => {
+      return f.fileName === file.fileName && f.source === source
+    })
+    if (isSelected) {
+      state.selectedFiles = state.selectedFiles.filter((f) => {
+        return !(f.fileName === file.fileName && f.source === source)
+      })
+    } else {
+      state.selectedFiles.push({
+        fileName: file.fileName,
+        source: source
+      })
+    }
+    emitter.emit('render')
+  })
+  emitter.on('open-selected-files', async () => {
+    log('open-selected-files')
+    let files = []
+    for (let i in state.selectedFiles) {
+      let selectedFile = state.selectedFiles[i]
+      let fileContent = '# empty empty ;)'
+
+      if (selectedFile.source === 'board') {
+        fileContent = await serial.loadFile(
+          serial.getFullPath(
+            '/',
+            state.boardNavigationPath,
+            selectedFile.fileName
+          )
+        )
+        files.push(
+          createFile({
+            parentFolder: disk.getFullPath('/', state.boardNavigationPath, ''),
+            fileName: selectedFile.fileName,
+            source: selectedFile.source,
+            content: fileContent
+          })
+        )
+      } else {
+        fileContent = await disk.loadFile(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            selectedFile.fileName
+          )
+        )
+        console.log(fileContent)
+        files.push(
+          createFile({
+            parentFolder: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
+            fileName: selectedFile.fileName,
+            source: selectedFile.source,
+            content: fileContent
+          })
+        )
+      }
+    }
+
+    files = files.filter((f) => { // file to open
+      let isAlready = false
+      state.openFiles.forEach((g) => { // file already open
+        if (g.fileName == f.fileName && g.source == f.source) {
+          isAlready = true
+        }
+      })
+      return !isAlready
+    })
+    if (files.length > 0) {
+      // console.log(state.openFiles, files)
+      state.openFiles = state.openFiles.concat(files)
+      state.editingFile = files[0].id
+    }
+    state.view = 'editor'
+    emitter.emit('render')
+  })
 
   // DOWNLOAD AND UPLOAD FILES
   emitter.on('upload-files', () => {})
@@ -188,196 +420,30 @@ async function store(state, emitter) {
   emitter.on('navigate-board-folder', () => {})
   emitter.on('navigate-disk-folder', () => {})
 
-  //
-  // // DIALOGS
-  // state.dialogs = {}
-  // emitter.on('open-connection-dialog', async () => {
-  //   log('open-connection-dialog')
-  //   if (state.isConnected) {
-  //     emitter.emit('disconnect')
-  //   }
-  //   state.dialogs['connection'] = true
-  //   state.availablePorts = await serial.loadPorts()
-  //   emitter.emit('render')
-  // })
-  // emitter.on('close-dialog', () => {
-  //   log('close-dialog')
-  //   Object.keys(state.dialogs).forEach(k => {
-  //     state.dialogs[k] = false
-  //   })
-  //   emitter.emit('render')
-  // })
-  //
-  // // CONNECTION
-  // state.availablePorts = []
-  // emitter.on('load-ports', async () => {
-  //   log('load-ports')
-  //   state.availablePorts = await serial.loadPorts()
-  //   emitter.emit('render')
-  // })
-  // emitter.on('disconnect', async () => {
-  //   log('disconnect')
-  //   state.serialPort = null
-  //   state.isConnected = false
-  //
-  //   await serial.disconnect()
-  //
-  //   emitter.emit('render')
-  // })
-  // emitter.on('connect', async (port) => {
-  //   const path = port.path
-  //   log('connect', path)
-  //
-  //   await serial.connect(path)
-  //
-  //   // Stop whatever is going on
-  //   // Recover from getting stuck in raw repl
-  //   await serial.get_prompt()
-  //
-  //   state.isConnected = true
-  //   state.isPanelOpen = true
-  //   emitter.emit('close-dialog')
-  //
-  //   // Make sure there is a lib folder
-  //   log('creating lib folder')
-  //   await serial.createFolder('lib')
-  //   state.serialPort = path
-  //
-  //   // Bind terminal
-  //   let term = state.cache(XTerm, 'terminal').term
-  //   if (!state.isTerminalBound) {
-  //     state.isTerminalBound = true
-  //     term.onData((data) => {
-  //       serial.eval(data)
-  //       term.scrollToBottom()
-  //     })
-  //     serial.eval('\x02')
-  //   }
-  //   serial.onData((data) => {
-  //     term.write(data)
-  //     term.scrollToBottom()
-  //   })
-  //   serial.onDisconnect(() => emitter.emit('disconnect'))
-  // })
-  //
-  // // CODE EXECUTION
-  // emitter.on('run', async () => {
-  //   log('run')
-  //   state.isPanelOpen = true
-  //   const file = state.diskFiles.find(f => f.id == state.editingFile)
-  //   const code = file.editor.editor.state.doc.toString()
-  //   await serial.get_prompt()
-  //   try {
-  //     await serial.run(code)
-  //   } catch(e) {
-  //     console.log('error', e)
-  //   }
-  //   emitter.emit('render')
-  // })
-  // emitter.on('stop', async () => {
-  //   log('stop')
-  //   await serial.get_prompt()
-  //   emitter.emit('render')
-  // })
-  // emitter.on('reset', async () => {
-  //   log('reset')
-  //   await serial.reset()
-  //   emitter.emit('update-files')
-  //   emitter.emit('render')
-  // })
-  //
-  // // TERMINAL PANEL
-  // state.isTerminalBound = false
-  // state.isPanelOpen = false
-  // emitter.on('toggle-panel', () => {
-  //   log('toggle-panel')
-  //   if (state.isPanelOpen) {
-  //     state.isPanelOpen = false
-  //   } else {
-  //     state.isPanelOpen = true
-  //   }
-  //   emitter.emit('render')
-  // })
-  // emitter.on('clean-terminal', () => {
-  //   log('clean-terminal')
-  //   state.cache(XTerm, 'terminal').term.clear()
-  // })
-  //
-  // // FILES
-  // state.diskFiles = null
-  // state.diskNavigationRoot = localStorage.getItem('diskNavigationRoot')
-  // if (!state.diskNavigationRoot || state.diskNavigationRoot == 'null') {
-  //   state.diskNavigationRoot = null
-  // }
-  //
-  // emitter.on('load-disk-files', async () => {
-  //   log('load-disk-files')
-  //   if (!state.diskNavigationRoot) return false
-  //
-  //   const files = await disk.ilistFiles(state.diskNavigationRoot)
-  //   state.diskFiles = files.map(MyFile)
-  //   // Load file contents
-  //   for (let i in state.diskFiles) {
-  //     if (state.diskFiles[i].type == 'file') {
-  //       state.diskFiles[i].content = await disk.loadFile(
-  //         state.diskNavigationRoot + '/' + state.diskFiles[i].path
-  //       )
-  //       state.diskFiles[i].editor = state.cache(CodeMirrorEditor, `editor_${state.diskFiles[i].id}`)
-  //       state.diskFiles[i].editor.render(state.diskFiles[i].content)
-  //       // Temporary: Open all the files
-  //       state.openedFiles.push(state.diskFiles[i].id)
-  //     }
-  //   }
-  //   if (state.openedFiles && state.openedFiles.length > 0) {
-  //     // Temporary: Select first file
-  //     emitter.emit('select-tab', state.openedFiles[0])
-  //   }
-  //   emitter.emit('render')
-  // })
-  // emitter.on('select-disk-navigation-root', async () => {
-  //   log('select-disk-navigation-root')
-  //   state.diskNavigationRoot = null
-  //   let { folder, files } = await disk.openFolder()
-  //   if (folder !== 'null' && folder !== null) {
-  //     localStorage.setItem('diskNavigationRoot', folder)
-  //     state.diskNavigationRoot = folder
-  //   }
-  //   state.diskFiles = await disk.ilistFiles(state.diskNavigationRoot)
-  //   emitter.emit('load-disk-files')
-  //   emitter.emit('render')
-  // })
-  //
-  // // TABS
-  // state.openedFiles = []
-  // state.editingFile = null
-  // emitter.on('select-tab', (id) => {
-  //   log('select-tab', id)
-  //   if (state.editingFile !== id) {
-  //     state.editingFile = id
-  //     emitter.emit('render')
-  //   }
-  // })
-  // emitter.on('close-tab', (id) => {
-  //   log('close-tab', id)
-  //   state.openedFiles = state.openedFiles.filter(f => f !== id)
-  //   if (state.editingFile === id) {
-  //     // Temporary: Select first file
-  //     state.editingFile = null
-  //   }
-  //   if (state.editingFile == null && state.openedFiles.length > 0) {
-  //     state.editingFile = state.openedFiles[0]
-  //   }
-  //   emitter.emit('render')
-  // })
-  //
-  // // VIEW AND ROUTING
-  // state.view = 'editor'
-  // emitter.on('set-view', (view) => {
-  //   log('set-view', view)
-  //   state.view = view
-  //   emitter.emit('render')
-  // })
+  function createFile({ source, parentFolder, fileName, content = '# empty file' }) {
+    const id = generateHash()
+    const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
+    editor.content = content
+    const hasChanges = false
+    return {
+      id,
+      source,
+      parentFolder,
+      fileName,
+      editor,
+      hasChanges
+    }
+  }
+
+  function createEmptyFile({ source, parentFolder }) {
+    return createFile({
+      fileName: generateFileName(),
+      parentFolder,
+      source,
+    })
+  }
 }
+
 
 function getDiskNavigationRootFromStorage() {
   let diskNavigationRoot = localStorage.getItem('diskNavigationRoot')
@@ -417,33 +483,13 @@ function generateHash() {
   return `${Date.now()}_${parseInt(Math.random()*1024)}`
 }
 
-function createFile({ source, parentFolder, fileName }) {
-  const id = generateHash()
-  const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
-  const hasChanges = false
-  return {
-    id,
-    source,
-    parentFolder,
-    fileName,
-    editor,
-    hasChanges
-  }
-}
 
-function createEmptyFile({ source, parentFolder }) {
-  return createFile({
-    fileName: generateFileName(),
-    parentFolder,
-    source,
-  })
-}
 
 async function getAvailablePorts() {
   return await serial.loadPorts()
 }
 
-function getBoardFiles(path) {
+async function getBoardFiles(path) {
   const files = await serial.ilistFiles(path)
   return files.map(f => ({
     fileName: f[0],
@@ -451,25 +497,25 @@ function getBoardFiles(path) {
   }))
 }
 
-function checkDiskFile({ parentFolder, fileName }) {
-  const files = getDiskFiles(parentFolder)
+async function checkDiskFile({ parentFolder, fileName }) {
+  const files = await getDiskFiles(parentFolder)
   const file = files.find((f) => f.fileName === fileName)
   return file ? true : false
 }
 
-function checkBoardFile({ parentFolder, fileName }) {
-  const files = getBoardFiles(parentFolder)
+async function checkBoardFile({ parentFolder, fileName }) {
+  const files = await getBoardFiles(parentFolder)
   const file = files.find((f) => f.fileName === fileName)
   return file ? true : false
 }
 
-function checkOverwrite({ fileNames = [], parentFolder, source }) {
+async function checkOverwrite({ fileNames = [], parentFolder, source }) {
   let files = []
   let overwrite = []
   if (source === 'board') {
     files = getBoardFiles(parentFolder)
   } else {
-    files = getDiskFiles(parentFolder)
+    files = await getDiskFiles(parentFolder)
   }
   return files.filter((f) => filenames.indexOf(f.fileName) !== -1)
 }
@@ -490,7 +536,7 @@ function pickRandom(array) {
 function canSave(state) {
   const isEditor = state.view === 'editor'
   const isConnected = state.isConnected
-  const file = state.openedFiles[state.editingFile]
+  const file = state.openFiles.find(f => f.id === state.editingFile)
   // Can only save on editor
   if (!isEditor) return false
   // Can always save disk files
@@ -529,4 +575,5 @@ function toggleFileSelection({ fileName, source, selectedFiles }) {
     // push file
     result = selectedFiles.push({ fileName, source })
   }
+  return result
 }

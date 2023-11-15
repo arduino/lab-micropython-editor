@@ -1,19 +1,15 @@
 function Tabs(state, emit) {
   return html`
     <div id="tabs">
-      ${state.openedFiles.map((id) => {
-        const file = state.diskFiles.find(f => f.id === id)
+      ${state.openFiles.map((file) => {
         return Tab({
-          text: file.path,
-          icon: 'computer.svg',
-          active: id === state.editingFile,
-          onSelectTab: () => emit('select-tab', id),
-          onCloseTab: () => emit('close-tab', id)
+          text: file.fileName,
+          icon: file.source === 'board'? 'connect.svg': 'computer.svg',
+          active: file.id === state.editingFile,
+          onSelectTab: () => emit('select-tab', file.id),
+          onCloseTab: () => emit('close-tab', file.id)
         })
       })}
-      <div class="button">
-        <button class="small">+</button>
-      </div>
     </div>
   `
 }

@@ -19,7 +19,9 @@ function Tab(args) {
         >
         <img class="icon" src="media/${icon}" />
         <div class="text">${text}</div>
-        <div class="options" tabindex="0" onclick=${onCloseTab}>x</div>
+        <div class="options" tabindex="0" onclick=${onCloseTab}>
+          <button>x</button>
+        </div>
       </div>
     `
   }
@@ -32,7 +34,9 @@ function Tab(args) {
         >
         <img class="icon" src="media/${icon}" />
         <div class="text">${text}</div>
-        <div class="options" tabindex="0" onclick=${onCloseTab}>x</div>
+        <div class="options" tabindex="0" onclick=${onCloseTab}>
+          <button>x</button>
+        </div>
       </div>
     `
   }

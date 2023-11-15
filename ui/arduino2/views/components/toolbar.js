@@ -15,19 +15,19 @@ function Toolbar(state, emit) {
       ${Button({
         icon: 'run.svg',
         tooltip: 'Run',
-        disabled: !state.isConnected,
+        disabled: !canExecute(state),
         onClick: () => emit('run')
       })}
       ${Button({
         icon: 'stop.svg',
         tooltip: 'Stop',
-        disabled: !state.isConnected,
+        disabled: !canExecute(state),
         onClick: () => emit('stop')
       })}
       ${Button({
         icon: 'reboot.svg',
         tooltip: 'Reset',
-        disabled: !state.isConnected,
+        disabled: !canExecute(state),
         onClick: () => emit('reset')
       })}
 
@@ -46,13 +46,13 @@ function Toolbar(state, emit) {
         icon: 'console.svg',
         tooltip: 'Editor and REPL',
         active: state.view === 'editor',
-        onClick: () => emit('set-view', 'editor')
+        onClick: () => emit('change-view', 'editor')
       })}
       ${Button({
         icon: 'files.svg',
         tooltip: 'File Manager',
         active: state.view === 'file-manager',
-        onClick: () => emit('set-view', 'file-manager')
+        onClick: () => emit('change-view', 'file-manager')
       })}
     </div>
   `

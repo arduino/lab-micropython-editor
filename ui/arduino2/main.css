@@ -391,9 +391,16 @@ button.small .icon {
   align-self: stretch;
 }
 
+#file-actions button {
+  padding: 0;
+}
+#file-actions button:hover {
+  opacity: 0.2;
+}
+
 .device-header {
   display: flex;
-  padding: 10px;
+  padding: 10px 0;
   align-items: flex-start;
   gap: 10px;
   align-self: stretch;
@@ -402,6 +409,7 @@ button.small .icon {
 .device-header button {
   width: auto;
   height: auto;
+  padding: 0;
 }
 
 .device-header .icon {

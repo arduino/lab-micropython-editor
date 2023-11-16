@@ -3,7 +3,7 @@ function DiskFileList(state, emit) {
   function DiskFileItem(item, i) {
     if (item.type === 'folder') {
       return html`
-        <div class="item" onclick=${() => console.log(item)}>
+        <div class="item" onclick=${() => emit('navigate-disk-folder', item.fileName)}>
           <img class="icon" src="media/folder.svg" />
           <div class="text">${item.fileName}</div>
         </div>
@@ -27,11 +27,11 @@ function DiskFileList(state, emit) {
   }
 
   return html`
-  <div class="file-list">
-    <div class="list">
-      <div class="item">..</div>
-      ${state.diskFiles.map(DiskFileItem)}
-  </div>
+    <div class="file-list">
+      <div class="list">
+        <div class="item" onclick=${() => emit('navigate-disk-parent')}>..</div>
+        ${state.diskFiles.map(DiskFileItem)}
+    </div>
   `
 }
 
@@ -40,7 +40,7 @@ function BoardFileList(state, emit) {
   function BoardFileItem(item, i) {
     if (item.type === 'folder') {
       return html`
-        <div class="item" onclick=${() => console.log(item)}>
+        <div class="item" onclick=${() => emit('navigate-board-folder', item.fileName)}>
           <img class="icon" src="media/folder.svg" />
           <div class="text">${item.fileName}</div>
         </div>
@@ -64,10 +64,10 @@ function BoardFileList(state, emit) {
   }
 
   return html`
-  <div class="file-list">
-    <div class="list">
-      <div class="item">..</div>
-      ${state.boardFiles.map(BoardFileItem)}
-  </div>
+    <div class="file-list">
+      <div class="list">
+        <div class="item" onclick=${() => emit('navigate-board-parent')}>..</div>
+        ${state.boardFiles.map(BoardFileItem)}
+    </div>
   `
 }

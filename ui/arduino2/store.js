@@ -3,7 +3,6 @@ const serial = window.BridgeSerial
 const disk = window.BridgeDisk
 
 async function store(state, emitter) {
-
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
@@ -119,7 +118,6 @@ async function store(state, emitter) {
       term.scrollToBottom()
     })
     serial.onDisconnect(() => emitter.emit('disconnect'))
-
 
     emitter.emit('close-connection-dialog')
     emitter.emit('refresh-files')
@@ -459,6 +457,7 @@ async function store(state, emitter) {
       state.editingFile = files[0].id
     }
     state.view = 'editor'
+    state.selectedFiles = []
     emitter.emit('render')
   })
 
@@ -488,14 +487,82 @@ async function store(state, emitter) {
     }
 
     state.isTransferring = false
+    state.selectedFiles = []
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
-  emitter.on('download-files', () => {})
+  emitter.on('download-files', async () => {
+    state.isTransferring = true
+    emitter.emit('render')
+
+    for (let i in state.selectedFiles) {
+      const file = state.selectedFiles[i]
+      await serial.downloadFile(
+        serial.getFullPath(
+          '/',
+          state.boardNavigationPath,
+          file.fileName
+        ),
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          file.fileName
+        ),
+        (e) => {
+          state.transferringProgress = e
+          emitter.emit('render')
+        }
+      )
+    }
+
+    state.isTransferring = false
+    state.selectedFiles = []
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
 
   // NAVIGATION
-  emitter.on('navigate-board-folder', () => {})
-  emitter.on('navigate-disk-folder', () => {})
+  emitter.on('navigate-board-folder', (folder) => {
+    log('navigate-board-folder')
+    state.boardNavigationPath = serial.getFullPath(
+      state.boardNavigationPath,
+      folder,
+      ''
+    )
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+  emitter.on('navigate-board-parent', () => {
+    log('navigate-board-parent')
+    state.boardNavigationPath = serial.getFullPath(
+      state.boardNavigationPath,
+      '..',
+      ''
+    )
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+
+  emitter.on('navigate-disk-folder', (folder) => {
+    log('navigate-disk-folder')
+    state.diskNavigationPath = disk.getFullPath(
+      state.diskNavigationPath,
+      folder,
+      ''
+    )
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+  emitter.on('navigate-disk-parent', () => {
+    log('navigate-disk-parent')
+    state.diskNavigationPath = disk.getFullPath(
+      state.diskNavigationPath,
+      '..',
+      ''
+    )
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
 
   function createFile({ source, parentFolder, fileName, content = '# empty file' }) {
     const id = generateHash()
@@ -559,8 +626,6 @@ async function getDiskFiles(path) {
 function generateHash() {
   return `${Date.now()}_${parseInt(Math.random()*1024)}`
 }
-
-
 
 async function getAvailablePorts() {
   return await serial.loadPorts()

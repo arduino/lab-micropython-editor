@@ -1,5 +1,5 @@
 function Toolbar(state, emit) {
-  const canSave = canSave(state)
+  const canSave = window.canSave(state) // TODO: How to avoid the window call?
 
   return html`
     <div id="toolbar">

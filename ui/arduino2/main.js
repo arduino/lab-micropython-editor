@@ -26,7 +26,7 @@ function App(state, emit) {
   if (state.isConnecting) return html`<div id="app"><p>Connecting...</p></div>`
   if (state.isLoading) return html`<div id="app"><p>Loading files...</p></div>`
   if (state.isSaving) return html`<div id="app"><p>Saving file... ${state.savingProgress}</p></div>`
-  if (state.isTransferring) return html`<div id="app"><p>Transferring file... ${state.savingProgress}</p></div>`
+  if (state.isTransferring) return html`<div id="app"><p>Transferring file... ${state.transferringProgress}</p></div>`
 
   return state.view == 'editor' ? EditorView(state, emit) : FileManagerView(state, emit)
 }

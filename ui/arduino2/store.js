@@ -187,6 +187,8 @@ async function store(state, emitter) {
       log("can't save")
       return
     }
+    state.isSaving = true
+    emitter.emit('render')
 
     const save = async () => {
       state.isSaving = true
@@ -228,6 +230,7 @@ async function store(state, emitter) {
     // Get open file
     let openFile = state.openFiles.find(f => f.id === state.editingFile)
     const contents = openFile.editor.editor.state.doc.toString()
+    const newFile = openFile.parentFolder == null
 
     // does full path exist?
     let fullPathExists = false
@@ -244,51 +247,49 @@ async function store(state, emitter) {
       })
     }
 
-    if (fullPathExists) {
+    if (!newFile && fullPathExists) {
       save()
     } else {
       // Make current navigation the parentFolder
       if (openFile.source == 'board') {
         openFile.parentFolder = state.boardNavigationPath
       } else {
-        openFile.parentFolder = state.boardNavigationPath
+        openFile.parentFolder = state.diskNavigationPath
       }
 
       // is there a file file on the parent path with the same name?
-      let willOverwrite = false
-      if (openFile.source == 'board') {
-        willOverwrite = await checkBoardFile({
-          parentFolder: openFile.parentFolder,
-          fileName: openFiles.fileName
-        })
-      } else {
-        willOverwrite = await checkDiskFile({
-          parentFolder: openFile.parentFolder,
-          fileName: openFile.fileName
-        })
-      }
+      // let willOverwrite = false
+      // if (openFile.source == 'board') {
+      //   willOverwrite = await checkBoardFile({
+      //     parentFolder: openFile.parentFolder,
+      //     fileName: openFiles.fileName
+      //   })
+      // } else {
+      //   willOverwrite = await checkDiskFile({
+      //     root: state.diskNavigationRoot,
+      //     parentFolder: openFile.parentFolder,
+      //     fileName: openFile.fileName
+      //   })
+      // }
+      //
+      // if (willOverwrite) {
+      //   log('will overwrite')
+      //   state.dialogs.push({
+      //     description: html`Would you like to overwrite the file <strong>${openFile.fileName}</strong> on ${openFile.source}?`,
+      //     options: [
+      //       { text: `Yes`, onClick: () => save() },
+      //       { text: `No`, onClick: () => {
+      //           state.dialogs.shift()
+      //           emitter.emit('render')
+      //         }
+      //       },
+      //     ]
+      //   })
+      save()
 
-      if (willOverwrite) {
-        log('will overwrite')
-        state.dialogs.push({
-          description: html`Would you like to overwrite the file <strong>${openFile.fileName}</strong> on ${openFile.source}?`,
-          options: [
-            { text: `Yes`, onClick: () => save() },
-            { text: `No`, onClick: () => {
-                state.dialogs.shift()
-                emitter.emit('render')
-              }
-            },
-          ]
-        })
-        emitter.emit('render')
-      } else {
-        save()
-      }
+      state.isSaving = false
+      emitter.emit('render')
     }
-  })
-  emitter.on('saved', () => {
-    // do I need this?
   })
 
   // TABS
@@ -640,13 +641,17 @@ async function getBoardFiles(path) {
   }))
 }
 
-async function checkDiskFile({ parentFolder, fileName }) {
-  const files = await getDiskFiles(parentFolder)
+async function checkDiskFile({ root, parentFolder, fileName }) {
+  if (root == null || parentFolder == null || fileName == null) return false
+  const files = await getDiskFiles(
+    disk.getFullPath(root, parentFolder, '')
+  )
   const file = files.find((f) => f.fileName === fileName)
   return file ? true : false
 }
 
 async function checkBoardFile({ parentFolder, fileName }) {
+  if (parentFolder == null || fileName == null) return false
   const files = await getBoardFiles(parentFolder)
   const file = files.find((f) => f.fileName === fileName)
   return file ? true : false

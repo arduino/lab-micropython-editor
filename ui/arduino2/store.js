@@ -298,8 +298,9 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('close-tab', (id) => {
+    log('close-tab', id)
     state.openFiles = state.openFiles.filter(f => f.id !== id)
-    state.editingFile = null
+    // state.editingFile = null
 
     if(state.openFiles.length > 0) {
       state.editingFile = state.openFiles[0].id

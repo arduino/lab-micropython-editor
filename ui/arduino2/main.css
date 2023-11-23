@@ -178,7 +178,8 @@ button.small .icon {
 }
 .tab .options button {
   width: auto;
-  height: auto;
+  height: 16px;
+  background: none;
 }
 
 #code-editor {

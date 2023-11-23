@@ -13,42 +13,36 @@ function Tab(args) {
 
   if (active) {
     return html`
-      <div
-        class="tab active"
-        tabindex="0"
-        >
+      <div class="tab active" tabindex="0">
         <img class="icon" src="media/${icon}" />
         <div class="text">${text}</div>
-        <div class="options" tabindex="0" onclick=${onCloseTab}>
-          <button>x</button>
+        <div class="options" >
+          <button onclick=${onCloseTab}>
+            <img src="media/close.svg" />
+          </button>
         </div>
       </div>
     `
   }
 
-  if (disabled) {
-    return html`
-      <div
-        class="tab disabled"
-        tabindex="0"
-        >
-        <img class="icon" src="media/${icon}" />
-        <div class="text">${text}</div>
-        <div class="options" tabindex="0" onclick=${onCloseTab}>
-          <button>x</button>
-        </div>
-      </div>
-    `
+  function selectTab(e) {
+    if(e.target.tagName === 'BUTTON' || e.target.tagName === 'IMG') return
+    onSelectTab(e)
   }
 
   return html`
     <div
       class="tab ${activeClass} ${disabledClass}"
       tabindex=${active ? 0 : null}
-      onclick=${onSelectTab}
+      onclick=${selectTab}
       >
       <img class="icon" src="media/${icon}" />
       <div class="text">${text}</div>
+      <div class="options">
+        <button onclick=${onCloseTab}>
+          <img src="media/close.svg" />
+        </button>
+      </div>
     </div>
   `
 }

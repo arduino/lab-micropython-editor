@@ -1,8 +1,11 @@
 const log = console.log
 const serial = window.BridgeSerial
 const disk = window.BridgeDisk
+const win = window.BridgeWindow
 
 async function store(state, emitter) {
+  win.setWindowSize(720, 640)
+
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()

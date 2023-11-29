@@ -161,7 +161,7 @@ button.small .icon {
 .tab .text {
   color: #000;
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
   line-height: normal;
   flex: 1 0 0;
   max-width: calc(100% - 46px);

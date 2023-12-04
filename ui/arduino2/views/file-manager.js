@@ -8,7 +8,7 @@ function FileManagerView(state, emit) {
             <div class="device-header">
               <img class="icon" src="media/${state.isConnected?'connect':'disconnect'}.svg" />
               <div onclick=${() => emit('open-connection-dialog')} class="text">${state.isConnected?state.connectedPort:'Select a board...'}</div>
-              <button disabled=${true}>
+              <button disabled=${!state.isConnected} onclick=${() => emit('create-file', 'serial')}>
                 <img class="icon" src="media/new-file.svg" />
               </button>
             </div>
@@ -21,7 +21,7 @@ function FileManagerView(state, emit) {
               <div class="text" onclick=${() => emit('select-disk-navigation-root')}>
                 ${state.diskNavigationRoot}
               </div>
-              <button disabled=${true}>
+                <button onclick=${() => emit('create-file', 'disk')}>
                 <img class="icon" src="media/new-file.svg" />
               </button>
             </div>
@@ -33,9 +33,3 @@ function FileManagerView(state, emit) {
     </div>
   `
 }
-
-
-
-// <div>
-
-// </div>

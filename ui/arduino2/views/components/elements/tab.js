@@ -18,7 +18,7 @@ function Tab(args) {
         <div class="text">${text}</div>
         <div class="options" >
           <button onclick=${onCloseTab}>
-            <img src="media/close.svg" />
+            <img class="icon" src="media/close.svg" />
           </button>
         </div>
       </div>
@@ -40,7 +40,7 @@ function Tab(args) {
       <div class="text">${text}</div>
       <div class="options">
         <button onclick=${onCloseTab}>
-          <img src="media/close.svg" />
+          <img class="icon" src="media/close.svg" />
         </button>
       </div>
     </div>

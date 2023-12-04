@@ -3,6 +3,17 @@ const serial = window.BridgeSerial
 const disk = window.BridgeDisk
 const win = window.BridgeWindow
 
+const newFileContent = `from arduino import *
+
+def setup():
+  pass
+
+def loop():
+  pass
+
+start(setup=setup, loop=loop)
+`
+
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
@@ -322,6 +333,9 @@ async function store(state, emitter) {
   // FILE OPERATIONS
   emitter.on('refresh-files', async () => {
     log('refresh-files')
+    if (state.isLoadingFiles) return
+    state.isLoadingFiles = true
+    emitter.emit('render')
     if (state.isConnected) {
       state.boardFiles = await getBoardFiles(
         serial.getFullPath(
@@ -339,6 +353,7 @@ async function store(state, emitter) {
       )
     )
     emitter.emit('refresh-selected-files')
+    state.isLoadingFiles = false
     emitter.emit('render')
   })
   emitter.on('refresh-selected-files', () => {
@@ -382,10 +397,50 @@ async function store(state, emitter) {
     state.isRemoving = false
     emitter.emit('render')
   })
-  emitter.on('create-file', () => {})
+  emitter.on('create-file', (device) => {
+    log('create-file', device)
+    if (state.creatingFile !== null) return
+    state.creatingFile = device
+    emitter.emit('render')
+  })
   emitter.on('rename-file', () => {})
   emitter.on('finish-renaming', () => {})
-  emitter.on('finish-creating', () => {})
+  emitter.on('finish-creating', async (value) => {
+    log('finish-creating', value)
+    if (!state.creatingFile) return
+
+    if (!value) {
+      state.creatingFile = null
+      emitter.emit('render')
+      return
+    }
+
+    if (state.isConnected && state.creatingFile == 'serial') {
+      await serial.saveFileContent(
+        serial.getFullPath(
+          '/',
+          state.boardNavigationPath,
+          value
+        ),
+        newFileContent
+      )
+    } else if (state.creatingFile == 'disk') {
+      await disk.saveFileContent(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        ),
+        newFileContent
+      )
+    }
+
+    setTimeout(() => {
+      state.creatingFile = null
+      emitter.emit('refresh-files')
+      emitter.emit('render')
+    }, 200)
+  })
   emitter.on('open-file-options', () => {})
   emitter.on('close-file-options', () => {})
 

@@ -24,7 +24,7 @@ function App(state, emit) {
 
   if (state.isRemoving) return html`<div id="app"><p>Removing...</p></div>`
   if (state.isConnecting) return html`<div id="app"><p>Connecting...</p></div>`
-  if (state.isLoading) return html`<div id="app"><p>Loading files...</p></div>`
+  if (state.isLoadingFiles) return html`<div id="app"><p>Loading files...</p></div>`
   if (state.isSaving) return html`<div id="app"><p>Saving file... ${state.savingProgress}</p></div>`
   if (state.isTransferring) return html`<div id="app"><p>Transferring file... ${state.transferringProgress}</p></div>`
 

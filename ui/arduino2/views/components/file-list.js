@@ -26,11 +26,24 @@ function DiskFileList(state, emit) {
     }
   }
 
+  const newFileItem = html`
+  <div class="item">
+    <img class="icon" src="media/file.svg" />
+    <div class="text">
+      <input autofocus
+      type="text"
+      onblur=${(e) => emit('finish-creating', e.target.value)}
+      />
+    </div>
+  </div>
+`
+
   return html`
     <div class="file-list">
       <div class="list">
         <div class="item" onclick=${() => emit('navigate-disk-parent')}>..</div>
         ${state.diskFiles.map(DiskFileItem)}
+        ${state.creatingFile == 'disk' ? newFileItem : null}
     </div>
   `
 }
@@ -63,11 +76,24 @@ function BoardFileList(state, emit) {
     }
   }
 
+  const newFileItem = html`
+  <div class="item">
+    <img class="icon" src="media/file.svg" />
+    <div class="text">
+      <input autofocus
+      type="text"
+      onblur=${(e) => emit('finish-creating', e.target.value)}
+      />
+    </div>
+  </div>
+`
+
   return html`
     <div class="file-list">
       <div class="list">
         <div class="item" onclick=${() => emit('navigate-board-parent')}>..</div>
         ${state.boardFiles.map(BoardFileItem)}
+        ${state.creatingFile == 'serial' ? newFileItem : null}
     </div>
   `
 }

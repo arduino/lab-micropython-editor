@@ -17,13 +17,13 @@ body, html {
 img {
   max-width: 100%;
   max-height: 100%;
-
 }
 
 button {
   display: flex;
   width: 45px;
   height: 45px;
+  padding: 0;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -54,12 +54,12 @@ button:hover, button.active {
 }
 
 button .icon {
-  width: 80%;
-  height: 80%;
+  width: 63%;
+  height: 63%;
 }
 button.small .icon {
-  width: 95%;
-  height: 95%;
+  width: 63%;
+  height: 63%;
 }
 
 
@@ -150,10 +150,6 @@ button.small .icon {
 .tab.active {
   background: #FFF;
 }
-.tab.disabled {
-  opacity: 0.5;
-  /* cursor: not-allowed; */
-}
 
 .tab .icon {
   height: 16px;
@@ -170,15 +166,23 @@ button.small .icon {
 }
 .tab .options {
   display: flex;
-  /* padding: 5px; */
   align-items: center;
   align-self: stretch;
   cursor: pointer;
+  height: 16px;
+  width: 16px;
 }
 .tab .options button {
-  width: auto;
-  height: 16px;
   background: none;
+  width: 100%;
+  height: 100%;
+}
+.tab .options button .icon {
+  width: 100%;
+  height: 100%;
+}
+.tab .options:hover button {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 #code-editor {
@@ -365,7 +369,7 @@ button.small .icon {
 
 #file-manager {
   display: flex;
-  padding: 10px 20px 20px 20px;
+  padding: 12px 32px 24px 32px;
   justify-content: center;
   align-items: center;
   gap: 10px;
@@ -394,9 +398,11 @@ button.small .icon {
   align-self: stretch;
 }
 
-#file-actions button {
-  padding: 0;
+#file-actions button .icon {
+  width: 100%;
+  height: 100%;
 }
+
 #file-actions button:hover {
   opacity: 0.2;
 }
@@ -519,4 +525,11 @@ button.small .icon {
 }
 .file-list .item .checkbox.checked .icon.on  {
   display: block;
+}
+
+.file-list .item input {
+  border: none;
+  border-radius: none;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
 }

@@ -38,10 +38,10 @@ jobs:
           node-version: '16'
           registry-url: 'https://registry.npmjs.org'
 
-      # - name: Install Python 2.7
-      #   uses: actions/setup-python@v3
-      #   with:
-      #     python-version: '2.7'
+      - name: Install Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11.x'
 
       - name: Package
         shell: bash

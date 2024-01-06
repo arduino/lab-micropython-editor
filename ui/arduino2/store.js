@@ -107,7 +107,7 @@ async function store(state, emitter) {
 
     // Make sure there is a lib folder
     log('creating lib folder')
-    await serial.createFolder('lib')
+    await serial.createFolder('/lib')
 
     // Connected and ready
     state.isConnecting = false

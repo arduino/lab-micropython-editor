@@ -3,15 +3,9 @@ const serial = window.BridgeSerial
 const disk = window.BridgeDisk
 const win = window.BridgeWindow
 
-const newFileContent = `from arduino import *
+const newFileContent = `# This program was created in Arduino Lab for MicroPython
 
-def setup():
-  pass
-
-def loop():
-  pass
-
-start(setup=setup, loop=loop)
+print('Hello, MicroPython!')
 `
 
 async function store(state, emitter) {
@@ -625,7 +619,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  function createFile({ source, parentFolder, fileName, content = '# empty file' }) {
+  function createFile({ source, parentFolder, fileName, content = newFileContent }) {
     const id = generateHash()
     const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
     editor.content = content

@@ -25,8 +25,12 @@ function DiskFileList(state, emit) {
       `
     }
   }
-  function onEnterKey(e) {
+  function onKeyEvent(e) {
     if(e.key.toLowerCase() === 'enter') {
+      e.target.blur()
+    }
+    if(e.key.toLowerCase() === 'escape') {
+      e.target.value = null
       e.target.blur()
     }
   }
@@ -36,7 +40,7 @@ function DiskFileList(state, emit) {
     <div class="text">
       <input autofocus
       type="text"
-      onkeydown=${onEnterKey}
+      onkeydown=${onKeyEvent}
       onblur=${(e) => emit('finish-creating', e.target.value)}
       />
       <script>
@@ -85,8 +89,12 @@ function BoardFileList(state, emit) {
     }
   }
 
-  function onEnterKey(e) {
+  function onKeyEvent(e) {
     if(e.key.toLowerCase() === 'enter') {
+      e.target.blur()
+    }
+    if(e.key.toLowerCase() === 'escape') {
+      e.target.value = null
       e.target.blur()
     }
   }
@@ -97,7 +105,7 @@ function BoardFileList(state, emit) {
     <div class="text">
       <input autofocus
       type="text"
-      onkeydown=${onEnterKey}
+      onkeydown=${onKeyEvent}
       onblur=${(e) => emit('finish-creating', e.target.value)}
       />
       <script>

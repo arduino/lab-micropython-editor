@@ -363,8 +363,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('remove-files', async () => {
-    filesNameList = state.selectedFiles.map(f => f.fileName)
-    console.log(filesNameList)
+    filesNameList = state.selectedFiles.map(f => f.source + ': ' + f.fileName)
     if(filesNameList.length > 1){
       confirmDelete = confirm('Are you sure you want to delete these files?:\n\n' + filesNameList.join('\n') , 'YES!', 'NOOOO!')
     }else{
@@ -412,12 +411,14 @@ async function store(state, emitter) {
   emitter.on('finish-creating', async (value) => {
     log('finish-creating', value)
     if (!state.creatingFile) return
-
+    
     if (!value) {
       state.creatingFile = null
       emitter.emit('render')
       return
     }
+    
+
 
     if (state.isConnected && state.creatingFile == 'serial') {
       await serial.saveFileContent(

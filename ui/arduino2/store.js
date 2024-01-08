@@ -363,6 +363,15 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('remove-files', async () => {
+    filesNameList = state.selectedFiles.map(f => f.fileName)
+    console.log(filesNameList)
+    if(filesNameList.length > 1){
+      confirmDelete = confirm('Are you sure you want to delete these files?:\n\n' + filesNameList.join('\n') , 'YES!', 'NOOOO!')
+    }else{
+      confirmDelete = confirm('Are you sure you want to delete ' + filesNameList[0] + '?' , 'YES!', 'NOOOO!')
+    }
+    
+    if(!confirmDelete) return
     state.isRemoving = true
     emitter.emit('render')
 
@@ -518,6 +527,15 @@ async function store(state, emitter) {
 
   // DOWNLOAD AND UPLOAD FILES
   emitter.on('upload-files', async () => {
+    filesNameList = state.selectedFiles.map(f => f.fileName)
+    console.log(filesNameList)
+    if(filesNameList.length > 1){
+      confirmDelete = confirm('Attention!\nUploading these files might overwrite files on destination:\n\n' + filesNameList.join('\n') , 'YES!', 'NOOOO!')
+    }else{
+      confirmDelete = confirm('Attention!\nUploading ' + filesNameList[0] + ' might overwrite the file on destination.' , 'YES!', 'NOOOO!')
+    }
+    
+    if(!confirmDelete) return
     state.isTransferring = true
     emitter.emit('render')
 
@@ -547,6 +565,13 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('download-files', async () => {
+    filesNameList = state.selectedFiles.map(f => f.fileName)
+    console.log(filesNameList)
+    if(filesNameList.length > 1){
+      confirmDelete = confirm('Attention!\nDownloading these files might overwrite files on destination:\n\n' + filesNameList.join('\n') , 'YES!', 'NOOOO!')
+    }else{
+      confirmDelete = confirm('Attention!\nDownloading ' + filesNameList[0] + ' might overwrite the file on destination.' , 'YES!', 'NOOOO!')
+    }
     state.isTransferring = true
     emitter.emit('render')
 

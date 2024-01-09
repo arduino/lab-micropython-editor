@@ -138,6 +138,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('disconnect', async () => {
+    await serial.disconnect()
     state.isConnected = false
     state.isPanelOpen = false
     state.boardFiles = []

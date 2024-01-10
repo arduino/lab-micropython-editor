@@ -6,7 +6,7 @@ function FileActions(state, emit) {
   return html`
   <div id="file-actions">
     ${Button({
-      icon: 'folder.svg',
+      icon: 'edit.svg',
       size: 'small',
       disabled: state.selectedFiles.length === 0,
       onClick: () => emit('open-selected-files')

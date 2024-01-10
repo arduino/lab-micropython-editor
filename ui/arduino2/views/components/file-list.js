@@ -42,8 +42,9 @@ function DiskFileList(state, emit) {
     <div class="file-list">
       <div class="list">
         <div class="item" onclick=${() => emit('navigate-disk-parent')}>..</div>
-        ${state.diskFiles.map(DiskFileItem)}
         ${state.creatingFile == 'disk' ? newFileItem : null}
+        ${state.diskFiles.map(DiskFileItem)}
+        
     </div>
   `
 }
@@ -92,8 +93,9 @@ function BoardFileList(state, emit) {
     <div class="file-list">
       <div class="list">
         <div class="item" onclick=${() => emit('navigate-board-parent')}>..</div>
-        ${state.boardFiles.map(BoardFileItem)}
         ${state.creatingFile == 'serial' ? newFileItem : null}
+        ${state.boardFiles.map(BoardFileItem)}
+        
     </div>
   `
 }

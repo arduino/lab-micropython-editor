@@ -21,9 +21,10 @@ function listFolder(folder) {
   })
 
   // Sort alphabetically in case-insensitive fashion
-  files.sort(function(entryA, entryB) {
-    return(entryA.path.localeCompare(entryB.path));
-  });
+  // this will prevent any other sorting from being 
+  // files.sort(function(entryA, entryB) {
+  //   return(entryA.path.localeCompare(entryB.path));
+  // });
 
   return files
 }
@@ -45,9 +46,9 @@ function ilistFolder(folder) {
   files = files.filter(f => f.path.indexOf('.') !== 0)
 
   // Sort alphabetically in case-insensitive fashion
-  files.sort(function (entryA, entryB) {
-    return(entryA.path.localeCompare(entryB.path));
-  });
+  // files.sort(function (entryA, entryB) {
+  //   return(entryA.path.localeCompare(entryB.path));
+  // });
   return files
 }
 

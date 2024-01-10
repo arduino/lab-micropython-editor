@@ -676,11 +676,11 @@ async function getDiskFiles(path) {
     fileName: f.path,
     type: f.type
   }))
-  files = files.sort(filesSortAlphabetically)
+  files = files.sort(sortFilesAlphabetically)
   return files
 }
 
-function filesSortAlphabetically(entryA, entryB) {
+function sortFilesAlphabetically(entryA, entryB) {
   return(entryA.fileName.localeCompare(entryB.fileName));
 }
 
@@ -695,12 +695,11 @@ async function getAvailablePorts() {
 async function getBoardFiles(path) {
   await serial.get_prompt()
   let files = await serial.ilistFiles(path)
-  console.log(files)
   files = files.map(f => ({
     fileName: f[0],
     type: f[1] === 0x4000 ? 'folder' : 'file'
   }))
-  files = files.sort(filesSortAlphabetically)
+  files = files.sort(sortFilesAlphabetically)
   return files
   
 }

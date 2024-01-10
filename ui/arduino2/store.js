@@ -3,15 +3,9 @@ const serial = window.BridgeSerial
 const disk = window.BridgeDisk
 const win = window.BridgeWindow
 
-const newFileContent = `from arduino import *
+const newFileContent = `# This program was created in Arduino Lab for MicroPython
 
-def setup():
-  pass
-
-def loop():
-  pass
-
-start(setup=setup, loop=loop)
+print('Hello, MicroPython!')
 `
 
 async function store(state, emitter) {

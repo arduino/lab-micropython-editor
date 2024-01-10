@@ -27,26 +27,35 @@ function DiskFileList(state, emit) {
   }
 
   const newFileItem = html`
-  <div class="item">
-    <img class="icon" src="media/file.svg" />
-    <div class="text">
-      <input autofocus
-      type="text"
-      onblur=${(e) => emit('finish-creating', e.target.value)}
-      />
+    <div class="item">
+      <img class="icon" src="media/file.svg" />
+      <div class="text">
+        <input type="text" onblur=${(e) => emit('finish-creating', e.target.value)}/>
+      </div>
     </div>
-  </div>
-`
+  `
 
-  return html`
+  const list = html`
     <div class="file-list">
       <div class="list">
         <div class="item" onclick=${() => emit('navigate-disk-parent')}>..</div>
         ${state.creatingFile == 'disk' ? newFileItem : null}
         ${state.diskFiles.map(DiskFileItem)}
-        
+      </div>
     </div>
   `
+
+  // Mutation observer
+  const observer = new MutationObserver((mutations) => {
+    const el = list.querySelector('input')
+    if (el) {
+      el.focus()
+      observer.disconnect()
+    }
+  })
+  observer.observe(list, { childList: true, subtree:true })
+
+  return list
 }
 
 function BoardFileList(state, emit) {
@@ -78,24 +87,32 @@ function BoardFileList(state, emit) {
   }
 
   const newFileItem = html`
-  <div class="item">
-    <img class="icon" src="media/file.svg" />
-    <div class="text">
-      <input autofocus
-      type="text"
-      onblur=${(e) => emit('finish-creating', e.target.value)}
-      />
+    <div class="item">
+      <img class="icon" src="media/file.svg" />
+      <div class="text">
+        <input type="text" onblur=${(e) => emit('finish-creating', e.target.value)}/>
+      </div>
     </div>
-  </div>
-`
+  `
 
-  return html`
+  const list = html`
     <div class="file-list">
       <div class="list">
         <div class="item" onclick=${() => emit('navigate-board-parent')}>..</div>
         ${state.creatingFile == 'serial' ? newFileItem : null}
         ${state.boardFiles.map(BoardFileItem)}
-        
+      </div>
     </div>
   `
+  // Mutation observer
+  const observer = new MutationObserver((mutations) => {
+    const el = list.querySelector('input')
+    if (el) {
+      el.focus()
+      observer.disconnect()
+    }
+  })
+  observer.observe(list, { childList: true, subtree:true })
+
+  return list
 }

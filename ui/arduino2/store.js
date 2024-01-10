@@ -671,11 +671,17 @@ async function selectDiskFolder() {
 }
 
 async function getDiskFiles(path) {
-  const files = await disk.ilistFiles(path)
-  return files.map(f => ({
+  let files = await disk.ilistFiles(path)
+  files = files.map(f => ({
     fileName: f.path,
     type: f.type
   }))
+  files = files.sort(sortFilesAlphabetically)
+  return files
+}
+
+function sortFilesAlphabetically(entryA, entryB) {
+  return(entryA.fileName.localeCompare(entryB.fileName));
 }
 
 function generateHash() {
@@ -688,11 +694,14 @@ async function getAvailablePorts() {
 
 async function getBoardFiles(path) {
   await serial.get_prompt()
-  const files = await serial.ilistFiles(path)
-  return files.map(f => ({
+  let files = await serial.ilistFiles(path)
+  files = files.map(f => ({
     fileName: f[0],
     type: f[1] === 0x4000 ? 'folder' : 'file'
   }))
+  files = files.sort(sortFilesAlphabetically)
+  return files
+  
 }
 
 async function checkDiskFile({ root, parentFolder, fileName }) {

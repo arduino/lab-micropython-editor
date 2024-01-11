@@ -460,7 +460,7 @@ async function store(state, emitter) {
     let files = []
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
-      let fileContent = '# empty file)'
+      let fileContent = '# empty file'
 
       if (selectedFile.source === 'board') {
         fileContent = await serial.loadFile(

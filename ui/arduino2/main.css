@@ -443,9 +443,10 @@ button.small .icon {
 .device-header .text span {
   position: absolute;
   right: 0;
-  min-width: calc(100% - 20px);
+  min-width: calc(100% - 30px);
   display: flex;
   align-items: center;
+  padding-right: 10px;
 }
 
 
@@ -454,7 +455,7 @@ button.small .icon {
   position: absolute;
   top: 0;
   left: 0;
-  width: 25px;
+  width: 30px;
   height: 100%;
   background: linear-gradient(0.25turn, white 25%, rgba(0, 0, 0, 0));
   z-index: 99;

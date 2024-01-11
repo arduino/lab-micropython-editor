@@ -450,7 +450,8 @@ async function store(state, emitter) {
     } else {
       state.selectedFiles.push({
         fileName: file.fileName,
-        source: source
+        source: source,
+        parentFolder: file.parentFolder
       })
     }
     emitter.emit('render')
@@ -460,7 +461,7 @@ async function store(state, emitter) {
     let files = []
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
-      let fileContent = '# empty file)'
+      let fileContent = '# empty file'
 
       if (selectedFile.source === 'board') {
         fileContent = await serial.loadFile(
@@ -500,17 +501,23 @@ async function store(state, emitter) {
     files = files.filter((f) => { // file to open
       let isAlready = false
       state.openFiles.forEach((g) => { // file already open
-        if (g.fileName == f.fileName && g.source == f.source) {
+        if (
+          g.fileName == f.fileName
+          && g.source == f.source
+          && g.parentFolder == f.parentFolder
+        ) {
           isAlready = true
         }
       })
       return !isAlready
     })
+
     if (files.length > 0) {
       // console.log(state.openFiles, files)
       state.openFiles = state.openFiles.concat(files)
       state.editingFile = files[0].id
     }
+
     state.view = 'editor'
     state.selectedFiles = []
     emitter.emit('render')

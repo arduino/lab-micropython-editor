@@ -1,4 +1,11 @@
 function FileManagerView(state, emit) {
+  let boardFullPath = 'Select a board...'
+  let diskFullPath = `${state.diskNavigationRoot}${state.diskNavigationPath}`
+
+  if (state.isConnected) {
+    boardFullPath = `${state.connectedPort}${state.boardNavigationPath}`
+  }
+
   return html`
     <div id="app">
       <div class="working-area">
@@ -7,7 +14,9 @@ function FileManagerView(state, emit) {
           <div id="board-files">
             <div class="device-header">
               <img class="icon" src="media/${state.isConnected?'connect':'disconnect'}.svg" />
-              <div onclick=${() => emit('open-connection-dialog')} class="text">${state.isConnected?state.connectedPort:'Select a board...'}</div>
+              <div onclick=${() => emit('open-connection-dialog')} class="text">
+                <span>${boardFullPath}</span>
+              </div>
               <button disabled=${!state.isConnected} onclick=${() => emit('create-file', 'serial')}>
                 <img class="icon" src="media/new-file.svg" />
               </button>
@@ -19,7 +28,7 @@ function FileManagerView(state, emit) {
             <div class="device-header">
               <img class="icon" src="media/computer.svg" />
               <div class="text" onclick=${() => emit('select-disk-navigation-root')}>
-                ${state.diskNavigationRoot}
+                <span>${diskFullPath}</span>
               </div>
                 <button onclick=${() => emit('create-file', 'disk')}>
                 <img class="icon" src="media/new-file.svg" />

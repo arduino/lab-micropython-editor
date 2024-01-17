@@ -586,20 +586,18 @@ async function store(state, emitter) {
   // NAVIGATION
   emitter.on('navigate-board-folder', (folder) => {
     log('navigate-board-folder')
-    state.boardNavigationPath = serial.getFullPath(
+    state.boardNavigationPath = serial.getNavigationPath(
       state.boardNavigationPath,
-      folder,
-      ''
+      folder
     )
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
   emitter.on('navigate-board-parent', () => {
     log('navigate-board-parent')
-    state.boardNavigationPath = serial.getFullPath(
+    state.boardNavigationPath = serial.getNavigationPath(
       state.boardNavigationPath,
-      '..',
-      ''
+      '..'
     )
     emitter.emit('refresh-files')
     emitter.emit('render')
@@ -607,20 +605,18 @@ async function store(state, emitter) {
 
   emitter.on('navigate-disk-folder', (folder) => {
     log('navigate-disk-folder')
-    state.diskNavigationPath = disk.getFullPath(
+    state.diskNavigationPath = disk.getNavigationPath(
       state.diskNavigationPath,
-      folder,
-      ''
+      folder
     )
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
   emitter.on('navigate-disk-parent', () => {
     log('navigate-disk-parent')
-    state.diskNavigationPath = disk.getFullPath(
+    state.diskNavigationPath = disk.getNavigationPath(
       state.diskNavigationPath,
-      '..',
-      ''
+      '..'
     )
     emitter.emit('refresh-files')
     emitter.emit('render')
@@ -708,7 +704,7 @@ async function getBoardFiles(path) {
   }))
   files = files.sort(sortFilesAlphabetically)
   return files
-  
+
 }
 
 async function checkDiskFile({ root, parentFolder, fileName }) {

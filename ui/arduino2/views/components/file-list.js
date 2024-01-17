@@ -1,4 +1,14 @@
 function DiskFileList(state, emit) {
+  
+  function onKeyEvent(e) {
+    if(e.key.toLowerCase() === 'enter') {
+      e.target.blur()
+    }
+    if(e.key.toLowerCase() === 'escape') {
+      e.target.value = null
+      e.target.blur()
+    }
+  }
 
   function DiskFileItem(item, i) {
     if (item.type === 'folder') {
@@ -59,6 +69,16 @@ function DiskFileList(state, emit) {
 }
 
 function BoardFileList(state, emit) {
+
+  function onKeyEvent(e) {
+    if(e.key.toLowerCase() === 'enter') {
+      e.target.blur()
+    }
+    if(e.key.toLowerCase() === 'escape') {
+      e.target.value = null
+      e.target.blur()
+    }
+  }
 
   function BoardFileItem(item, i) {
     if (item.type === 'folder') {

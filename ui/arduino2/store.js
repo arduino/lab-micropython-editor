@@ -368,6 +368,10 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+      if (!confirmAction) {
+        continue
+      }
       if (file.source === 'board') {
         await serial.removeFile(
           serial.getFullPath(
@@ -388,7 +392,7 @@ async function store(state, emitter) {
     }
 
     emitter.emit('refresh-files')
-
+    state.selectedFiles = []
     state.isRemoving = false
     emitter.emit('render')
   })
@@ -530,6 +534,10 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      confirmAction = confirm(`Copying ${file.fileName} might overwrite an existing file at destination.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+      if (!confirmAction) {
+        continue
+      }
       await serial.uploadFile(
         disk.getFullPath(
           state.diskNavigationRoot,
@@ -559,6 +567,10 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      confirmAction = confirmDialog(`Copying ${file.fileName} might overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
+      if (!confirmAction) {
+        continue
+      }
       await serial.downloadFile(
         serial.getFullPath(
           '/',

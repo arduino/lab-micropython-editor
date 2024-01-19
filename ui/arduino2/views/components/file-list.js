@@ -40,7 +40,7 @@ function DiskFileList(state, emit) {
     <div class="item">
       <img class="icon" src="media/file.svg" />
       <div class="text">
-        <input type="text" onblur=${(e) => emit('finish-creating', e.target.value)}/>
+        <input type="text" onkeydown=${onKeyEvent} onblur=${(e) => emit('finish-creating', e.target.value)}/>
       </div>
     </div>
   `
@@ -60,7 +60,6 @@ function DiskFileList(state, emit) {
     const el = list.querySelector('input')
     if (el) {
       el.focus()
-      observer.disconnect()
     }
   })
   observer.observe(list, { childList: true, subtree:true })
@@ -110,7 +109,7 @@ function BoardFileList(state, emit) {
     <div class="item">
       <img class="icon" src="media/file.svg" />
       <div class="text">
-        <input type="text" onblur=${(e) => emit('finish-creating', e.target.value)}/>
+        <input type="text" onkeydown=${onKeyEvent}  onblur=${(e) => emit('finish-creating', e.target.value)}/>
       </div>
     </div>
   `
@@ -129,7 +128,6 @@ function BoardFileList(state, emit) {
     const el = list.querySelector('input')
     if (el) {
       el.focus()
-      observer.disconnect()
     }
   })
   observer.observe(list, { childList: true, subtree:true })

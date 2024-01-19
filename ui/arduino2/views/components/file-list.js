@@ -60,7 +60,6 @@ function DiskFileList(state, emit) {
     const el = list.querySelector('input')
     if (el) {
       el.focus()
-      observer.disconnect()
     }
   })
   observer.observe(list, { childList: true, subtree:true })
@@ -129,7 +128,6 @@ function BoardFileList(state, emit) {
     const el = list.querySelector('input')
     if (el) {
       el.focus()
-      observer.disconnect()
     }
   })
   observer.observe(list, { childList: true, subtree:true })

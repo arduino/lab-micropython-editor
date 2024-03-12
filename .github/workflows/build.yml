@@ -24,7 +24,8 @@ jobs:
         config:
           - os: windows-2019
           - os: ubuntu-latest
-          - os: macos-latest
+          - os: macos-13    # Last macOS version supported for x86 runners
+          - os: macos-14    # First macOS version support for Apple Silicon runners
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 

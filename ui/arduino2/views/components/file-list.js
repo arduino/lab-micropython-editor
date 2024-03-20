@@ -11,20 +11,21 @@ function DiskFileList(state, emit) {
   }
 
   function DiskFileItem(item, i) {
-    function navigate(path) {
-      return () => emit('navigate-disk-folder', path)
-    }
+    const isChecked = state.selectedFiles.find(
+      f => f.fileName === item.fileName && f.source === 'disk'
+    )
     if (item.type === 'folder') {
       return html`
-        <div class="item" onclick=${() => navigate(item.fileName)}>
+        <div
+          class="item ${isChecked ? 'selected' : ''}"
+          ondblclick=${() => emit('navigate-disk-folder', item.fileName)}
+          onclick=${() => emit('toggle-file-selection', item, 'disk')}
+          >
           <img class="icon" src="media/folder.svg" />
           <div class="text">${item.fileName}</div>
         </div>
       `
     } else {
-      const isChecked = state.selectedFiles.find(
-        f => f.fileName === item.fileName && f.source === 'disk'
-      )
       return html`
         <div
           class="item ${isChecked ? 'selected' : ''}"
@@ -52,7 +53,7 @@ function DiskFileList(state, emit) {
   const list = html`
     <div class="file-list">
       <div class="list">
-        <div class="item" onclick=${() => emit('navigate-disk-parent')}>..</div>
+        <div class="item" ondblclick=${() => emit('navigate-disk-parent')}>..</div>
         ${state.creatingFile == 'disk' ? newFileItem : null}
         ${state.diskFiles.map(DiskFileItem)}
       </div>
@@ -84,20 +85,21 @@ function BoardFileList(state, emit) {
   }
 
   function BoardFileItem(item, i) {
-    function navigate(path) {
-      return () => emit('navigate-board-folder', path)
-    }
+    const isChecked = state.selectedFiles.find(
+      f => f.fileName === item.fileName && f.source === 'board'
+    )
     if (item.type === 'folder') {
       return html`
-        <div class="item" onclick=${navigate(item.fileName)}>
+        <div
+          class="item ${isChecked ? 'selected' : ''}"
+          onclick=${() => emit('toggle-file-selection', item, 'board')}
+          ondblclick=${() => emit('navigate-board-folder', item.fileName)}
+          >
           <img class="icon" src="media/folder.svg" />
           <div class="text">${item.fileName}</div>
         </div>
       `
     } else {
-      const isChecked = state.selectedFiles.find(
-        f => f.fileName === item.fileName && f.source === 'board'
-      )
       return html`
         <div
           class="item ${isChecked ? 'selected' : ''}"
@@ -125,7 +127,7 @@ function BoardFileList(state, emit) {
   const list = html`
     <div class="file-list">
       <div class="list">
-        <div class="item" onclick=${() => emit('navigate-board-parent')}>..</div>
+        <div class="item" ondblclick=${() => emit('navigate-board-parent')}>..</div>
         ${state.creatingFile == 'serial' ? newFileItem : null}
         ${state.boardFiles.map(BoardFileItem)}
       </div>

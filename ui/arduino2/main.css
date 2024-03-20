@@ -492,6 +492,7 @@ button.small .icon {
   cursor: pointer;
 }
 
+.file-list .item.selected,
 .file-list .item:hover {
   background: #FFF;
 }
@@ -507,7 +508,6 @@ button.small .icon {
   display: flex;
 }
 
-.file-list .item .checkbox,
 .file-list .item .icon {
   width: 32px;
   height: 32px;

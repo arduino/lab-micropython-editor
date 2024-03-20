@@ -368,6 +368,9 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      if (file.type == 'folder') {
+        continue
+      }
       const confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmAction) {
         continue
@@ -443,7 +446,18 @@ async function store(state, emitter) {
   emitter.on('open-file-options', () => {})
   emitter.on('close-file-options', () => {})
 
-  emitter.on('toggle-file-selection', (file, source) => {
+  emitter.on('toggle-file-selection', (file, source, event) => {
+    // Single file selection unless holding keyboard key
+    if (event && !event.ctrlKey && !event.metaKey) {
+      state.selectedFiles = [{
+        fileName: file.fileName,
+        type: file.type,
+        source: source,
+        parentFolder: file.parentFolder
+      }]
+      emitter.emit('render')
+      return
+    }
     const isSelected = state.selectedFiles.find((f) => {
       return f.fileName === file.fileName && f.source === source
     })
@@ -454,6 +468,7 @@ async function store(state, emitter) {
     } else {
       state.selectedFiles.push({
         fileName: file.fileName,
+        type: file.type,
         source: source,
         parentFolder: file.parentFolder
       })
@@ -465,6 +480,9 @@ async function store(state, emitter) {
     let files = []
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
+      if (selectedFile.type == 'folder') {
+        continue
+      }
       let fileContent = '# empty file'
 
       if (selectedFile.source === 'board') {
@@ -523,17 +541,28 @@ async function store(state, emitter) {
     }
 
     state.view = 'editor'
-    state.selectedFiles = []
     emitter.emit('render')
+  })
+  emitter.on('open-file', (source, file) => {
+    log('open-file', source, file)
+    state.selectedFiles = [{
+      fileName: file.fileName,
+      type: file.type,
+      source: source,
+      parentFolder: state[`${source}NavigationPath`]
+    }]
+    emitter.emit('open-selected-files')
   })
 
   // DOWNLOAD AND UPLOAD FILES
   emitter.on('upload-files', async () => {
     state.isTransferring = true
     emitter.emit('render')
-
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      if (file.type == 'folder') {
+        continue
+      }
       const confirmAction = confirm(`Copying ${file.fileName} might overwrite an existing file at destination.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmAction) {
         continue
@@ -567,6 +596,9 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      if (file.type == 'folder') {
+        continue
+      }
       const confirmAction = confirm(`Copying ${file.fileName} might overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmAction) {
         continue
@@ -789,6 +821,11 @@ function canUpload({ isConnected, selectedFiles }) {
   return isConnected
       && selectedFiles.length > 0
       && selectedBoardFiles.length === 0
+}
+
+function canEdit({ selectedFiles }) {
+  const files = selectedFiles.filter((f) => f.type == 'file')
+  return files.length != 0
 }
 
 function toggleFileSelection({ fileName, source, selectedFiles }) {

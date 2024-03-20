@@ -8,7 +8,7 @@ function FileActions(state, emit) {
     ${Button({
       icon: 'edit.svg',
       size: 'small',
-      disabled: state.selectedFiles.length === 0,
+      disabled: !canEdit({ selectedFiles: state.selectedFiles }),
       onClick: () => emit('open-selected-files')
     })}
     ${Button({

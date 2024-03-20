@@ -22,7 +22,7 @@ function generateFileList(source) {
           <div
             class="item ${isChecked ? 'selected' : ''}"
             ondblclick=${() => emit(`navigate-${source}-folder`, item.fileName)}
-            onclick=${() => emit('toggle-file-selection', item, source)}
+            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
             >
             <img class="icon" src="media/folder.svg" />
             <div class="text">${item.fileName}</div>
@@ -32,7 +32,8 @@ function generateFileList(source) {
         return html`
           <div
             class="item ${isChecked ? 'selected' : ''}"
-            onclick=${() => emit('toggle-file-selection', item, source)}
+            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
+            ondblclick=${() => emit(`open-file`, source, item)}
             >
             <img class="icon" src="media/file.svg"  />
             <div class="text">${item.fileName}</div>

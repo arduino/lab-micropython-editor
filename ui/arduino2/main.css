@@ -482,7 +482,9 @@ button.small .icon {
 
 .file-list .item {
   display: flex;
-  height: 32px;
+  height: 28px;
+  min-height: 28px;
+  max-height: 28px;;
   padding: 5px 10px;
   align-items: center;
   gap: 10px;

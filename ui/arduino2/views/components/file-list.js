@@ -49,7 +49,15 @@ function generateFileList(source) {
       <div class="item">
         <img class="icon" src="media/file.svg" />
         <div class="text">
-          <input type="text" onkeydown=${onKeyEvent} onblur=${(e) => emit('finish-creating', e.target.value)}/>
+          <input type="text" onkeydown=${onKeyEvent} onblur=${(e) => emit('finish-creating-file', e.target.value)}/>
+        </div>
+      </div>
+    `
+    const newFolderItem = html`
+      <div class="item">
+        <img class="icon" src="media/folder.svg" />
+        <div class="text">
+          <input type="text" onkeydown=${onKeyEvent} onblur=${(e) => emit('finish-creating-folder', e.target.value)}/>
         </div>
       </div>
     `
@@ -59,6 +67,7 @@ function generateFileList(source) {
         <div class="list">
           <div class="item" ondblclick=${() => emit(`navigate-${source}-parent`)}>..</div>
           ${state.creatingFile == source ? newFileItem : null}
+          ${state.creatingFolder == source ? newFolderItem : null}
           ${state[`${source}Files`].map(FileItem)}
         </div>
       </div>

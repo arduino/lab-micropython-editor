@@ -415,7 +415,7 @@ button.small .icon {
 }
 
 .device-header button {
-  width: auto;
+  width: 32px;
   height: auto;
   padding: 0;
 }

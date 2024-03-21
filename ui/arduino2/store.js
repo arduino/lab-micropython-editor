@@ -16,12 +16,14 @@ async function store(state, emitter) {
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
   state.diskFiles = []
   state.boardNavigationPath = '/'
+  state.boardNavigationRoot = '/'
   state.boardFiles = []
   state.openFiles = []
   state.selectedFiles = []
   state.editingFile = null
   state.creatingFile = null
   state.renamingFile = null
+  state.creatingFolder = null
 
   state.availablePorts = []
 
@@ -209,7 +211,7 @@ async function store(state, emitter) {
           await serial.get_prompt()
           await serial.saveFileContent(
             serial.getFullPath(
-              '/',
+              state.boardNavigationRoot,
               openFile.parentFolder,
               openFile.fileName
             ),
@@ -247,6 +249,7 @@ async function store(state, emitter) {
     let fullPathExists = false
     if (openFile.source == 'board') {
       fullPathExists = await checkBoardFile({
+        root: state.boardNavigationRoot,
         parentFolder: openFile.parentFolder,
         fileName: openFile.fileName
       })
@@ -408,11 +411,10 @@ async function store(state, emitter) {
     log('create-file', device)
     if (state.creatingFile !== null) return
     state.creatingFile = device
+    state.creatingFolder = null
     emitter.emit('render')
   })
-  emitter.on('rename-file', () => {})
-  emitter.on('finish-renaming', () => {})
-  emitter.on('finish-creating', async (value) => {
+  emitter.on('finish-creating-file', async (value) => {
     log('finish-creating', value)
     if (!state.creatingFile) return
 
@@ -422,7 +424,12 @@ async function store(state, emitter) {
       return
     }
 
-    if (state.isConnected && state.creatingFile == 'board') {
+    const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFile}.\nThis can overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
+    if (!confirmAction) {
+      return
+    }
+
+    if (state.creatingFile == 'board' && state.isConnected) {
       await serial.saveFileContent(
         serial.getFullPath(
           '/',
@@ -448,6 +455,55 @@ async function store(state, emitter) {
       emitter.emit('render')
     }, 200)
   })
+
+  emitter.on('create-folder', (device) => {
+    log('create-folder', device)
+    if (state.creatingFolder !== null) return
+    state.creatingFolder = device
+    state.creatingFile = null
+    emitter.emit('render')
+  })
+  emitter.on('finish-creating-folder', async (value) => {
+    log('finish-creating-folder', value)
+    if (!state.creatingFolder) return
+
+    if (!value) {
+      state.creatingFolder = null
+      emitter.emit('render')
+      return
+    }
+
+    const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFolder}.\nThis can overwrite an existing folder, are you sure you want to proceed?`, 'Cancel', 'Yes')
+    if (!confirmAction) return
+
+    if (state.creatingFolder == 'board' && state.isConnected) {
+      await serial.createFolder(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          value
+        )
+      )
+    } else if (state.creatingFolder == 'disk') {
+      await disk.createFolder(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        )
+      )
+    }
+
+    setTimeout(() => {
+      state.creatingFolder = null
+      emitter.emit('refresh-files')
+      emitter.emit('render')
+    }, 200)
+  })
+
+
+  emitter.on('rename-file', () => {})
+  emitter.on('finish-renaming', () => {})
   emitter.on('open-file-options', () => {})
   emitter.on('close-file-options', () => {})
 

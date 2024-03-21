@@ -106,6 +106,9 @@ const Disk = {
   renameFile: async (oldName, newName) => {
     return ipcRenderer.invoke('rename-file', oldName, newName)
   },
+  createFolder: async (folderPath) => {
+    return ipcRenderer.invoke('create-folder', folderPath)
+  },
   getNavigationPath: (navigation, target) => {
     return path.join(navigation, target)
   },

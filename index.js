@@ -98,6 +98,17 @@ ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
   return true
 })
 
+ipcMain.handle('create-folder', (event, folderPath) => {
+  console.log('ipcMain', 'create-folder', folderPath)
+  try {
+    fs.mkdirSync(folderPath, { recursive: true })
+  } catch(e) {
+    console.log('error', e)
+    return false
+  }
+  return true
+})
+
 // WINDOW MANAGEMENT
 
 ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {

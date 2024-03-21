@@ -422,7 +422,7 @@ async function store(state, emitter) {
       return
     }
 
-    if (state.isConnected && state.creatingFile == 'serial') {
+    if (state.isConnected && state.creatingFile == 'board') {
       await serial.saveFileContent(
         serial.getFullPath(
           '/',

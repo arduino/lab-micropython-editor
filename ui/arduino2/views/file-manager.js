@@ -17,7 +17,7 @@ function FileManagerView(state, emit) {
               <div onclick=${() => emit('open-connection-dialog')} class="text">
                 <span>${boardFullPath}</span>
               </div>
-              <button disabled=${!state.isConnected} onclick=${() => emit('create-file', 'serial')}>
+              <button disabled=${!state.isConnected} onclick=${() => emit('create-file', 'board')}>
                 <img class="icon" src="media/new-file.svg" />
               </button>
             </div>

@@ -21,6 +21,9 @@ const Serial = {
   run: async (code) => {
     return board.run(code)
   },
+  execFile: async (path) => {
+    return board.execfile(path)
+  },
   get_prompt: async () => {
     return board.get_prompt()
   },
@@ -72,6 +75,9 @@ const Serial = {
   createFolder: async (folder) => {
     return await board.fs_mkdir(folder)
   },
+  removeFolder: async (folder) => {
+    return await board.fs_rmdir(folder)
+  },
   getNavigationPath: (navigation, target) => {
     return path.posix.join(navigation, target)
   },
@@ -108,6 +114,9 @@ const Disk = {
   },
   createFolder: async (folderPath) => {
     return ipcRenderer.invoke('create-folder', folderPath)
+  },
+  removeFolder: async (folderPath) => {
+    return ipcRenderer.invoke('remove-folder', folderPath)
   },
   getNavigationPath: (navigation, target) => {
     return path.join(navigation, target)

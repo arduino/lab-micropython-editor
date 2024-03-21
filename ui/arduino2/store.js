@@ -358,7 +358,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('refresh-selected-files', () => {
-    log('refres-selected-files')
+    log('refresh-selected-files')
     state.selectedFiles = state.selectedFiles.filter(f => {
       if (f.source === 'board') {
         if (!state.isConnected) return false
@@ -376,29 +376,46 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
-      if (file.type == 'folder') {
-        continue
-      }
       const confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmAction) {
         continue
       }
-      if (file.source === 'board') {
-        await serial.removeFile(
-          serial.getFullPath(
-            '/',
-            state.boardNavigationPath,
-            file.fileName
+      if (file.type == 'folder') {
+        if (file.source === 'board') {
+          await removeBoardFolder(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              file.fileName
+            )
           )
-        )
+        } else {
+          await disk.removeFolder(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              file.fileName
+            )
+          )
+        }
       } else {
-        await disk.removeFile(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            state.diskNavigationPath,
-            file.fileName
+        if (file.source === 'board') {
+          await serial.removeFile(
+            serial.getFullPath(
+              '/',
+              state.boardNavigationPath,
+              file.fileName
+            )
           )
-        )
+        } else {
+          await disk.removeFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              file.fileName
+            )
+          )
+        }
       }
     }
 
@@ -424,10 +441,11 @@ async function store(state, emitter) {
       return
     }
 
-    const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFile}.\nThis can overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
-    if (!confirmAction) {
-      return
-    }
+    // Check if will overwrite
+    // const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFile}.\nThis can overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
+    // if (!confirmAction) {
+    //   return
+    // }
 
     if (state.creatingFile == 'board' && state.isConnected) {
       await serial.saveFileContent(
@@ -472,9 +490,6 @@ async function store(state, emitter) {
       emitter.emit('render')
       return
     }
-
-    const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFolder}.\nThis can overwrite an existing folder, are you sure you want to proceed?`, 'Cancel', 'Yes')
-    if (!confirmAction) return
 
     if (state.creatingFolder == 'board' && state.isConnected) {
       await serial.createFolder(
@@ -907,4 +922,9 @@ function toggleFileSelection({ fileName, source, selectedFiles }) {
     selectedFiles.push({ fileName, source })
   }
   return result
+}
+
+async function removeBoardFolder(fullPath) {
+  let output = await serial.execFile('./ui/arduino2/helpers.py')
+  await serial.run(`delete_folder('${fullPath}')`)
 }

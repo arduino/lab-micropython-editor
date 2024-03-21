@@ -109,6 +109,12 @@ ipcMain.handle('create-folder', (event, folderPath) => {
   return true
 })
 
+ipcMain.handle('remove-folder', (event, folderPath) => {
+  console.log('ipcMain', 'remove-folder', folderPath)
+  fs.rmdirSync(folderPath, { recursive: true, force: true })
+  return true
+})
+
 // WINDOW MANAGEMENT
 
 ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {

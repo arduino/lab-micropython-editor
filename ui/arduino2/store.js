@@ -303,6 +303,7 @@ async function store(state, emitter) {
 
   // TABS
   emitter.on('select-tab', (id) => {
+    log('select-tab', id)
     state.editingFile = id
     emitter.emit('render')
   })
@@ -352,6 +353,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('refresh-selected-files', () => {
+    log('refres-selected-files')
     state.selectedFiles = state.selectedFiles.filter(f => {
       if (f.source === 'board') {
         if (!state.isConnected) return false
@@ -363,6 +365,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('remove-files', async () => {
+    log('remove-files')
     state.isRemoving = true
     emitter.emit('render')
 
@@ -447,6 +450,7 @@ async function store(state, emitter) {
   emitter.on('close-file-options', () => {})
 
   emitter.on('toggle-file-selection', (file, source, event) => {
+    log('toggle-file-selection', file, source, event)
     // Single file selection unless holding keyboard key
     if (event && !event.ctrlKey && !event.metaKey) {
       state.selectedFiles = [{
@@ -556,6 +560,7 @@ async function store(state, emitter) {
 
   // DOWNLOAD AND UPLOAD FILES
   emitter.on('upload-files', async () => {
+    log('upload-files')
     state.isTransferring = true
     emitter.emit('render')
     for (let i in state.selectedFiles) {
@@ -591,6 +596,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('download-files', async () => {
+    log('download-files')
     state.isTransferring = true
     emitter.emit('render')
 
@@ -629,7 +635,7 @@ async function store(state, emitter) {
 
   // NAVIGATION
   emitter.on('navigate-board-folder', (folder) => {
-    log('navigate-board-folder')
+    log('navigate-board-folder', folder)
     state.boardNavigationPath = serial.getNavigationPath(
       state.boardNavigationPath,
       folder
@@ -648,7 +654,7 @@ async function store(state, emitter) {
   })
 
   emitter.on('navigate-disk-folder', (folder) => {
-    log('navigate-disk-folder')
+    log('navigate-disk-folder', folder)
     state.diskNavigationPath = disk.getNavigationPath(
       state.diskNavigationPath,
       folder
@@ -666,7 +672,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  function createFile({ source, parentFolder, fileName, content = '# empty file' }) {
+  function createFile({ source, parentFolder, fileName, content = newFileContent }) {
     const id = generateHash()
     const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
     editor.content = content

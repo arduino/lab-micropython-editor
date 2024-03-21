@@ -56,6 +56,7 @@ async function store(state, emitter) {
     if (folder) {
       saveDiskNavigationRootToStorage(folder)
       state.diskNavigationRoot = folder
+      state.diskNavigationPath = '/'
       emitter.emit('refresh-files')
     }
     emitter.emit('render')
@@ -136,6 +137,7 @@ async function store(state, emitter) {
     state.isConnected = false
     state.isPanelOpen = false
     state.boardFiles = []
+    state.boardNavigationPath = '/'
     emitter.emit('refresh-files')
     emitter.emit('render')
   })

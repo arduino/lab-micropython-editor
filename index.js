@@ -40,6 +40,24 @@ function ilistFolder(folder) {
   return files
 }
 
+function getAllFiles(dirPath, arrayOfFiles) {
+  // https://coderrocketfuel.com/article/recursively-list-all-the-files-in-a-directory-using-node-js
+  files = ilistFolder(dirPath)
+  arrayOfFiles = arrayOfFiles || []
+  files.forEach(function(file) {
+    const p = path.join(dirPath, file.path)
+    const stat = fs.statSync(p)
+    arrayOfFiles.push({
+      path: p,
+      type: stat.isDirectory() ? 'folder' : 'file'
+    })
+    if (stat.isDirectory()) {
+      arrayOfFiles = getAllFiles(p, arrayOfFiles)
+    }
+  })
+  return arrayOfFiles
+}
+
 // LOCAL FILE SYSTEM ACCESS
 ipcMain.handle('open-folder', async (event) => {
   console.log('ipcMain', 'open-folder')
@@ -61,6 +79,12 @@ ipcMain.handle('ilist-files', async (event, folder) => {
   console.log('ipcMain', 'ilist-files', folder)
   if (!folder) return []
   return ilistFolder(folder)
+})
+
+ipcMain.handle('ilist-all-files', (event, folder) => {
+  console.log('ipcMain', 'ilist-all-files', folder)
+  if (!folder) return []
+  return getAllFiles(folder)
 })
 
 ipcMain.handle('load-file', (event, filePath) => {

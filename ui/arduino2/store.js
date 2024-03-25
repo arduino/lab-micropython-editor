@@ -369,8 +369,100 @@ async function store(state, emitter) {
     })
     emitter.emit('render')
   })
+
+  emitter.on('create-file', (device) => {
+    log('create-file', device)
+    if (state.creatingFile !== null) return
+    state.creatingFile = device
+    state.creatingFolder = null
+    emitter.emit('render')
+  })
+  emitter.on('finish-creating-file', async (value) => {
+    log('finish-creating', value)
+    if (!state.creatingFile) return
+
+    if (!value) {
+      state.creatingFile = null
+      emitter.emit('render')
+      return
+    }
+
+    // Check if will overwrite
+    // const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFile}.\nThis can overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
+    // if (!confirmAction) {
+    //   return
+    // }
+
+    if (state.creatingFile == 'board' && state.isConnected) {
+      await serial.saveFileContent(
+        serial.getFullPath(
+          '/',
+          state.boardNavigationPath,
+          value
+        ),
+        newFileContent
+      )
+    } else if (state.creatingFile == 'disk') {
+      await disk.saveFileContent(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        ),
+        newFileContent
+      )
+    }
+
+    setTimeout(() => {
+      state.creatingFile = null
+      emitter.emit('refresh-files')
+      emitter.emit('render')
+    }, 200)
+  })
+  emitter.on('create-folder', (device) => {
+    log('create-folder', device)
+    if (state.creatingFolder !== null) return
+    state.creatingFolder = device
+    state.creatingFile = null
+    emitter.emit('render')
+  })
+  emitter.on('finish-creating-folder', async (value) => {
+    log('finish-creating-folder', value)
+    if (!state.creatingFolder) return
+
+    if (!value) {
+      state.creatingFolder = null
+      emitter.emit('render')
+      return
+    }
+
+    if (state.creatingFolder == 'board' && state.isConnected) {
+      await serial.createFolder(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          value
+        )
+      )
+    } else if (state.creatingFolder == 'disk') {
+      await disk.createFolder(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        )
+      )
+    }
+
+    setTimeout(() => {
+      state.creatingFolder = null
+      emitter.emit('refresh-files')
+      emitter.emit('render')
+    }, 200)
+  })
+
   emitter.on('remove-files', async () => {
-    log('remove-files')
+    log('remove-files') // and folders
     state.isRemoving = true
     emitter.emit('render')
 
@@ -424,103 +516,9 @@ async function store(state, emitter) {
     state.isRemoving = false
     emitter.emit('render')
   })
-  emitter.on('create-file', (device) => {
-    log('create-file', device)
-    if (state.creatingFile !== null) return
-    state.creatingFile = device
-    state.creatingFolder = null
-    emitter.emit('render')
-  })
-  emitter.on('finish-creating-file', async (value) => {
-    log('finish-creating', value)
-    if (!state.creatingFile) return
 
-    if (!value) {
-      state.creatingFile = null
-      emitter.emit('render')
-      return
-    }
-
-    // Check if will overwrite
-    // const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFile}.\nThis can overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
-    // if (!confirmAction) {
-    //   return
-    // }
-
-    if (state.creatingFile == 'board' && state.isConnected) {
-      await serial.saveFileContent(
-        serial.getFullPath(
-          '/',
-          state.boardNavigationPath,
-          value
-        ),
-        newFileContent
-      )
-    } else if (state.creatingFile == 'disk') {
-      await disk.saveFileContent(
-        disk.getFullPath(
-          state.diskNavigationRoot,
-          state.diskNavigationPath,
-          value
-        ),
-        newFileContent
-      )
-    }
-
-    setTimeout(() => {
-      state.creatingFile = null
-      emitter.emit('refresh-files')
-      emitter.emit('render')
-    }, 200)
-  })
-
-  emitter.on('create-folder', (device) => {
-    log('create-folder', device)
-    if (state.creatingFolder !== null) return
-    state.creatingFolder = device
-    state.creatingFile = null
-    emitter.emit('render')
-  })
-  emitter.on('finish-creating-folder', async (value) => {
-    log('finish-creating-folder', value)
-    if (!state.creatingFolder) return
-
-    if (!value) {
-      state.creatingFolder = null
-      emitter.emit('render')
-      return
-    }
-
-    if (state.creatingFolder == 'board' && state.isConnected) {
-      await serial.createFolder(
-        serial.getFullPath(
-          state.boardNavigationRoot,
-          state.boardNavigationPath,
-          value
-        )
-      )
-    } else if (state.creatingFolder == 'disk') {
-      await disk.createFolder(
-        disk.getFullPath(
-          state.diskNavigationRoot,
-          state.diskNavigationPath,
-          value
-        )
-      )
-    }
-
-    setTimeout(() => {
-      state.creatingFolder = null
-      emitter.emit('refresh-files')
-      emitter.emit('render')
-    }, 200)
-  })
-
-
-  emitter.on('rename-file', () => {})
-  emitter.on('finish-renaming', () => {})
-  emitter.on('open-file-options', () => {})
-  emitter.on('close-file-options', () => {})
+  emitter.on('rename-file', () => { /* TODO */ })
+  emitter.on('finish-renaming', () => { /* TODO */ })
 
   emitter.on('toggle-file-selection', (file, source, event) => {
     log('toggle-file-selection', file, source, event)
@@ -638,24 +636,29 @@ async function store(state, emitter) {
     emitter.emit('render')
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      const srcPath = disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        file.fileName
+      )
+      const destPath = serial.getFullPath(
+        state.boardNavigationRoot,
+        state.boardNavigationPath,
+        file.fileName
+      )
+      console.log(srcPath, destPath)
       if (file.type == 'folder') {
-        continue
-      }
-      const confirmAction = confirm(`Copying ${file.fileName} might overwrite an existing file at destination.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
-      if (!confirmAction) {
+        await uploadFolder(
+          srcPath, destPath,
+          (e) => {
+            state.transferringProgress = e
+            emitter.emit('render')
+          }
+        )
         continue
       }
       await serial.uploadFile(
-        disk.getFullPath(
-          state.diskNavigationRoot,
-          state.diskNavigationPath,
-          file.fileName
-        ),
-        serial.getFullPath(
-          '/',
-          state.boardNavigationPath,
-          file.fileName
-        ),
+        srcPath, destPath,
         (e) => {
           state.transferringProgress = e
           emitter.emit('render')
@@ -675,24 +678,28 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
+      const srcPath = serial.getFullPath(
+        state.boardNavigationRoot,
+        state.boardNavigationPath,
+        file.fileName
+      )
+      const destPath = disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        file.fileName
+      )
       if (file.type == 'folder') {
-        continue
-      }
-      const confirmAction = confirm(`Copying ${file.fileName} might overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
-      if (!confirmAction) {
+        await downloadFolder(
+          srcPath, destPath,
+          (e) => {
+            state.transferringProgress = e
+            emitter.emit('render')
+          }
+        )
         continue
       }
       await serial.downloadFile(
-        serial.getFullPath(
-          '/',
-          state.boardNavigationPath,
-          file.fileName
-        ),
-        disk.getFullPath(
-          state.diskNavigationRoot,
-          state.diskNavigationPath,
-          file.fileName
-        ),
+        srcPath, destPath,
         (e) => {
           state.transferringProgress = e
           emitter.emit('render')
@@ -925,6 +932,64 @@ function toggleFileSelection({ fileName, source, selectedFiles }) {
 }
 
 async function removeBoardFolder(fullPath) {
+  // TODO: Replace with getting the file tree from the board and deleting one by one
   let output = await serial.execFile('./ui/arduino2/helpers.py')
   await serial.run(`delete_folder('${fullPath}')`)
+}
+
+async function uploadFolder(srcPath, destPath, dataConsumer) {
+  dataConsumer = dataConsumer || function() {}
+  await serial.createFolder(destPath)
+  let allFiles = await disk.ilistAllFiles(srcPath)
+  for (let i in allFiles) {
+    const file = allFiles[i]
+    const relativePath = file.path.substr(srcPath.length)
+    if (file.type === 'folder') {
+      await serial.createFolder(
+        serial.getFullPath(
+          destPath,
+          relativePath,
+          ''
+        )
+      )
+    } else {
+      await serial.uploadFile(
+        disk.getFullPath(srcPath, relativePath, ''),
+        serial.getFullPath(destPath, relativePath, ''),
+        dataConsumer
+      )
+    }
+  }
+}
+
+async function downloadFolder(srcPath, destPath, dataConsumer) {
+  dataConsumer = dataConsumer || function() {}
+  await disk.createFolder(destPath)
+  let output = await serial.execFile('./ui/arduino2/helpers.py')
+  output = await serial.run(`ilist_all('${srcPath}')`)
+  let files = []
+  try {
+    // Extracting the json output from serial response
+    output = output.substring(
+      output.indexOf('OK')+2,
+      output.indexOf('\x04')
+    )
+    files = JSON.parse(output)
+  } catch (e) {
+    log('error', output)
+  }
+  for (let i in files) {
+    const file = files[i]
+    const relativePath = file.path.substr(srcPath.length)
+    if (file.type == 'folder') {
+      await disk.createFolder(
+        disk.getFullPath( destPath, relativePath, '')
+      )
+    } else {
+      await serial.downloadFile(
+        serial.getFullPath(srcPath, relativePath, ''),
+        serial.getFullPath(destPath, relativePath, '')
+      )
+    }
+  }
 }

@@ -65,7 +65,7 @@ function generateFileList(source) {
     const list = html`
       <div class="file-list">
         <div class="list">
-          <div class="item" ondblclick=${() => emit(`navigate-${source}-parent`)}>..</div>
+          <div class="item" onclick=${() => emit(`navigate-${source}-parent`)}>..</div>
           ${state.creatingFile == source ? newFileItem : null}
           ${state.creatingFolder == source ? newFolderItem : null}
           ${state[`${source}Files`].map(FileItem)}

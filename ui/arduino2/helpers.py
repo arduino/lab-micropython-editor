@@ -26,7 +26,7 @@ def delete_folder(path):
     for file in files:
         if file['type'] == 'file':
             os.remove(file['path'])
-    for file in files:
+    for file in reversed(files):
         if file['type'] == 'folder':
             os.rmdir(file['path'])
     os.rmdir(path)

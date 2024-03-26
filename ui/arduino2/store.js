@@ -421,12 +421,34 @@ async function store(state, emitter) {
     state.isRemoving = true
     emitter.emit('render')
 
+    let boardNames = state.selectedFiles
+      .filter(file => file.source === 'board')
+      .map(file => file.fileName)
+
+    let diskNames = state.selectedFiles
+      .filter(file => file.source === 'disk')
+      .map(file => file.fileName)
+
+    let message = `You are about to delete the following files:\n\n`
+    if (boardNames.length) {
+      message += `From your board:\n`
+      boardNames.forEach(name => message += `${name}\n`)
+      message += `\n`
+    }
+    if (diskNames.length) {
+      message += `From your disk:\n`
+      diskNames.forEach(name => message += `${name}\n`)
+      message += `\n`
+    }
+
+    message += `Are you sure you want to proceed?`
+    const confirmAction = confirm(message, 'Cancel', 'Yes')
+    state.isRemoving = false
+    emitter.emit('render')
+    if (!confirmAction) return
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
-      const confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
-      if (!confirmAction) {
-        continue
-      }
       if (file.type == 'folder') {
         if (file.source === 'board') {
           await removeBoardFolder(
@@ -587,6 +609,23 @@ async function store(state, emitter) {
     log('upload-files')
     state.isTransferring = true
     emitter.emit('render')
+    // Check if it will overwrite something
+    const willOverwrite = await checkOverwrite({
+      fileNames: state.selectedFiles.map(f => f.fileName),
+      parentFolder: serial.getFullPath(state.boardNavigationRoot, state.boardNavigationPath, ''),
+      source: 'board'
+    })
+    if (willOverwrite.length > 0) {
+      let message = `You are about to overwrite the following files/folders on your board:\n\n`
+      willOverwrite.forEach(f => message += `${f.fileName}\n`)
+      message += `\n`
+      message += `Are you sure you want to proceed?`
+      const confirmAction = confirm(message, 'Cancel', 'Yes')
+      state.isTransferring = false
+      emitter.emit('render')
+      if (!confirmAction) return
+    }
+    // Upload files
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       const srcPath = disk.getFullPath(
@@ -627,7 +666,23 @@ async function store(state, emitter) {
     log('download-files')
     state.isTransferring = true
     emitter.emit('render')
-
+    // Check if it will overwrite something
+    const willOverwrite = await checkOverwrite({
+      fileNames: state.selectedFiles.map(f => f.fileName),
+      parentFolder: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
+      source: 'disk'
+    })
+    if (willOverwrite.length > 0) {
+      let message = `You are about to overwrite the following files/folders on your disk:\n\n`
+      willOverwrite.forEach(f => message += `${f.fileName}\n`)
+      message += `\n`
+      message += `Are you sure you want to proceed?`
+      const confirmAction = confirm(message, 'Cancel', 'Yes')
+      state.isTransferring = false
+      emitter.emit('render')
+      if (!confirmAction) return
+    }
+    // Download files
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       const srcPath = serial.getFullPath(
@@ -807,13 +862,12 @@ async function checkBoardFile({ parentFolder, fileName }) {
 
 async function checkOverwrite({ fileNames = [], parentFolder, source }) {
   let files = []
-  let overwrite = []
   if (source === 'board') {
-    files = getBoardFiles(parentFolder)
+    files = await getBoardFiles(parentFolder)
   } else {
     files = await getDiskFiles(parentFolder)
   }
-  return files.filter((f) => filenames.indexOf(f.fileName) !== -1)
+  return files.filter((f) => fileNames.indexOf(f.fileName) !== -1)
 }
 
 function generateFileName(filename) {

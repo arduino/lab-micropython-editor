@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 50 50" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1.73271,0,0,1.73271,-6.00623,-2.69559)">
+        <g id="icon">
+            <g>
+                <path d="M32,25C32,25.549 31.549,26 31,26L28,26L28,29C28,29.549 27.549,30 27,30C26.451,30 26,29.549 26,29L26,26L23,26C22.451,26 22,25.549 22,25C22,24.451 22.451,24 23,24L26,24L26,21C26,20.451 26.451,20 27,20C27.549,20 28,20.451 28,21L28,24L31,24C31.549,24 32,24.451 32,25Z" style="fill-rule:nonzero;"/>
+                <path d="M27,10L16.41,10L12.71,6.29C12.521,6.103 12.266,5.998 12,6L5,6C4.451,6 4,6.451 4,7L4,25C4,25.549 4.451,26 5,26L19,26C19.549,26 20,25.549 20,25C20,24.451 19.549,24 19,24L6,24L6,12L26,12L26,17C26,17.549 26.451,18 27,18C27.549,18 28,17.549 28,17L28,11C28,10.451 27.549,10 27,10ZM6,10L6,8L11.59,8L13.59,10L6,10Z" style="fill-rule:nonzero;"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,5 +1,14 @@
 function Toolbar(state, emit) {
-  const canSave = window.canSave(state) // TODO: How to avoid the window call?
+  const canSave = window.canSave({
+    view: state.view,
+    isConnected: state.isConnected,
+    openFiles: state.openFiles,
+    editingFile: state.editingFile
+  }) // TODO: How to avoid the window call?
+  const canExecute = window.canExecute({
+    view: state.view,
+    isConnected: state.isConnected
+  })
 
   return html`
     <div id="toolbar">
@@ -15,19 +24,19 @@ function Toolbar(state, emit) {
       ${Button({
         icon: 'run.svg',
         tooltip: 'Run',
-        disabled: !canExecute(state),
+        disabled: !canExecute,
         onClick: () => emit('run')
       })}
       ${Button({
         icon: 'stop.svg',
         tooltip: 'Stop',
-        disabled: !canExecute(state),
+        disabled: !canExecute,
         onClick: () => emit('stop')
       })}
       ${Button({
         icon: 'reboot.svg',
         tooltip: 'Reset',
-        disabled: !canExecute(state),
+        disabled: !canExecute,
         onClick: () => emit('reset')
       })}
 

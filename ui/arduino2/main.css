@@ -492,7 +492,6 @@ button.small .icon {
   align-items: center;
   gap: 10px;
   align-self: stretch;
-  cursor: pointer;
 }
 
 .file-list .item.selected,

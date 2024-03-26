@@ -943,7 +943,7 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
   let allFiles = await disk.ilistAllFiles(srcPath)
   for (let i in allFiles) {
     const file = allFiles[i]
-    const relativePath = file.path.substr(srcPath.length)
+    const relativePath = file.path.substring(srcPath.length)
     if (file.type === 'folder') {
       await serial.createFolder(
         serial.getFullPath(
@@ -980,7 +980,7 @@ async function downloadFolder(srcPath, destPath, dataConsumer) {
   }
   for (let i in files) {
     const file = files[i]
-    const relativePath = file.path.substr(srcPath.length)
+    const relativePath = file.path.substring(srcPath.length)
     if (file.type == 'folder') {
       await disk.createFolder(
         disk.getFullPath( destPath, relativePath, '')

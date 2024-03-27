@@ -494,8 +494,53 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('rename-file', () => { /* TODO */ })
-  emitter.on('finish-renaming', () => { /* TODO */ })
+  emitter.on('rename-file', (source, item) => {
+    log('rename-file', source, item)
+    state.renamingFile = source
+    emitter.emit('render')
+  })
+  emitter.on('finish-renaming', async (value) => {
+    log('finish-renaming', value)
+    if (!value) return
+    state.isSaving = true
+    emitter.emit('render')
+
+    // You can only rename one file, the selected one
+    const fileName = state.selectedFiles[0].fileName
+
+    if (state.renamingFile == 'board') {
+      await serial.renameFile(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          fileName
+        ),
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          value
+        )
+      )
+    } else {
+      await disk.renameFile(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          fileName
+        ),
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        )
+      )
+    }
+
+    state.isSaving = false
+    state.renamingFile = null
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
 
   emitter.on('toggle-file-selection', (file, source, event) => {
     log('toggle-file-selection', file, source, event)

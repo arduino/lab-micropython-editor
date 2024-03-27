@@ -2,7 +2,7 @@ const DiskFileList = generateFileList('disk')
 const BoardFileList = generateFileList('board')
 
 function generateFileList(source) {
-  return function(state, emit) {
+  return function FileList(state, emit) {
     function onKeyEvent(e) {
       if(e.key.toLowerCase() === 'enter') {
         e.target.blur()
@@ -10,38 +10,6 @@ function generateFileList(source) {
       if(e.key.toLowerCase() === 'escape') {
         e.target.value = null
         e.target.blur()
-      }
-    }
-
-    function FileItem(item, i) {
-      const isChecked = state.selectedFiles.find(
-        f => f.fileName === item.fileName && f.source === source
-      )
-      if (item.type === 'folder') {
-        return html`
-          <div
-            class="item ${isChecked ? 'selected' : ''}"
-            ondblclick=${() => emit(`navigate-${source}-folder`, item.fileName)}
-            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
-            >
-            <img class="icon" src="media/folder.svg" />
-            <div class="text">${item.fileName}</div>
-          </div>
-        `
-      } else {
-        return html`
-          <div
-            class="item ${isChecked ? 'selected' : ''}"
-            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
-            ondblclick=${() => emit(`open-file`, source, item)}
-            >
-            <img class="icon" src="media/file.svg"  />
-            <div class="text">${item.fileName}</div>
-            <div class="options" onclick=${() => console.log('options', item)}>
-              <img src="media/falafel.svg" />
-            </div>
-          </div>
-        `
       }
     }
 
@@ -61,6 +29,68 @@ function generateFileList(source) {
         </div>
       </div>
     `
+
+    function FileItem(item, i) {
+      const renamingFileItem = html`
+        <input type="text"
+          value=${item.fileName}
+          onkeydown=${onKeyEvent}
+          onblur=${(e) => emit('finish-renaming', e.target.value)}
+          onclick=${(e) => false}
+          ondblclick=${(e) => false}
+          />
+      `
+      const isChecked = state.selectedFiles.find(
+        f => f.fileName === item.fileName && f.source === source
+      )
+      function renameItem(e) {
+        e.preventDefault()
+        emit('rename-file', source, item)
+        return false
+      }
+      function navigateToFolder() {
+        if (!state.renamingFile) emit(`navigate-${source}-folder`, item.fileName)
+      }
+      function openFile() {
+        if (!state.renamingFile) emit(`open-file`, source, item)
+      }
+      let fileName = item.fileName
+      const isSelected = state.selectedFiles.find(f => f.fileName === fileName)
+
+      if (state.renamingFile == source && isSelected) {
+        fileName = renamingFileItem
+      }
+      if (item.type === 'folder') {
+        return html`
+          <div
+            class="item ${isChecked ? 'selected' : ''}"
+            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
+            ondblclick=${navigateToFolder}
+            >
+            <img class="icon" src="media/folder.svg" />
+            <div class="text">${fileName}</div>
+            <div class="options" onclick=${renameItem}>
+              <img src="media/cursor.svg" />
+            </div>
+          </div>
+        `
+      } else {
+        return html`
+          <div
+            class="item ${isChecked ? 'selected' : ''}"
+            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
+            ondblclick=${openFile}
+            >
+            <img class="icon" src="media/file.svg"  />
+            <div class="text">${fileName}</div>
+            <div class="options" onclick=${renameItem}>
+              <img src="media/cursor.svg" />
+            </div>
+          </div>
+        `
+      }
+    }
+
     // XXX: Use `source` to filter an array of files with a `source` as proprety
     const list = html`
       <div class="file-list">

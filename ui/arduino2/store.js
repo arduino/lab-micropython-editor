@@ -443,9 +443,11 @@ async function store(state, emitter) {
 
     message += `Are you sure you want to proceed?`
     const confirmAction = confirm(message, 'Cancel', 'Yes')
-    state.isRemoving = false
-    emitter.emit('render')
-    if (!confirmAction) return
+    if (!confirmAction) {
+      state.isRemoving = false
+      emitter.emit('render')
+      return
+    }
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]

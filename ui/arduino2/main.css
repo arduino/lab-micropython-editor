@@ -501,9 +501,9 @@ button.small .icon {
 
 .file-list .item .options {
   display: none;
-  padding: 5px;
   align-items: center;
   align-self: stretch;
+  cursor: pointer;
 }
 
 .file-list .item:hover .options {

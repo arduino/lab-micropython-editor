@@ -501,39 +501,90 @@ async function store(state, emitter) {
   })
   emitter.on('finish-renaming', async (value) => {
     log('finish-renaming', value)
-    if (!value) return
-    state.isSaving = true
-    emitter.emit('render')
 
     // You can only rename one file, the selected one
     const fileName = state.selectedFiles[0].fileName
 
+    if (!value || fileName == value) {
+      state.renamingFile = null
+      emitter.emit('render')
+      return
+    }
+
+    state.isSaving = true
+    emitter.emit('render')
+
+    // Check if new name overwrites something
     if (state.renamingFile == 'board') {
-      await serial.renameFile(
-        serial.getFullPath(
-          state.boardNavigationRoot,
-          state.boardNavigationPath,
-          fileName
-        ),
-        serial.getFullPath(
-          state.boardNavigationRoot,
-          state.boardNavigationPath,
-          value
-        )
-      )
+      // Check if it will overwrite something
+      const willOverwrite = await checkOverwrite({
+        fileNames: [ value ],
+        parentFolder: disk.getFullPath(state.boardNavigationRoot, state.boardNavigationPath, ''),
+        source: 'board'
+      })
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following files/folders on your board:\n\n`
+        willOverwrite.forEach(f => message += `${f.fileName}\n`)
+        message += `\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.isSaving = false
+          emitter.emit('render')
+          return
+        }
+      }
     } else {
-      await disk.renameFile(
-        disk.getFullPath(
-          state.diskNavigationRoot,
-          state.diskNavigationPath,
-          fileName
-        ),
-        disk.getFullPath(
-          state.diskNavigationRoot,
-          state.diskNavigationPath,
-          value
+      // Check if it will overwrite something
+      const willOverwrite = await checkOverwrite({
+        fileNames: [ value ],
+        parentFolder: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
+        source: 'disk'
+      })
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following files/folders on your disk:\n\n`
+        willOverwrite.forEach(f => message += `${f.fileName}\n`)
+        message += `\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.isSaving = false
+          emitter.emit('render')
+          return
+        }
+      }
+    }
+
+    try {
+      if (state.renamingFile == 'board') {
+        await serial.renameFile(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            fileName
+          ),
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            value
+          )
         )
-      )
+      } else {
+        await disk.renameFile(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            fileName
+          ),
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            value
+          )
+        )
+      }
+    } catch (e) {
+      alert(`The file ${fileName} could not be renamed to ${value}`)
     }
 
     state.isSaving = false

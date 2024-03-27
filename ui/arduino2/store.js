@@ -666,9 +666,11 @@ async function store(state, emitter) {
       message += `\n`
       message += `Are you sure you want to proceed?`
       const confirmAction = confirm(message, 'Cancel', 'Yes')
-      state.isTransferring = false
-      emitter.emit('render')
-      if (!confirmAction) return
+      if (!confirmAction) {
+        state.isTransferring = false
+        emitter.emit('render')
+        return
+      }
     }
     // Upload files
     for (let i in state.selectedFiles) {
@@ -723,9 +725,11 @@ async function store(state, emitter) {
       message += `\n`
       message += `Are you sure you want to proceed?`
       const confirmAction = confirm(message, 'Cancel', 'Yes')
-      state.isTransferring = false
-      emitter.emit('render')
-      if (!confirmAction) return
+      if (!confirmAction) {
+        state.isTransferring = false
+        emitter.emit('render')
+        return
+      }
     }
     // Download files
     for (let i in state.selectedFiles) {

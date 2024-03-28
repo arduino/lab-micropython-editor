@@ -139,6 +139,15 @@ ipcMain.handle('remove-folder', (event, folderPath) => {
   return true
 })
 
+ipcMain.handle('file-exists', (event, filePath) => {
+  console.log('ipcMain', 'file-exists', filePath)
+  try {
+    fs.accessSync(filePath, fs.constants.F_OK)
+    return true
+  } catch(err) {
+    return false
+  }
+})
 // WINDOW MANAGEMENT
 
 ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {

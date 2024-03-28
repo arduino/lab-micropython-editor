@@ -86,6 +86,9 @@ const Serial = {
   },
   getParentPath: (navigation) => {
     return path.posix.dirname(navigation)
+  },
+  fileExists: async (filePath) => {
+    return board.fs_exists(filePath)
   }
 }
 
@@ -129,6 +132,9 @@ const Disk = {
   },
   getParentPath: (navigation) => {
     return path.dirname(navigation)
+  },
+  fileExists: async (filePath) => {
+    return ipcRenderer.invoke('file-exists', filePath)
   }
 }
 

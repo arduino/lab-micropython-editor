@@ -212,14 +212,90 @@ async function store(state, emitter) {
 
     // Get open file
     let openFile = state.openFiles.find(f => f.id === state.editingFile)
-    if (openFile.parentFolder === null) {
+
+    let willOverwrite = false
+    if (openFile.parentFolder === null) { // it's a new file
+      // Define parent folder
       if (openFile.source == 'board') {
         openFile.parentFolder = state.boardNavigationPath
-      } else {
+        // Check for overwrite
+        willOverwrite = await serial.fileExists(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          )
+        )
+      } else if (openFile.source == 'disk') {
         openFile.parentFolder = state.diskNavigationPath
+        // Check for overwrite
+        willOverwrite = await disk.fileExists(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          )
+        )
+      }
+
+    } else if (openFile.parentFolder !== null) {
+      // Check if the current full path exists
+      let fullPathExists = false
+      if (openFile.source == 'board') {
+        fullPathExists = await serial.fileExists(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          )
+        )
+      } else if (openFile.source == 'disk') {
+        fullPathExists = await disk.fileExists(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          )
+        )
+      }
+
+      if (!fullPathExists) {
+        // Redefine parent folder
+        if (openFile.source == 'board') {
+          openFile.parentFolder = state.boardNavigationPath
+          // Check for overwrite
+          willOverwrite = await serial.fileExists(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            )
+          )
+        } else if (openFile.source == 'disk') {
+          openFile.parentFolder = state.diskNavigationPath
+          // Check for overwrite
+          willOverwrite = await disk.fileExists(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            )
+          )
+        }
       }
     }
 
+    if (willOverwrite) {
+      const confirmation = confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      if (!confirmation) {
+        state.isSaving = false
+        openFile.parentFolder = null
+        emitter.emit('render')
+        return
+      }
+    }
+
+    // SAVE
     const contents = openFile.editor.editor.state.doc.toString()
     try {
       if (openFile.source == 'board') {
@@ -236,7 +312,7 @@ async function store(state, emitter) {
             emitter.emit('render')
           }
         )
-      } else {
+      } else if (openFile.source == 'disk') {
         await disk.saveFileContent(
           disk.getFullPath(
             state.diskNavigationRoot,
@@ -272,7 +348,7 @@ async function store(state, emitter) {
     } else {
       const newFile = createEmptyFile({
         source: 'disk',
-        parentFolder: state.diskNavigationPath
+        parentFolder: null
       })
       state.openFiles.push(newFile)
       state.editingFile = newFile.id
@@ -423,7 +499,7 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
-      const confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+      const confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\n\nAre you sure you want to proceed?`, 'Yes', 'Cancel')
       if (!confirmAction) {
         continue
       }
@@ -786,34 +862,31 @@ async function getBoardFiles(path) {
   }))
   files = files.sort(sortFilesAlphabetically)
   return files
-
 }
 
-async function checkDiskFile({ root, parentFolder, fileName }) {
+function checkDiskFile({ root, parentFolder, fileName }) {
   if (root == null || parentFolder == null || fileName == null) return false
-  const files = await getDiskFiles(
-    disk.getFullPath(root, parentFolder, '')
+  return disk.fileExists(
+    disk.getFullPath(root, parentFolder, fileName)
   )
-  const file = files.find((f) => f.fileName === fileName)
-  return file ? true : false
 }
 
 async function checkBoardFile({ parentFolder, fileName }) {
   if (parentFolder == null || fileName == null) return false
-  const files = await getBoardFiles(parentFolder)
-  const file = files.find((f) => f.fileName === fileName)
-  return file ? true : false
+  return board.fileExists(
+    board.getFullPath('/', parentFolder, fileName)
+  )
 }
 
-async function checkOverwrite({ fileNames = [], parentFolder, source }) {
+async function checkOverwrite({ fileNames = [], parentPath, source }) {
   let files = []
   let overwrite = []
   if (source === 'board') {
-    files = getBoardFiles(parentFolder)
+    files = getBoardFiles(parentPath)
   } else {
-    files = await getDiskFiles(parentFolder)
+    files = await getDiskFiles(parentPath)
   }
-  return files.filter((f) => filenames.indexOf(f.fileName) !== -1)
+  return files.filter((f) => fileNames.indexOf(f.fileName) !== -1)
 }
 
 function generateFileName(filename) {

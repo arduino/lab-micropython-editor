@@ -497,12 +497,37 @@ async function store(state, emitter) {
     state.isRemoving = true
     emitter.emit('render')
 
+    let boardNames = state.selectedFiles
+      .filter(file => file.source === 'board')
+      .map(file => file.fileName)
+
+    let diskNames = state.selectedFiles
+      .filter(file => file.source === 'disk')
+      .map(file => file.fileName)
+
+    let message = `You are about to delete the following files:\n\n`
+    if (boardNames.length) {
+      message += `From your board:\n`
+      boardNames.forEach(name => message += `${name}\n`)
+      message += `\n`
+    }
+    if (diskNames.length) {
+      message += `From your disk:\n`
+      diskNames.forEach(name => message += `${name}\n`)
+      message += `\n`
+    }
+
+    message += `Are you sure you want to proceed?`
+    const confirmAction = confirm(message, 'Cancel', 'Yes')
+    if (!confirmAction) {
+      state.isRemoving = false
+      emitter.emit('render')
+      return
+    }
+
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
-      const confirmAction = confirm(`You are about to delete ${file.fileName} from your ${file.source}.\n\nAre you sure you want to proceed?`, 'Yes', 'Cancel')
-      if (!confirmAction) {
-        continue
-      }
       if (file.type == 'folder') {
         if (file.source === 'board') {
           await removeBoardFolder(

@@ -88,7 +88,17 @@ const Serial = {
     return path.posix.dirname(navigation)
   },
   fileExists: async (filePath) => {
-    return board.fs_exists(filePath)
+    // !!!: Fix this on micropython.js level
+    // ???: Check if file exists is not part of mpremote specs
+    const output = await board.run(`
+import os
+try:
+  os.stat("${filePath}")
+  print(0)
+except OSError:
+  print(1)
+`)
+    return output[2] === '0'
   }
 }
 

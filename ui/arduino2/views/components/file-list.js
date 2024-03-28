@@ -2,7 +2,7 @@ const DiskFileList = generateFileList('disk')
 const BoardFileList = generateFileList('board')
 
 function generateFileList(source) {
-  return function(state, emit) {
+  return function FileList(state, emit) {
     function onKeyEvent(e) {
       if(e.key.toLowerCase() === 'enter') {
         e.target.blur()

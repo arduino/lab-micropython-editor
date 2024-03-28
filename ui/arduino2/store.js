@@ -418,13 +418,21 @@ async function store(state, emitter) {
       return
     }
 
-    // Check if will overwrite
-    // const confirmAction = confirm(`You are about to create ${value} on your ${state.creatingFile}.\nThis can overwrite an existing file, are you sure you want to proceed?`, 'Cancel', 'Yes')
-    // if (!confirmAction) {
-    //   return
-    // }
-
     if (state.creatingFile == 'board' && state.isConnected) {
+      let willOverwrite = await checkBoardFile({
+        root: state.boardNavigationRoot,
+        parentFolder: state.boardNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite the file ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFile = null
+          emitter.emit('render')
+          return
+        }
+        // TODO: Remove existing file
+      }
       await serial.saveFileContent(
         serial.getFullPath(
           '/',
@@ -434,6 +442,20 @@ async function store(state, emitter) {
         newFileContent
       )
     } else if (state.creatingFile == 'disk') {
+      let willOverwrite = await checkDiskFile({
+        root: state.diskNavigationRoot,
+        parentFolder: state.diskNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite the file ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFile = null
+          emitter.emit('render')
+          return
+        }
+        // TODO: Remove existing file
+      }
       await disk.saveFileContent(
         disk.getFullPath(
           state.diskNavigationRoot,
@@ -468,6 +490,27 @@ async function store(state, emitter) {
     }
 
     if (state.creatingFolder == 'board' && state.isConnected) {
+      let willOverwrite = await checkBoardFile({
+        root: state.boardNavigationRoot,
+        parentFolder: state.boardNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFolder = null
+          emitter.emit('render')
+          return
+        }
+        // Remove existing folder
+        await removeBoardFolder(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            value
+          )
+        )
+      }
       await serial.createFolder(
         serial.getFullPath(
           state.boardNavigationRoot,
@@ -476,6 +519,27 @@ async function store(state, emitter) {
         )
       )
     } else if (state.creatingFolder == 'disk') {
+      let willOverwrite = await checkDiskFile({
+        root: state.diskNavigationRoot,
+        parentFolder: state.diskNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFolder = null
+          emitter.emit('render')
+          return
+        }
+        // Remove existing folder
+        await disk.removeFolder(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            value
+          )
+        )
+      }
       await disk.createFolder(
         disk.getFullPath(
           state.diskNavigationRoot,
@@ -896,10 +960,10 @@ function checkDiskFile({ root, parentFolder, fileName }) {
   )
 }
 
-async function checkBoardFile({ parentFolder, fileName }) {
-  if (parentFolder == null || fileName == null) return false
-  return board.fileExists(
-    board.getFullPath('/', parentFolder, fileName)
+async function checkBoardFile({ root, parentFolder, fileName }) {
+  if (root == null || parentFolder == null || fileName == null) return false
+  return serial.fileExists(
+    serial.getFullPath(root, parentFolder, fileName)
   )
 }
 

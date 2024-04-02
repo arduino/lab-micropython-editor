@@ -552,4 +552,5 @@ button.small .icon {
   border-radius: none;
   height: 100%;
   background: rgba(255, 255, 255, 0.5);
+  font-family: inherit;
 }

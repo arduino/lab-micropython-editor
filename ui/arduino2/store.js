@@ -888,12 +888,18 @@ async function store(state, emitter) {
     log('upload-files')
     state.isTransferring = true
     emitter.emit('render')
-    // Check if it will overwrite something
+
+    // Check which files will be overwritten on the board
     const willOverwrite = await checkOverwrite({
+      source: 'board',
       fileNames: state.selectedFiles.map(f => f.fileName),
-      parentPath: serial.getFullPath(state.boardNavigationRoot, state.boardNavigationPath, ''),
-      source: 'board'
+      parentPath: serial.getFullPath(
+        state.boardNavigationRoot,
+        state.boardNavigationPath,
+        ''
+      ),
     })
+
     if (willOverwrite.length > 0) {
       let message = `You are about to overwrite the following files/folders on your board:\n\n`
       willOverwrite.forEach(f => message += `${f.fileName}\n`)
@@ -906,7 +912,7 @@ async function store(state, emitter) {
         return
       }
     }
-    // Upload files
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       const srcPath = disk.getFullPath(
@@ -947,12 +953,18 @@ async function store(state, emitter) {
     log('download-files')
     state.isTransferring = true
     emitter.emit('render')
-    // Check if it will overwrite something
+
+    // Check which files will be overwritten on the disk
     const willOverwrite = await checkOverwrite({
+      source: 'disk',
       fileNames: state.selectedFiles.map(f => f.fileName),
-      parentPath: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
-      source: 'disk'
+      parentPath: disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        ''
+      ),
     })
+
     if (willOverwrite.length > 0) {
       let message = `You are about to overwrite the following files/folders on your disk:\n\n`
       willOverwrite.forEach(f => message += `${f.fileName}\n`)
@@ -965,7 +977,7 @@ async function store(state, emitter) {
         return
       }
     }
-    // Download files
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       const srcPath = serial.getFullPath(

@@ -850,7 +850,7 @@ async function store(state, emitter) {
     // Check if it will overwrite something
     const willOverwrite = await checkOverwrite({
       fileNames: state.selectedFiles.map(f => f.fileName),
-      parentFolder: serial.getFullPath(state.boardNavigationRoot, state.boardNavigationPath, ''),
+      parentPath: serial.getFullPath(state.boardNavigationRoot, state.boardNavigationPath, ''),
       source: 'board'
     })
     if (willOverwrite.length > 0) {
@@ -909,7 +909,7 @@ async function store(state, emitter) {
     // Check if it will overwrite something
     const willOverwrite = await checkOverwrite({
       fileNames: state.selectedFiles.map(f => f.fileName),
-      parentFolder: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
+      parentPath: disk.getFullPath(state.diskNavigationRoot, state.diskNavigationPath, ''),
       source: 'disk'
     })
     if (willOverwrite.length > 0) {
@@ -1102,7 +1102,7 @@ async function checkBoardFile({ root, parentFolder, fileName }) {
 async function checkOverwrite({ fileNames = [], parentPath, source }) {
   let files = []
   if (source === 'board') {
-    files = await getBoardFiles(parentFolder)
+    files = await getBoardFiles(parentPath)
   } else {
     files = await getDiskFiles(parentPath)
   }

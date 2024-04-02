@@ -818,7 +818,7 @@ async function store(state, emitter) {
     state.isTransferring = true
     emitter.emit('render')
 
-    // Check which files will be overwritten on the board
+    // Check which files will be overwritten on the disk
     const willOverwrite = await checkOverwrite({
       source: 'disk',
       fileNames: state.selectedFiles.map(f => f.fileName),

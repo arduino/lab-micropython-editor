@@ -162,6 +162,8 @@ button.small .icon {
   flex: 1 0 0;
   max-width: calc(100% - 46px);
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .tab .options {
   display: flex;
@@ -415,7 +417,7 @@ button.small .icon {
 }
 
 .device-header button {
-  width: auto;
+  width: 32px;
   height: auto;
   padding: 0;
 }
@@ -478,6 +480,7 @@ button.small .icon {
   align-items: flex-start;
   flex: 1 0 0;
   align-self: stretch;
+  width: calc(100% - 40px);
 }
 
 .file-list .item {
@@ -489,9 +492,9 @@ button.small .icon {
   align-items: center;
   gap: 10px;
   align-self: stretch;
-  cursor: pointer;
 }
 
+.file-list .item.selected,
 .file-list .item:hover {
   background: #FFF;
 }
@@ -507,23 +510,22 @@ button.small .icon {
   display: flex;
 }
 
-.file-list .item .checkbox,
 .file-list .item .icon {
   width: 32px;
   height: 32px;
 }
 .file-list .item .text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 1 0 0;
-  align-self: stretch;
   color: #000;
   font-family: Roboto Mono;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+
+  white-space: nowrap;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .file-list .item .checkbox .icon.off,

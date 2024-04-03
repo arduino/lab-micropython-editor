@@ -501,9 +501,9 @@ button.small .icon {
 
 .file-list .item .options {
   display: none;
-  padding: 5px;
   align-items: center;
   align-self: stretch;
+  cursor: pointer;
 }
 
 .file-list .item:hover .options {
@@ -548,9 +548,13 @@ button.small .icon {
 }
 
 .file-list .item input {
+  box-sizing: border-box;
   border: none;
   border-radius: none;
   height: 100%;
+  width: 100%;
   background: rgba(255, 255, 255, 0.5);
   font-family: inherit;
+  font-size: inherit;
+  outline-color: #F4BA00;
 }

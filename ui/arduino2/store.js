@@ -589,7 +589,6 @@ async function store(state, emitter) {
       return
     }
 
-
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       if (file.type == 'folder') {
@@ -637,8 +636,145 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('rename-file', () => { /* TODO */ })
-  emitter.on('finish-renaming', () => { /* TODO */ })
+  emitter.on('rename-file', (source, item) => {
+    log('rename-file', source, item)
+    state.renamingFile = source
+    emitter.emit('render')
+  })
+  emitter.on('finish-renaming', async (value) => {
+    log('finish-renaming', value)
+
+    // You can only rename one file, the selected one
+    const file = state.selectedFiles[0]
+
+    if (!value || file.fileName == value) {
+      state.renamingFile = null
+      emitter.emit('render')
+      return
+    }
+
+    state.isSaving = true
+    emitter.emit('render')
+
+    // Check if new name overwrites something
+    if (state.renamingFile == 'board' && state.isConnected) {
+      // Check if it will overwrite something
+      const willOverwrite = await checkOverwrite({
+        fileNames: [ value ],
+        parentPath: disk.getFullPath(
+          state.boardNavigationRoot, state.boardNavigationPath, ''
+        ),
+        source: 'board'
+      })
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following file/folder on your board:\n\n`
+        message += `${value}\n\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.isSaving = false
+          state.renamingFile = null
+          emitter.emit('render')
+          return
+        }
+
+        if (file.type == 'folder') {
+          await removeBoardFolder(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              value
+            )
+          )
+        } else if (file.type == 'file') {
+          await serial.removeFile(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              value
+            )
+          )
+        }
+      }
+    } else if (state.renamingFile == 'disk') {
+      // Check if it will overwrite something
+      const willOverwrite = await checkOverwrite({
+        fileNames: [ value ],
+        parentPath: disk.getFullPath(
+          state.diskNavigationRoot, state.diskNavigationPath, ''
+        ),
+        source: 'disk'
+      })
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following file/folder on your disk:\n\n`
+        message += `${value}\n\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.isSaving = false
+          state.renamingFile = null
+          emitter.emit('render')
+          return
+        }
+
+        if (file.type == 'folder') {
+          await disk.removeFolder(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              value
+            )
+          )
+        } else if (file.type == 'file') {
+          await disk.removeFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              value
+            )
+          )
+        }
+
+      }
+    }
+
+    try {
+      if (state.renamingFile == 'board') {
+        await serial.renameFile(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            file.fileName
+          ),
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            value
+          )
+        )
+      } else {
+        await disk.renameFile(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            file.fileName
+          ),
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            value
+          )
+        )
+      }
+    } catch (e) {
+      alert(`The file ${file.fileName} could not be renamed to ${value}`)
+    }
+
+    state.isSaving = false
+    state.renamingFile = null
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
 
   emitter.on('toggle-file-selection', (file, source, event) => {
     log('toggle-file-selection', file, source, event)
@@ -1018,7 +1154,6 @@ async function checkBoardFile({ root, parentFolder, fileName }) {
 
 async function checkOverwrite({ fileNames = [], parentPath, source }) {
   let files = []
-  let overwrite = []
   if (source === 'board') {
     files = await getBoardFiles(parentPath)
   } else {

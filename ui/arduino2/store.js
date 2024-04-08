@@ -24,6 +24,7 @@ async function store(state, emitter) {
   state.creatingFile = null
   state.renamingFile = null
   state.creatingFolder = null
+  state.renamingTab = null
 
   state.availablePorts = []
 

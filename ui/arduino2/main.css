@@ -186,6 +186,18 @@ button.small .icon {
   background: rgba(255, 255, 255, 0.5);
 }
 
+.tab .text input {
+  box-sizing: border-box;
+  border: none;
+  border-radius: none;
+  height: 100%;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  font-family: inherit;
+  font-size: inherit;
+  outline-color: #F4BA00;
+}
+
 #code-editor {
   flex: 1 0 0;
   align-self: stretch;

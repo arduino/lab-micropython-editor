@@ -35,7 +35,7 @@ function generateFileList(source) {
         <input type="text"
           value=${item.fileName}
           onkeydown=${onKeyEvent}
-          onblur=${(e) => emit('finish-renaming', e.target.value)}
+          onblur=${(e) => emit('finish-renaming-file', e.target.value)}
           onclick=${(e) => false}
           ondblclick=${(e) => false}
           />

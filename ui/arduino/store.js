@@ -829,7 +829,7 @@ async function store(state, emitter) {
       } else if (openFile.source == 'disk') {
         openFile.parentFolder = state.diskNavigationPath
       }
-    } 
+    }
 
     // Check if it will overwrite
     let willOverwrite = false
@@ -1418,7 +1418,7 @@ function toggleFileSelection({ fileName, source, selectedFiles }) {
 
 async function removeBoardFolder(fullPath) {
   // TODO: Replace with getting the file tree from the board and deleting one by one
-  let output = await serial.execFile('./ui/arduino2/helpers.py')
+  let output = await serial.execFile('./ui/arduino/helpers.py')
   await serial.run(`delete_folder('${fullPath}')`)
 }
 
@@ -1450,7 +1450,7 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
 async function downloadFolder(srcPath, destPath, dataConsumer) {
   dataConsumer = dataConsumer || function() {}
   await disk.createFolder(destPath)
-  let output = await serial.execFile('./ui/arduino2/helpers.py')
+  let output = await serial.execFile('./ui/arduino/helpers.py')
   output = await serial.run(`ilist_all('${srcPath}')`)
   let files = []
   try {

@@ -174,7 +174,7 @@ function createWindow () {
     }
   })
   // and load the index.html of the app.
-  win.loadFile('ui/arduino2/index.html')
+  win.loadFile('ui/arduino/index.html')
   // win.loadFile('ui/sandbox/index.html')
 }
 

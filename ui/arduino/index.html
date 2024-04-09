@@ -6,31 +6,40 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="libs/xterm.css">
-    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="main.css">
 
     <!-- 3rd party dependencies -->
+    <script type="text/javascript" src="libs/codemirror.js" charset="utf-8"></script>
     <script type="text/javascript" src="libs/xterm.js" charset="utf-8"></script>
     <script type="text/javascript" src="libs/xterm-addon-fit.js" charset="utf-8"></script>
-    <script type="text/javascript" src="libs/ace/ace.js" charset="utf-8"></script>
     <script type="text/javascript" src="libs/FileSaver.js" charset="utf-8"></script>
     <script type="text/javascript" src="libs/choo.js" charset="utf-8"></script>
+    <script type="text/javascript" src="libs/words.js" charset="utf-8"></script>
+
+    <!-- Elements -->
+    <script type="text/javascript" src="views/components/elements/button.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/elements/editor.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/elements/message.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/elements/options.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/elements/tab.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/elements/terminal.js" charset="utf-8"></script>
 
     <!-- Components -->
-    <script type="text/javascript" src="components/icon.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/button.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/toolbar.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/filename.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/editor.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/panel_terminal.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/panel_files.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/panel.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/portdialog.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/message.js" charset="utf-8"></script>
-    <script type="text/javascript" src="components/blocking.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/code-editor.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/connection-dialog.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/file-actions.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/file-list.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/repl-panel.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/tabs.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/components/toolbar.js" charset="utf-8"></script>
+
+    <!-- Views -->
+    <script type="text/javascript" src="views/editor.js" charset="utf-8"></script>
+    <script type="text/javascript" src="views/file-manager.js" charset="utf-8"></script>
 
     <!-- Application source code -->
 		<script type="text/javascript" src="store.js" charset="utf-8"></script>
-		<script type="text/javascript" src="app.js" charset="utf-8"></script>
+		<script type="text/javascript" src="main.js" charset="utf-8"></script>
   </head>
   <body>
     <div id="app"></div>

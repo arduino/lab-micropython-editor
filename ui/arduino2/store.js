@@ -215,8 +215,41 @@ async function store(state, emitter) {
     let openFile = state.openFiles.find(f => f.id === state.editingFile)
 
     let willOverwrite = false
-    if (openFile.parentFolder === null) { // it's a new file
+    const oldParentFolder = openFile.parentFolder
+    const isNewFile = oldParentFolder === null
+
+    if (isNewFile) {
       // Define parent folder
+      if (openFile.source == 'board') {
+        openFile.parentFolder = state.boardNavigationPath
+      } else if (openFile.source == 'disk') {
+        openFile.parentFolder = state.diskNavigationPath
+      }
+
+    }
+
+    // Check if the current full path exists
+    let fullPathExists = false
+    if (openFile.source == 'board') {
+      fullPathExists = await serial.fileExists(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    } else if (openFile.source == 'disk') {
+      fullPathExists = await disk.fileExists(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    }
+
+    if (isNewFile || !fullPathExists) {
+      // Redefine parent folder
       if (openFile.source == 'board') {
         openFile.parentFolder = state.boardNavigationPath
         // Check for overwrite
@@ -238,59 +271,13 @@ async function store(state, emitter) {
           )
         )
       }
-
-    } else if (openFile.parentFolder !== null) {
-      // Check if the current full path exists
-      let fullPathExists = false
-      if (openFile.source == 'board') {
-        fullPathExists = await serial.fileExists(
-          serial.getFullPath(
-            state.boardNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
-          )
-        )
-      } else if (openFile.source == 'disk') {
-        fullPathExists = await disk.fileExists(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
-          )
-        )
-      }
-
-      if (!fullPathExists) {
-        // Redefine parent folder
-        if (openFile.source == 'board') {
-          openFile.parentFolder = state.boardNavigationPath
-          // Check for overwrite
-          willOverwrite = await serial.fileExists(
-            serial.getFullPath(
-              state.boardNavigationRoot,
-              openFile.parentFolder,
-              openFile.fileName
-            )
-          )
-        } else if (openFile.source == 'disk') {
-          openFile.parentFolder = state.diskNavigationPath
-          // Check for overwrite
-          willOverwrite = await disk.fileExists(
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              openFile.parentFolder,
-              openFile.fileName
-            )
-          )
-        }
-      }
     }
 
     if (willOverwrite) {
       const confirmation = confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmation) {
         state.isSaving = false
-        openFile.parentFolder = null
+        openFile.parentFolder = oldParentFolder
         emitter.emit('render')
         return
       }
@@ -368,7 +355,7 @@ async function store(state, emitter) {
     if (state.isConnected) {
       state.boardFiles = await getBoardFiles(
         serial.getFullPath(
-          '/',
+          state.boardNavigationRoot,
           state.boardNavigationPath,
           ''
         )
@@ -784,6 +771,17 @@ async function store(state, emitter) {
   })
   emitter.on('finish-renaming-tab', async (value) => {
     log('finish-renaming-tab', value)
+
+    // You can only rename one tab, the active one
+    const openFile = state.openFiles.find(f => f.id === state.renamingTab)
+
+    if (!value || openFile.fileName == value) {
+      state.renamingTab = null
+      state.isSaving = false
+      emitter.emit('render')
+      return
+    }
+
     let response = canSave({
       view: state.view,
       isConnected: state.isConnected,
@@ -798,93 +796,59 @@ async function store(state, emitter) {
     state.isSaving = true
     emitter.emit('render')
 
-    // Rename the open file object
-    let openFile = state.openFiles.find(f => f.id === state.renamingTab)
-    if (value == openFile.fileName) {
-      state.renamingTab = null
-      state.isSaving = false
-      emitter.emit('render')
-      return
-    }
-
+    const oldParentFolder = openFile.parentFolder
     const oldName = openFile.fileName
     openFile.fileName = value
 
-    let willOverwrite = false
-    if (openFile.parentFolder === null) { // it's a new file
-      // Define parent folder
+    const isNewFile = oldParentFolder === null
+    let fullPathExists = false
+    if (!isNewFile) {
+      // Check if full path exists
       if (openFile.source == 'board') {
-        openFile.parentFolder = state.boardNavigationPath
-        // Check for overwrite
-        willOverwrite = await serial.fileExists(
+        fullPathExists = await serial.fileExists(
           serial.getFullPath(
             state.boardNavigationRoot,
             openFile.parentFolder,
-            openFile.fileName
+            oldName
           )
         )
       } else if (openFile.source == 'disk') {
-        openFile.parentFolder = state.diskNavigationPath
-        // Check for overwrite
-        willOverwrite = await disk.fileExists(
+        fullPathExists = await disk.fileExists(
           disk.getFullPath(
             state.diskNavigationRoot,
             openFile.parentFolder,
-            openFile.fileName
-          )
-        )
-      }
-    } else if (openFile.parentFolder !== null) {
-      if (openFile.source == 'board') {
-        // Check for overwrite
-        willOverwrite = await serial.fileExists(
-          serial.getFullPath(
-            state.boardNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
-          )
-        )
-      } else if (openFile.source == 'disk') {
-        // Check for overwrite
-        willOverwrite = await disk.fileExists(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
+            oldName
           )
         )
       }
     }
-
-    // SAVE FILE CONTENTS
-    const contents = openFile.editor.editor.state.doc.toString()
-    try {
+    if (isNewFile || !fullPathExists) {
+      // Define parent folder
       if (openFile.source == 'board') {
-        await serial.get_prompt()
-        await serial.saveFileContent(
-          serial.getFullPath(
-            state.boardNavigationRoot,
-            openFile.parentFolder,
-            oldName
-          ),
-          contents,
-          (e) => {
-            state.savingProgress = e
-            emitter.emit('render')
-          }
-        )
+        openFile.parentFolder = state.boardNavigationPath
       } else if (openFile.source == 'disk') {
-        await disk.saveFileContent(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            openFile.parentFolder,
-            oldName
-          ),
-          contents
-        )
+        openFile.parentFolder = state.diskNavigationPath
       }
-    } catch (e) {
-      log('error', e)
+    } 
+
+    // Check if it will overwrite
+    let willOverwrite = false
+    if (openFile.source == 'board') {
+      willOverwrite = await serial.fileExists(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    } else if (openFile.source == 'disk') {
+      willOverwrite = await disk.fileExists(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
     }
 
     if (willOverwrite) {
@@ -898,36 +862,100 @@ async function store(state, emitter) {
       }
     }
 
-    try {
-      if (openFile.source == 'board') {
-        await serial.renameFile(
-          serial.getFullPath(
-            state.boardNavigationRoot,
-            openFile.parentFolder,
-            oldName
-          ),
-          serial.getFullPath(
-            state.boardNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
+    if (fullPathExists) {
+      // SAVE FILE CONTENTS
+      const contents = openFile.editor.editor.state.doc.toString()
+      try {
+        if (openFile.source == 'board') {
+          await serial.get_prompt()
+          await serial.saveFileContent(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            contents,
+            (e) => {
+              state.savingProgress = e
+              emitter.emit('render')
+            }
           )
-        )
-      } else if (openFile.source == 'disk') {
-        await disk.renameFile(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            openFile.parentFolder,
-            oldName
-          ),
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
+        } else if (openFile.source == 'disk') {
+          await disk.saveFileContent(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            contents
           )
-        )
+        }
+      } catch (e) {
+        log('error', e)
       }
-    } catch(e) {
-      log('error', e)
+      // RENAME FILE
+      try {
+        if (openFile.source == 'board') {
+          await serial.renameFile(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            )
+          )
+        } else if (openFile.source == 'disk') {
+          await disk.renameFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            )
+          )
+        }
+      } catch(e) {
+        log('error', e)
+      }
+    } else if (!fullPathExists) {
+      // SAVE FILE CONTENTS
+      const contents = openFile.editor.editor.state.doc.toString()
+      try {
+        if (openFile.source == 'board') {
+          await serial.get_prompt()
+          await serial.saveFileContent(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            ),
+            contents,
+            (e) => {
+              state.savingProgress = e
+              emitter.emit('render')
+            }
+          )
+        } else if (openFile.source == 'disk') {
+          await disk.saveFileContent(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            ),
+            contents
+          )
+        }
+      } catch (e) {
+        log('error', e)
+      }
     }
 
     state.renamingTab = null

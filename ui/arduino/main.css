@@ -604,7 +604,6 @@ button.small .icon {
   box-sizing: border-box;
   padding: 0 10px;
   border: none;
-  border-radius: 0 !important;
   width: 100%;
   background: rgba(255, 255, 255, 1.0);
   font-family: inherit;

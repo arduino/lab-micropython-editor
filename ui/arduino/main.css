@@ -39,6 +39,7 @@ button {
   border-radius: 45px;
   background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
+  transition: all 0.1s;
 }
 button.small {
   width: 28px;
@@ -149,6 +150,7 @@ button.small .icon {
   cursor: pointer;
   background: #DAE3E3;
   overflow: hidden;
+  transition: all 0.1s;
 }
 
 .tab:hover {
@@ -480,7 +482,7 @@ button.small .icon {
   width: 30px;
   height: 100%;
   background: linear-gradient(0.25turn, white 25%, rgba(0, 0, 0, 0));
-  z-index: 99;
+  z-index: 98;
 }
 
 .file-list {
@@ -512,6 +514,7 @@ button.small .icon {
   align-items: center;
   gap: 10px;
   align-self: stretch;
+  transition: all 0.1s;
 }
 
 .file-list .item.selected,
@@ -520,14 +523,16 @@ button.small .icon {
 }
 
 .file-list .item .options {
-  display: none;
+  display: flex;
+  opacity: 0;
   align-items: center;
   align-self: stretch;
   cursor: pointer;
+  transition: all 0.1s;
 }
 
 .file-list .item:hover .options {
-  display: flex;
+  opacity: 1;
 }
 
 .file-list .item .icon {

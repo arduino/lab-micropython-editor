@@ -609,7 +609,6 @@ button.small .icon {
   font-family: inherit;
   font-size: 14px;
   outline-style: none;
-  /* outline-color: #F4BA00; */
 }
 #code-editor .cm-panels input:focus {
   outline-style: solid;

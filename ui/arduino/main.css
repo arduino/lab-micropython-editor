@@ -590,3 +590,56 @@ button.small .icon {
   font-size: inherit;
   outline-color: #F4BA00;
 }
+
+#code-editor .cm-panels {
+  border-color: #DAE3E3;
+  padding: 0 10px;
+  margin: 0;
+}
+#code-editor .cm-panels .cm-search {
+  display: flex;
+  align-items: center;
+  height: 45px;
+  padding: 0;
+  background: #ECF1F1;
+  gap: 10px;
+}
+#code-editor .cm-panels label {
+  display: none;
+}
+#code-editor .cm-panels input,
+#code-editor .cm-panels button {
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  width: auto;
+}
+#code-editor .cm-panels button {
+  border: none;
+  border-radius: none;
+  font-family: inherit;
+  background: none;
+}
+#code-editor .cm-panels input {
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: none;
+  width: 100%;
+  background: rgba(255, 255, 255, 1.0);
+  font-family: inherit;
+  font-size: 14px;
+  outline-style: none;
+}
+#code-editor .cm-panels input:focus {
+  outline-style: solid;
+  outline-color: #F4BA00;
+
+}
+#code-editor .cm-panels [name="replace"],
+#code-editor .cm-panels [name="replace"],
+#code-editor .cm-panels [name="replaceAll"] {
+  display: none;
+}
+#code-editor .cm-panel.cm-search [name="close"] {
+  position: relative;
+}

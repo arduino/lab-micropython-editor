@@ -1,4 +1,6 @@
-const PANEL_HEIGHT = 320
+const PANEL_CLOSED = 45
+const PANEL_TOO_SMALL = 65
+const PANEL_DEFAULT = 320
 
 function App(state, emit) {
   if (state.diskNavigationRoot == null) {

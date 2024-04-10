@@ -33,8 +33,6 @@ async function store(state, emitter) {
   state.isConnected = false
   state.connectedPort = null
 
-
-  state.isPanelOpen = false
   state.isSaving = false
   state.savingProgress = 0
   state.isTransferring = false
@@ -52,6 +50,14 @@ async function store(state, emitter) {
   })
   state.openFiles.push(newFile)
   state.editingFile = newFile.id
+
+  state.savedPanelHeight = PANEL_DEFAULT
+  state.panelHeight = PANEL_CLOSED
+  state.resizePanel = function(e) {
+    state.panelHeight = (PANEL_CLOSED/2) + document.body.clientHeight - e.clientY
+    state.savedPanelHeight = state.panelHeight
+    emitter.emit('render')
+  }
 
   // START AND BASIC ROUTING
   emitter.on('select-disk-navigation-root', async () => {
@@ -110,8 +116,8 @@ async function store(state, emitter) {
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
-    if (state.view === 'editor') {
-      state.isPanelOpen = true
+    if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
+      state.panelHeight = state.savedPanelHeight
     }
     state.connectedPort = path
 
@@ -138,7 +144,7 @@ async function store(state, emitter) {
   emitter.on('disconnect', async () => {
     await serial.disconnect()
     state.isConnected = false
-    state.isPanelOpen = false
+    state.panelHeight = PANEL_CLOSED
     state.boardFiles = []
     state.boardNavigationPath = '/'
     emitter.emit('refresh-files')
@@ -155,9 +161,9 @@ async function store(state, emitter) {
   // CODE EXECUTION
   emitter.on('run', async () => {
     log('run')
-    state.isPanelOpen = true
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
     const code = openFile.editor.editor.state.doc.toString()
+    emitter.emit('open-panel')
     emitter.emit('render')
     try {
       await serial.get_prompt()
@@ -168,13 +174,19 @@ async function store(state, emitter) {
   })
   emitter.on('stop', async () => {
     log('stop')
-    state.isPanelOpen = true
+    if (state.panelHeight <= PANEL_CLOSED) {
+      state.panelHeight = state.savedPanelHeight
+    }
+    emitter.emit('open-panel')
     emitter.emit('render')
     await serial.get_prompt()
   })
   emitter.on('reset', async () => {
     log('reset')
-    state.isPanelOpen = true
+    if (state.panelHeight <= PANEL_CLOSED) {
+      state.panelHeight = state.savedPanelHeight
+    }
+    emitter.emit('open-panel')
     emitter.emit('render')
     await serial.reset()
     emitter.emit('update-files')
@@ -183,15 +195,27 @@ async function store(state, emitter) {
 
   // PANEL
   emitter.on('open-panel', () => {
-    state.isPanelOpen = true
+    state.panelHeight = state.savedPanelHeight
     emitter.emit('render')
+    setTimeout(() => {
+      state.cache(XTerm, 'terminal').resizeTerm()
+    }, 200)
   })
   emitter.on('close-panel', () => {
-    state.isPanelOpen = false
+    state.savedPanelHeight = state.panelHeight
+    state.panelHeight = 0
     emitter.emit('render')
   })
   emitter.on('clear-terminal', () => {
     state.cache(XTerm, 'terminal').term.clear()
+  })
+  emitter.on('start-resizing-panel', () => {
+    log('start-resizing-panel')
+    window.addEventListener('mousemove', state.resizePanel)
+  })
+  emitter.on('stop-resizing-panel', () => {
+    log('stop-resizing-panel')
+    window.removeEventListener('mousemove', state.resizePanel)
   })
 
   // SAVING

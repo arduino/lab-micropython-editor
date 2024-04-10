@@ -1,10 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+@font-face {
+  font-family: "RobotoMono", monospace;
+  src:
+    url("media/roboto-mono-latin-ext-400-normal.woff"),
+    url("media/roboto-mono-latin-ext-400-normal.woff2");
+  font-weight: normal;
+  font-style: normal;
+}
 
 * {
   /* box-sizing: border-box; */
   -moz-user-select: none;
   -webkit-user-select: none;
   user-select: none;
+  font-family: "RobotoMono", monospace;
 }
 
 body, html {
@@ -99,7 +107,7 @@ button.small .icon {
   height: 100%;
   justify-content: center;
   align-items: center;
-  font-family: Roboto Mono;
+  font-family: "RobotoMono", monospace;
   overflow: hidden;
 }
 
@@ -445,7 +453,7 @@ button.small .icon {
   position: relative;
   cursor: pointer;
   color: #000;
-  font-family: Roboto Mono;
+  font-family: "RobotoMono", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -528,7 +536,7 @@ button.small .icon {
 }
 .file-list .item .text {
   color: #000;
-  font-family: Roboto Mono;
+  font-family: "RobotoMono", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;

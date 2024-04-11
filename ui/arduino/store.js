@@ -55,7 +55,11 @@ async function store(state, emitter) {
   state.panelHeight = PANEL_CLOSED
   state.resizePanel = function(e) {
     state.panelHeight = (PANEL_CLOSED/2) + document.body.clientHeight - e.clientY
-    state.savedPanelHeight = state.panelHeight
+    if (state.panelHeight <= PANEL_CLOSED) {
+      state.savedPanelHeight = PANEL_DEFAULT
+    } else {
+      state.savedPanelHeight = state.panelHeight
+    }
     emitter.emit('render')
   }
 
@@ -195,6 +199,7 @@ async function store(state, emitter) {
 
   // PANEL
   emitter.on('open-panel', () => {
+    emitter.emit('stop-resizing-panel')
     state.panelHeight = state.savedPanelHeight
     emitter.emit('render')
     setTimeout(() => {
@@ -202,6 +207,7 @@ async function store(state, emitter) {
     }, 200)
   })
   emitter.on('close-panel', () => {
+    emitter.emit('stop-resizing-panel')
     state.savedPanelHeight = state.panelHeight
     state.panelHeight = 0
     emitter.emit('render')
@@ -212,6 +218,13 @@ async function store(state, emitter) {
   emitter.on('start-resizing-panel', () => {
     log('start-resizing-panel')
     window.addEventListener('mousemove', state.resizePanel)
+    // Stop resizing when mouse leaves window or enters the tabs area
+    document.body.addEventListener('mouseleave', () => {
+      emitter.emit('stop-resizing-panel')
+    }, { once: true })
+    document.querySelector('#tabs').addEventListener('mouseenter', () => {
+      emitter.emit('stop-resizing-panel')
+    }, { once: true })
   })
   emitter.on('stop-resizing-panel', () => {
     log('stop-resizing-panel')

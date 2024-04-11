@@ -1,25 +1,27 @@
 function ReplPanel(state, emit) {
-  let height = state.isPanelOpen ? PANEL_HEIGHT : 45
-
   const onToggle = () => {
-    if (state.isPanelOpen) {
+    if (state.panelHeight > PANEL_CLOSED) {
       emit('close-panel')
     } else {
       emit('open-panel')
     }
   }
   const panelOpenClass = state.isPanelOpen ? 'open' : 'closed'
-  const termOperationsVisibility = state.isPanelOpen ? 'visible' : 'hidden'
+  const termOperationsVisibility = state.panelHeight > PANEL_TOO_SMALL ? 'visible' : 'hidden'
   const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'
 
   return html`
-    <div id="panel" class="${panelOpenClass}">
+    <div id="panel" style="height: ${state.panelHeight}px">
       <div class="panel-bar">
+        <div id="drag-handle"
+          onmousedown=${() => emit('start-resizing-panel')}
+          onmouseup=${() => emit('stop-resizing-panel')}
+          ></div>
         <div class="term-operations ${termOperationsVisibility}">
           ${ReplOperations(state, emit)}
         </div>
         ${Button({
-          icon: `arrow-${state.isPanelOpen ? 'down' : 'up'}.svg`,
+          icon: `arrow-${state.panelHeight > PANEL_CLOSED ? 'down' : 'up'}.svg`,
           size: 'small',
           onClick: onToggle
         })}

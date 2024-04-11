@@ -21,12 +21,13 @@ class XTerm extends Component {
   }
 
   resizeTerm() {
+    // XXX: This should not be querying the DOM like that :o
     if (document.querySelector('#panel')) {
-      let handleSize = 45
       const parentStyle = window.getComputedStyle(document.querySelector('#panel'))
       const parentWidth = parseInt(parentStyle.getPropertyValue('width'))
+      const parentHeight = parseInt(parentStyle.getPropertyValue('height'))
       const cols = Math.floor(parentWidth / this.term._core._renderService.dimensions.actualCellWidth) - 6
-      const rows = Math.floor((PANEL_HEIGHT-handleSize) / this.term._core._renderService.dimensions.actualCellHeight) - 2
+      const rows = Math.floor((parentHeight-PANEL_CLOSED) / this.term._core._renderService.dimensions.actualCellHeight) - 2
       this.term.resize(cols, rows)
     }
   }

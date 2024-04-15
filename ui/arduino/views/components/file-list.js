@@ -92,6 +92,18 @@ function generateFileList(source) {
     }
 
     // XXX: Use `source` to filter an array of files with a `source` as proprety
+    const files = state[`${source}Files`].sort((a, b) => {
+      const nameA = a.fileName.toUpperCase()
+      const nameB = b.fileName.toUpperCase()
+      // Folders come first than files
+      if (a.type === 'folder' && b.type === 'file') return -1
+      // Folders and files come in alphabetic order
+      if (a.type === b.type) {
+        if (nameA < nameB) return -1
+        if (nameA > nameB) return 1
+      }
+      return 0
+    })
     const list = html`
       <div class="file-list">
         <div class="list">
@@ -103,7 +115,7 @@ function generateFileList(source) {
           </div>
           ${state.creatingFile == source ? newFileItem : null}
           ${state.creatingFolder == source ? newFolderItem : null}
-          ${state[`${source}Files`].map(FileItem)}
+          ${files.map(FileItem)}
         </div>
       </div>
     `

@@ -7,6 +7,7 @@ function Tabs(state, emit) {
           icon: file.source === 'board'? 'connect.svg': 'computer.svg',
           active: file.id === state.editingFile,
           renaming: file.id === state.renamingTab,
+          hasChanges: file.hasChanges,
           onSelectTab: () => emit('select-tab', file.id),
           onCloseTab: () => emit('close-tab', file.id),
           onStartRenaming: () => emit('rename-tab', file.id),

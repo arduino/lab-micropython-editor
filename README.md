@@ -1,5 +1,11 @@
 # Arduino Lab for MicroPython
 
+<p align="center">
+
+<img src="https://github.com/arduino/lab-micropython-editor/blob/chore/docs/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-48-25.png?raw=true" width="50%" />
+
+</p>
+
 Arduino Lab for MicroPython is a lightweight editor for MicroPython programs, supporting connection with a board, code upload, file transfer and interactive REPL shell.
 This project is sponsored by Arduino, based on original work by [Murilo Polese](http://www.murilopolese.com). This is an experimental pre-release software, please direct any questions only to Github issues.
 

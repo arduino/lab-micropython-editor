@@ -1,7 +1,12 @@
 # Arduino Lab for MicroPython Editor
 
-![Arduino Lab for MicroPython Editor interface](./documents/Screenshot from 2024-04-15 09-48-25.png)
-![Arduino Lab for MicroPython Editor interface](./documents/Screenshot from 2024-04-15 09-47-03.png)
+<p align="center">
+
+<img src="https://github.com/arduino/lab-micropython-editor/blob/chore/docs/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-48-25.png?raw=true" width="40%" />
+
+<img src="https://github.com/arduino/lab-micropython-editor/blob/chore/docs/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-47-03.png?raw=true" width="40%" />
+
+</p>
 
 This UI is a [choo-choo](https://github.com/choojs/choo) app. It has pre-built dependencies so *no build process* is required for the interface.
 

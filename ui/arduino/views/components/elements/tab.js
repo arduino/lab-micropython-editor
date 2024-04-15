@@ -8,7 +8,8 @@ function Tab(args) {
     onFinishRenaming = () => false,
     disabled = false,
     active = false,
-    renaming = false
+    renaming = false,
+    hasChanges = false
   } = args
 
   if (active) {
@@ -41,7 +42,9 @@ function Tab(args) {
       return html`
         <div class="tab active" tabindex="0">
           <img class="icon" src="media/${icon}" />
-          <div class="text" ondblclick=${onStartRenaming}>${text}</div>
+          <div class="text" ondblclick=${onStartRenaming}>
+            ${hasChanges ? ' *' : ''} ${text}
+          </div>
           <div class="options" >
             <button onclick=${onCloseTab}>
               <img class="icon" src="media/close.svg" />
@@ -65,7 +68,9 @@ function Tab(args) {
       onclick=${selectTab}
       >
       <img class="icon" src="media/${icon}" />
-      <div class="text">${text}</div>
+      <div class="text">
+        ${hasChanges ? '*' : ''} ${text}
+      </div>
       <div class="options">
         <button onclick=${onCloseTab}>
           <img class="icon" src="media/close.svg" />

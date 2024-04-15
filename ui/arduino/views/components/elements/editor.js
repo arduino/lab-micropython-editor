@@ -7,11 +7,11 @@ class CodeMirrorEditor extends Component {
 
   load(el) {
     const onCodeChange = (update) => {
-      this.content = update.state.doc.toString()
       // console.log('code change', this.content)
+      this.content = update.state.doc.toString()
+      this.onChange()
     }
     this.editor = createEditor(this.content, el, onCodeChange)
-
   }
 
   createElement(content) {
@@ -20,6 +20,10 @@ class CodeMirrorEditor extends Component {
   }
 
   update() {
+    return false
+  }
+
+  onChange() {
     return false
   }
 }

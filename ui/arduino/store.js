@@ -48,6 +48,10 @@ async function store(state, emitter) {
     parentFolder: null, // Null parent folder means not saved?
     source: 'disk'
   })
+  newFile.editor.onChange = function() {
+    newFile.hasChanges = true
+    emitter.emit('render')
+  }
   state.openFiles.push(newFile)
   state.editingFile = newFile.id
 
@@ -351,6 +355,7 @@ async function store(state, emitter) {
       log('error', e)
     }
 
+    openFile.hasChanges = false
     state.isSaving = false
     state.savingProgress = 0
     emitter.emit('refresh-files')
@@ -365,6 +370,11 @@ async function store(state, emitter) {
   })
   emitter.on('close-tab', (id) => {
     log('close-tab', id)
+    const currentTab = state.openFiles.find(f => f.id === id)
+    if (currentTab.hasChanges && currentTab.parentFolder !== null) {
+      let response = confirm("Your file has unsaved changes. Are you sure you want to proceed?")
+      if (!response) return false
+    }
     state.openFiles = state.openFiles.filter(f => f.id !== id)
     // state.editingFile = null
 
@@ -375,6 +385,10 @@ async function store(state, emitter) {
         source: 'disk',
         parentFolder: null
       })
+      newFile.editor.onChange = function() {
+        newFile.hasChanges = true
+        emitter.emit('render')
+      }
       state.openFiles.push(newFile)
       state.editingFile = newFile.id
     }
@@ -995,6 +1009,7 @@ async function store(state, emitter) {
       }
     }
 
+    openFile.hasChanges = false
     state.renamingTab = null
     state.isSaving = false
     state.savingProgress = 0
@@ -1037,11 +1052,12 @@ async function store(state, emitter) {
     let files = []
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
+      let openFile = null
       if (selectedFile.type == 'folder') {
         // Don't open folders
         continue
       }
-      if (selectedFile.source === 'board') {
+      if (selectedFile.source == 'board') {
         const fileContent = await serial.loadFile(
           serial.getFullPath(
             '/',
@@ -1049,15 +1065,17 @@ async function store(state, emitter) {
             selectedFile.fileName
           )
         )
-        files.push(
-          createFile({
-            parentFolder: state.boardNavigationPath,
-            fileName: selectedFile.fileName,
-            source: selectedFile.source,
-            content: fileContent
-          })
-        )
-      } else {
+        openFile = createFile({
+          parentFolder: state.boardNavigationPath,
+          fileName: selectedFile.fileName,
+          source: selectedFile.source,
+          content: fileContent
+        })
+        openFile.editor.onChange = function() {
+          openFile.hasChanges = true
+          emitter.emit('render')
+        }
+      } else if (selectedFile.source == 'disk') {
         const fileContent = await disk.loadFile(
           disk.getFullPath(
             state.diskNavigationRoot,
@@ -1065,15 +1083,18 @@ async function store(state, emitter) {
             selectedFile.fileName
           )
         )
-        files.push(
-          createFile({
-            parentFolder: state.diskNavigationPath,
-            fileName: selectedFile.fileName,
-            source: selectedFile.source,
-            content: fileContent
-          })
-        )
+        openFile = createFile({
+          parentFolder: state.diskNavigationPath,
+          fileName: selectedFile.fileName,
+          source: selectedFile.source,
+          content: fileContent
+        })
+        openFile.editor.onChange = function() {
+          openFile.hasChanges = true
+          emitter.emit('render')
+        }
       }
+      files.push(openFile)
     }
 
     files = files.filter((f) => { // find files to open
@@ -1280,11 +1301,17 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  function createFile({ source, parentFolder, fileName, content = newFileContent }) {
+  function createFile(args) {
+    const {
+      source,
+      parentFolder,
+      fileName,
+      content = newFileContent,
+      hasChanges = false
+    } = args
     const id = generateHash()
     const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
     editor.content = content
-    const hasChanges = false
     return {
       id,
       source,
@@ -1300,6 +1327,7 @@ async function store(state, emitter) {
       fileName: generateFileName(),
       parentFolder,
       source,
+      hasChanges: true
     })
   }
 }

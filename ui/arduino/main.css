@@ -168,7 +168,7 @@ button.small .icon {
   color: #000;
   font-style: normal;
   font-weight: 400;
-  line-height: normal;
+  line-height: 1.1em;
   flex: 1 0 0;
   max-width: calc(100% - 46px);
   overflow: hidden;
@@ -553,11 +553,11 @@ button.small .icon {
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-
   white-space: nowrap;
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1em;
 }
 
 .file-list .item .checkbox .icon.off,

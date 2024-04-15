@@ -19,18 +19,27 @@ function App(state, emit) {
     `
   }
 
+  let overlay = html`<div id="overlay" class="closed"></div>`
+
   if (state.diskFiles == null) {
     emit('load-disk-files')
-    return html`<div id="app"><p>Loading files...</p></div>`
+    overlay = html`<div id="overlay" class="open"><p>Loading files...</p></div>`
   }
 
-  if (state.isRemoving) return html`<div id="app"><p>Removing...</p></div>`
-  if (state.isConnecting) return html`<div id="app"><p>Connecting...</p></div>`
-  if (state.isLoadingFiles) return html`<div id="app"><p>Loading files...</p></div>`
-  if (state.isSaving) return html`<div id="app"><p>Saving file... ${state.savingProgress}</p></div>`
-  if (state.isTransferring) return html`<div id="app"><p>Transferring file... ${state.transferringProgress}</p></div>`
+  if (state.isRemoving) overlay = html`<div id="overlay" class="open"><p>Removing...</p></div>`
+  if (state.isConnecting) overlay = html`<div id="overlay" class="open"><p>Connecting...</p></div>`
+  if (state.isLoadingFiles) overlay = html`<div id="overlay" class="open"><p>Loading files...</p></div>`
+  if (state.isSaving) overlay = html`<div id="overlay" class="open"><p>Saving file... ${state.savingProgress}</p></div>`
+  if (state.isTransferring) overlay = html`<div id="overlay" class="open"><p>Transferring file... ${state.transferringProgress}</p></div>`
 
-  return state.view == 'editor' ? EditorView(state, emit) : FileManagerView(state, emit)
+  const view = state.view == 'editor' ? EditorView(state, emit) : FileManagerView(state, emit)
+  return html`
+    <div id="app">
+      ${view}
+      ${overlay}
+    </div>
+  `
+
 }
 
 window.addEventListener('load', () => {

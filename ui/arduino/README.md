@@ -2,9 +2,9 @@
 
 <p align="center">
 
-<img src="https://github.com/arduino/lab-micropython-editor/blob/chore/docs/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-48-25.png?raw=true" width="40%" />
+<img src="https://github.com/arduino/lab-micropython-editor/blob/development/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-48-25.png?raw=true" width="40%" />
 
-<img src="https://github.com/arduino/lab-micropython-editor/blob/chore/docs/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-47-03.png?raw=true" width="40%" />
+<img src="https://github.com/arduino/lab-micropython-editor/blob/development/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-47-03.png?raw=true" width="40%" />
 
 </p>
 

@@ -33,9 +33,9 @@ This project is sponsored by Arduino, based on original work by [Murilo Polese](
 
 ## Technical overview
 
-Arduino Lab for MicroPython is an [Electron](https://www.electronjs.org/) app that has its main purpose to communicate over serial with a microprocessor running [MicroPython](https://micropython.org/). All Electron code is at `/index.js`.
+Arduino Lab for MicroPython is an [Electron](https://www.electronjs.org/) app that has its main purpose to communicate over serial with a microprocessor running [MicroPython](https://micropython.org/). The Electron code is at `/index.js` and inside the folder `/backend`.
 
-All operations over serial are abstracted and packaged on `/micropython.js` which is an attempt of porting `pyboard.py`. The port has its [own repository](https://github.com/arduino/micropython.js) but for the sake of simplicity and transparency, `micropython.js` is committed as source code.
+All operations over serial are abstracted and packaged on `micropython.js` which is an attempt of porting `pyboard.py`. The module has its [own repository](https://github.com/arduino/micropython.js) with documentation and examples of usage.
 
 The User Interface (UI) source code stays inside `/ui` folder and is completely independent of the Electron code.
 
@@ -49,6 +49,7 @@ At the root of the repository you will find:
 - `/build_resources`: Icons and other assets used during the build process.
 - `/ui`: Available user interfaces.
 - `/index.js`: Main Electron code.
+- `/backend`: Electron helpers.
 - `/preload.js`: Creates Disk, Serial and Window APIs on Electron's main process and exposes it to Electron's renderer process (context bridge).
 
 ## User interface

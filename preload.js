@@ -24,10 +24,10 @@ const Serial = {
   execFile: async (path) => {
     return board.execfile(path)
   },
-  get_prompt: async () => {
+  getPrompt: async () => {
     return board.get_prompt()
   },
-  keyboard_interrupt: async () => {
+  keyboardInterrupt: async () => {
     await board.stop()
     return Promise.resolve()
   },

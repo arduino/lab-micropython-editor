@@ -115,7 +115,7 @@ async function store(state, emitter) {
 
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
-    await serial.get_prompt()
+    await serial.getPrompt()
 
     // Make sure there is a lib folder
     log('creating lib folder')
@@ -174,7 +174,7 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     emitter.emit('render')
     try {
-      await serial.get_prompt()
+      await serial.getPrompt()
       await serial.run(code)
     } catch(e) {
       log('error', e)
@@ -187,7 +187,7 @@ async function store(state, emitter) {
     }
     emitter.emit('open-panel')
     emitter.emit('render')
-    await serial.get_prompt()
+    await serial.getPrompt()
   })
   emitter.on('reset', async () => {
     log('reset')
@@ -272,6 +272,7 @@ async function store(state, emitter) {
     // Check if the current full path exists
     let fullPathExists = false
     if (openFile.source == 'board') {
+      await serial.getPrompt()
       fullPathExists = await serial.fileExists(
         serial.getFullPath(
           state.boardNavigationRoot,
@@ -294,6 +295,7 @@ async function store(state, emitter) {
       if (openFile.source == 'board') {
         openFile.parentFolder = state.boardNavigationPath
         // Check for overwrite
+        await serial.getPrompt()
         willOverwrite = await serial.fileExists(
           serial.getFullPath(
             state.boardNavigationRoot,
@@ -328,7 +330,7 @@ async function store(state, emitter) {
     const contents = openFile.editor.editor.state.doc.toString()
     try {
       if (openFile.source == 'board') {
-        await serial.get_prompt()
+        await serial.getPrompt()
         await serial.saveFileContent(
           serial.getFullPath(
             state.boardNavigationRoot,
@@ -918,7 +920,7 @@ async function store(state, emitter) {
       const contents = openFile.editor.editor.state.doc.toString()
       try {
         if (openFile.source == 'board') {
-          await serial.get_prompt()
+          await serial.getPrompt()
           await serial.saveFileContent(
             serial.getFullPath(
               state.boardNavigationRoot,
@@ -981,7 +983,7 @@ async function store(state, emitter) {
       const contents = openFile.editor.editor.state.doc.toString()
       try {
         if (openFile.source == 'board') {
-          await serial.get_prompt()
+          await serial.getPrompt()
           await serial.saveFileContent(
             serial.getFullPath(
               state.boardNavigationRoot,
@@ -1382,7 +1384,7 @@ async function getAvailablePorts() {
 }
 
 async function getBoardFiles(path) {
-  await serial.get_prompt()
+  await serial.getPrompt()
   let files = await serial.ilistFiles(path)
   files = files.map(f => ({
     fileName: f[0],
@@ -1401,6 +1403,7 @@ function checkDiskFile({ root, parentFolder, fileName }) {
 
 async function checkBoardFile({ root, parentFolder, fileName }) {
   if (root == null || parentFolder == null || fileName == null) return false
+  await serial.getPrompt()
   return serial.fileExists(
     serial.getFullPath(root, parentFolder, fileName)
   )

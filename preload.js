@@ -21,10 +21,13 @@ const Serial = {
   run: async (code) => {
     return board.run(code)
   },
-  get_prompt: async () => {
+  execFile: async (path) => {
+    return board.execfile(path)
+  },
+  getPrompt: async () => {
     return board.get_prompt()
   },
-  keyboard_interrupt: async () => {
+  keyboardInterrupt: async () => {
     await board.stop()
     return Promise.resolve()
   },
@@ -72,6 +75,9 @@ const Serial = {
   createFolder: async (folder) => {
     return await board.fs_mkdir(folder)
   },
+  removeFolder: async (folder) => {
+    return await board.fs_rmdir(folder)
+  },
   getNavigationPath: (navigation, target) => {
     return path.posix.join(navigation, target)
   },
@@ -80,6 +86,19 @@ const Serial = {
   },
   getParentPath: (navigation) => {
     return path.posix.dirname(navigation)
+  },
+  fileExists: async (filePath) => {
+    // !!!: Fix this on micropython.js level
+    // ???: Check if file exists is not part of mpremote specs
+    const output = await board.run(`
+import os
+try:
+  os.stat("${filePath}")
+  print(0)
+except OSError:
+  print(1)
+`)
+    return output[2] === '0'
   }
 }
 
@@ -92,6 +111,9 @@ const Disk = {
   },
   ilistFiles: async (folder) => {
     return ipcRenderer.invoke('ilist-files', folder)
+  },
+  ilistAllFiles: async (folder) => {
+    return ipcRenderer.invoke('ilist-all-files', folder)
   },
   loadFile: async (filePath) => {
     let content = await ipcRenderer.invoke('load-file', filePath)
@@ -106,6 +128,12 @@ const Disk = {
   renameFile: async (oldName, newName) => {
     return ipcRenderer.invoke('rename-file', oldName, newName)
   },
+  createFolder: async (folderPath) => {
+    return ipcRenderer.invoke('create-folder', folderPath)
+  },
+  removeFolder: async (folderPath) => {
+    return ipcRenderer.invoke('remove-folder', folderPath)
+  },
   getNavigationPath: (navigation, target) => {
     return path.join(navigation, target)
   },
@@ -114,6 +142,9 @@ const Disk = {
   },
   getParentPath: (navigation) => {
     return path.dirname(navigation)
+  },
+  fileExists: async (filePath) => {
+    return ipcRenderer.invoke('file-exists', filePath)
   }
 }
 

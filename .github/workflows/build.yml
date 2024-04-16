@@ -1,4 +1,4 @@
-name: Arduino MicroPython Lab
+name: Arduino Lab for MicroPython
 
 on:
   push:
@@ -96,15 +96,15 @@ jobs:
       matrix:
         artifact:
           - path: "*-linux_x64.zip"
-            name: Linux_X86-64
+            name: Arduino-Lab-for-MicroPython_Linux_X86-64
           - path: "*-mac_x64.zip"
-            name: macOS
+            name: Arduino-Lab-for-MicroPython_macOS_X86-64
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
           # - path: "*Windows_64bit.msi"
           #   name: Windows_X86-64_MSI
           - path: "*-win_x64.zip"
-            name: Windows_X86-64_zip
+            name: Arduino-Lab-for-MicroPython_Windows_X86-64
 
     steps:
       - name: Download job transfer artifact

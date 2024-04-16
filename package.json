@@ -1,46 +1,46 @@
 {
-	"name": "arduino-lab-micropython-ide",
-	"productName": "Arduino Lab for Micropython",
-	"version": "0.8.0",
-	"description": "Arduino Lab for MicroPython is a project sponsored by Arduino, based on original work by Murilo Polese.\nThis is an experimental pre-release software, please direct any questions exclusively to Github issues.",
-	"main": "index.js",
-	"scripts": {
-		"post-set-shell": "npm config set script-shell bash",
-		"rebuild": "electron-rebuild",
-		"dev": "electron  --inspect ./",
-		"build": "npm run post-set-shell && electron-builder $(if [ $(uname -m) =  arm64 ]; then echo --mac --x64; fi)",
-		"postinstall": "npm run post-set-shell && npm run rebuild"
-	},
-	"devDependencies": {
-		"electron": "^19.0.10",
-		"electron-builder": "^23.3.3",
-		"electron-notarize": "^1.2.1",
-		"electron-rebuild": "^3.2.9",
-		"is-ci": "^3.0.1"
-	},
-	"build": {
-		"appId": "cc.arduino.micropython-lab",
-		"artifactName": "${productName}-${os}_${arch}.${ext}",
-		"mac": {
-			"target": "zip",
-			"icon": "build_resources/icon.icns"
-		},
-		"win": {
-			"target": "zip",
-			"icon": "build_resources/icon.png"
-		},
-		"linux": {
-			"target": "zip",
-			"icon": "build_resources/icon.icns"
-		},
-		"afterSign": "build_resources/notarize.js"
-	},
-	"license": "MIT",
-	"dependencies": {
-		"about-window": "^1.15.2",
-		"micropython.js": "github:arduino/micropython.js#v1.4.2"
-	},
-	"engines": {
-		"node": "18"
-	}
+  "name": "arduino-lab-micropython-ide",
+  "productName": "Arduino Lab for Micropython",
+  "version": "0.9.0",
+  "description": "Arduino Lab for MicroPython is a project sponsored by Arduino, based on original work by Murilo Polese.\nThis is an experimental pre-release software, please direct any questions exclusively to Github issues.",
+  "main": "index.js",
+  "scripts": {
+    "post-set-shell": "npm config set script-shell bash",
+    "rebuild": "electron-rebuild",
+    "dev": "electron  --inspect ./",
+    "build": "npm run post-set-shell && electron-builder $(if [ $(uname -m) =  arm64 ]; then echo --mac --x64; fi)",
+    "postinstall": "npm run post-set-shell && npm run rebuild"
+  },
+  "devDependencies": {
+    "electron": "^19.0.10",
+    "electron-builder": "^23.3.3",
+    "electron-notarize": "^1.2.1",
+    "electron-rebuild": "^3.2.9",
+    "is-ci": "^3.0.1"
+  },
+  "build": {
+    "appId": "cc.arduino.micropython-lab",
+    "artifactName": "${productName}-${os}_${arch}.${ext}",
+    "mac": {
+      "target": "zip",
+      "icon": "build_resources/icon.icns"
+    },
+    "win": {
+      "target": "zip",
+      "icon": "build_resources/icon.png"
+    },
+    "linux": {
+      "target": "zip",
+      "icon": "build_resources/icon.icns"
+    },
+    "afterSign": "build_resources/notarize.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "about-window": "^1.15.2",
+    "micropython.js": "github:arduino/micropython.js#v1.4.4"
+  },
+  "engines": {
+    "node": "18"
+  }
 }

@@ -1,116 +1,133 @@
 const log = console.log
-const DEFAULT_PANEL_HEIGHT = '15rem'
+const serial = window.BridgeSerial
+const disk = window.BridgeDisk
+const win = window.BridgeWindow
 
+const newFileContent = `# This program was created in Arduino Lab for MicroPython
 
-function store(state, emitter) {
-  const serial = window.BridgeSerial
-  const disk = window.BridgeDisk
-  const win = window.BridgeWindow
+print('Hello, MicroPython!')
+`
 
+async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
-  state.ports = []
+  state.view = 'editor'
+  state.diskNavigationPath = '/'
+  state.diskNavigationRoot = getDiskNavigationRootFromStorage()
   state.diskFiles = []
-  state.serialFiles = []
-  state.selectedFile = null
-  state.selectedDevice = 'disk'
+  state.boardNavigationPath = '/'
+  state.boardNavigationRoot = '/'
+  state.boardFiles = []
+  state.openFiles = []
+  state.selectedFiles = []
+  state.editingFile = null
+  state.creatingFile = null
+  state.renamingFile = null
+  state.creatingFolder = null
+  state.renamingTab = null
 
-  // No trailing slashes
-  state.diskPath = localStorage.getItem('diskPath') == 'null'
-    ? null
-    : localStorage.getItem('diskPath')
-  state.serialPath = '/' // this never changes
-  state.serialPort = null
-  // no slashes on the start or end
-  state.diskNavigation = ''
-  state.serialNavigation = ''
+  state.availablePorts = []
 
+  state.isConnectionDialogOpen = false
+  state.isConnecting = false
   state.isConnected = false
-  state.isPortDialogOpen = false
-  state.isTerminalOpen = false
-  state.isFilesOpen = false
-  state.isEditingFilename = false
+  state.connectedPort = null
 
-  state.messageText = 'Disconnected'
-  state.isShowingMessage = true
-  state.messageTimeout = 0
+  state.isSaving = false
+  state.savingProgress = 0
+  state.isTransferring = false
+  state.transferringProgress = 0
+  state.isRemoving = false
 
-  state.isTerminalBound = false // XXX
-  state.panelHeight = null
+  state.isLoadingFiles = false
+  state.dialogs = []
 
-  state.blocking = false
-  state.unsavedChanges = false
+  state.isTerminalBound = false
 
-  // SERIAL CONNECTION
-  emitter.on('load-ports', async () => {
-    log('load-ports')
-    state.ports = await serial.loadPorts()
+  const newFile = createEmptyFile({
+    parentFolder: null, // Null parent folder means not saved?
+    source: 'disk'
+  })
+  newFile.editor.onChange = function() {
+    newFile.hasChanges = true
+    emitter.emit('render')
+  }
+  state.openFiles.push(newFile)
+  state.editingFile = newFile.id
+
+  state.savedPanelHeight = PANEL_DEFAULT
+  state.panelHeight = PANEL_CLOSED
+  state.resizePanel = function(e) {
+    state.panelHeight = (PANEL_CLOSED/2) + document.body.clientHeight - e.clientY
+    if (state.panelHeight <= PANEL_CLOSED) {
+      state.savedPanelHeight = PANEL_DEFAULT
+    } else {
+      state.savedPanelHeight = state.panelHeight
+    }
+    emitter.emit('render')
+  }
+
+  // START AND BASIC ROUTING
+  emitter.on('select-disk-navigation-root', async () => {
+    const folder = await selectDiskFolder()
+    if (folder) {
+      saveDiskNavigationRootToStorage(folder)
+      state.diskNavigationRoot = folder
+      state.diskNavigationPath = '/'
+      emitter.emit('refresh-files')
+    }
     emitter.emit('render')
   })
-  emitter.on('open-port-dialog', async () => {
-    log('open-port-dialog')
+  emitter.on('change-view', (view) => {
+    state.view = view
+    if (state.view === 'file-manager') {
+      emitter.emit('refresh-files')
+    }
+    emitter.emit('render')
+  })
+
+  // CONNECTION DIALOG
+  emitter.on('open-connection-dialog', async () => {
+    log('open-connection-dialog')
     emitter.emit('disconnect')
-    state.isPortDialogOpen = true
-    emitter.emit('render')
-    state.ports = await serial.loadPorts()
-    emitter.emit('render')
-  })
-  emitter.on('close-port-dialog', async () => {
-    log('close-port-dialog')
-    state.isPortDialogOpen = false
+    state.availablePorts = await getAvailablePorts()
+    state.isConnectionDialogOpen = true
     emitter.emit('render')
   })
-
-  emitter.on('disconnect', async () => {
-    log('disconnect')
-    if (state.isConnected) {
-      emitter.emit('message', 'Disconnected')
-    }
-    state.serialPort = null
-    state.isConnected = false
-    state.serialNavigation = ''
-    state.isTerminalOpen = false
-    state.serialFiles = []
-
-    // When you disconnect with a serial file selected, keep the editor content
-    if (state.selectedDevice === 'serial') {
-      state.selectedDevice = 'disk'
-      state.selectedFile = null
-    }
-
-    await serial.disconnect()
-
+  emitter.on('close-connection-dialog', () => {
+    state.isConnectionDialogOpen = false
     emitter.emit('render')
-    resizeEditor(state)
   })
-  emitter.on('connect', async (path) => {
-    log('connect', path)
+  emitter.on('update-ports', async () => {
+    state.availablePorts = await getAvailablePorts()
+    emitter.emit('render')
+  })
+  emitter.on('select-port', async (port) => {
+    log('connect', port)
+    const path = port.path
 
-    state.blocking = true
-    emitter.emit('message', 'Connecting')
+    state.isConnecting = true
+    emitter.emit('render')
 
+    let timeout_id = setTimeout(() => emitter.emit('connection-timeout'), 5000)
     await serial.connect(path)
+    clearTimeout(timeout_id)
 
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
-    await serial.get_prompt()
-
-    state.isConnected = true
-    emitter.emit('close-port-dialog')
+    await serial.getPrompt()
 
     // Make sure there is a lib folder
     log('creating lib folder')
-    await serial.createFolder('lib')
-    state.serialPort = path
-    state.serialNavigation = ''
-    emitter.emit('update-files')
+    await serial.createFolder('/lib')
 
-    emitter.emit('message', 'Connected', 1000)
-
-    if (!state.isFilesOpen) {
-      emitter.emit('show-terminal')
+    // Connected and ready
+    state.isConnecting = false
+    state.isConnected = true
+    if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
+      state.panelHeight = state.savedPanelHeight
     }
-    emitter.emit('render')
+    state.connectedPort = path
 
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
@@ -120,575 +137,1412 @@ function store(state, emitter) {
         serial.eval(data)
         term.scrollToBottom()
       })
+      serial.eval('\x02')
     }
     serial.onData((data) => {
       term.write(data)
       term.scrollToBottom()
     })
     serial.onDisconnect(() => emitter.emit('disconnect'))
+
+    emitter.emit('close-connection-dialog')
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+  emitter.on('disconnect', async () => {
+    await serial.disconnect()
+    state.isConnected = false
+    state.panelHeight = PANEL_CLOSED
+    state.boardFiles = []
+    state.boardNavigationPath = '/'
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+  emitter.on('connection-timeout', async () => {
+    state.isConnected = false
+    state.isConnecting = false
+    state.availablePorts = await getAvailablePorts()
+    state.isConnectionDialogOpen = true
+    emitter.emit('render')
   })
 
   // CODE EXECUTION
   emitter.on('run', async () => {
     log('run')
-    if (!state.isTerminalOpen) emitter.emit('show-terminal')
-    let editor = state.cache(AceEditor, 'editor').editor
-    let code = editor.getValue()
-    await serial.get_prompt()
-    serial.run(code)
+    const openFile = state.openFiles.find(f => f.id == state.editingFile)
+    const code = openFile.editor.editor.state.doc.toString()
+    emitter.emit('open-panel')
     emitter.emit('render')
+    try {
+      await serial.getPrompt()
+      await serial.run(code)
+    } catch(e) {
+      log('error', e)
+    }
   })
   emitter.on('stop', async () => {
     log('stop')
-    await serial.get_prompt()
+    if (state.panelHeight <= PANEL_CLOSED) {
+      state.panelHeight = state.savedPanelHeight
+    }
+    emitter.emit('open-panel')
     emitter.emit('render')
+    await serial.getPrompt()
   })
   emitter.on('reset', async () => {
     log('reset')
+    if (state.panelHeight <= PANEL_CLOSED) {
+      state.panelHeight = state.savedPanelHeight
+    }
+    emitter.emit('open-panel')
+    emitter.emit('render')
     await serial.reset()
     emitter.emit('update-files')
     emitter.emit('render')
   })
 
-  // FILE MANAGEMENT
-  emitter.on('new-file', (dev) => {
-    log('new-file', dev)
-    state.selectedDevice = dev
-    state.selectedFile = null
-    state.unsavedChanges = false
-    let editor = state.cache(AceEditor, 'editor').editor
-    editor.setValue('')
-    emitter.emit('close-new-file-dialog')
+  // PANEL
+  emitter.on('open-panel', () => {
+    emitter.emit('stop-resizing-panel')
+    state.panelHeight = state.savedPanelHeight
     emitter.emit('render')
-  })
-  emitter.on('save', async () => {
-    log('save')
-    let editor = state.cache(AceEditor, 'editor').editor
-    let contents = cleanCharacters(editor.getValue())
-    editor.setValue(contents)
-    let filename = cleanCharacters(state.selectedFile || 'undefined')
-    let deviceName = getDeviceName(state.selectedDevice)
-
-    state.blocking = true
-    emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
-
-    if (state.selectedDevice === 'serial') {
-      await serial.get_prompt()
-      await serial.saveFileContent(
-        serial.getFullPath(
-          state.serialPath,
-          state.serialNavigation,
-          filename
-        ),
-        contents,
-        (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
-      )
-      // XXX: This one second delay may be shorter
-      setTimeout(() => emitter.emit('update-files'), 1000)
-      state.unsavedChanges = false
-      emitter.emit('message', `Saved`, 1000)
-    }
-
-    if (state.selectedDevice === 'disk' && state.diskPath) {
-      await disk.saveFileContent(
-        disk.getFullPath(
-          state.diskPath,
-          state.diskNavigation,
-          filename
-        ),
-        contents
-      )
-      setTimeout(() => emitter.emit('update-files'), 100)
-      state.unsavedChanges = false
-      emitter.emit('message', `Saved`, 500)
-    }
-
-
-  })
-  emitter.on('remove', async () => {
-    log('remove')
-    let deviceName = getDeviceName(state.selectedDevice)
-
-    state.blocking = true
-    emitter.emit('render')
-
-    if (confirm(`Do you want to remove ${state.selectedFile} from ${deviceName}?`)) {
-      if (state.selectedDevice === 'serial') {
-        await serial.get_prompt()
-        await serial.removeFile(state.serialNavigation + '/' + state.selectedFile)
-        emitter.emit('new-file', 'serial')
-      }
-      if (state.selectedDevice === 'disk') {
-        await disk.removeFile(
-          disk.getFullPath(
-            state.diskPath,
-            state.diskNavigation,
-            state.selectedFile
-          )
-        )
-        emitter.emit('new-file', 'disk')
-      }
-      emitter.emit('update-files')
-      emitter.emit('render')
-    } else {
-      state.blocking = false
-      emitter.emit('render')
-    }
-  })
-  emitter.on('select-file', async (device, filename) => {
-    log('select-file', device, filename)
-    if (state.unsavedChanges) {
-      let response = confirm(`Loading a new file will discard any unsaved changes.\nPress OK to accept or Cancel to abort.`)
-      if (!response) return
-    }
-    state.selectedDevice = device
-
-    /*
-    XXX: If user is changing a file name, do not request the file from the board
-    over serial to prevent two commands being executed at the same time.
-    TODO: Create a queue of actions and execute them in order
-    */
-    if (state.selectedDevice === 'serial' && state.isEditingFilename) return
-
-    state.blocking = true
-    emitter.emit('render')
-
-    let content = ''
-    if (state.selectedDevice === 'serial') {
-      await serial.get_prompt()
-      content = await serial.loadFile(
-        serial.getFullPath(
-          state.serialPath,
-          state.serialNavigation,
-          filename
-        )
-      )
-    }
-
-    if (state.selectedDevice === 'disk') {
-      content = await disk.loadFile(
-        disk.getFullPath(
-          state.diskPath,
-          state.diskNavigation,
-          filename
-        )
-      )
-    }
-
-    let editor = state.cache(AceEditor, 'editor').editor
-    editor.setValue(cleanCharacters(content))
-
-    state.selectedFile = filename
-    state.unsavedChanges = false
-    state.blocking = false
-    emitter.emit('render')
-  })
-  emitter.on('open-folder', async () => {
-    log('open-folder')
-    let { folder, files } = await disk.openFolder()
-    state.diskNavigation = ''
-    if (folder !== 'null' && folder !== null) {
-      localStorage.setItem('diskPath', folder)
-      state.diskPath = folder
-    }
-    if (!state.isFilesOpen) emitter.emit('show-files')
-    emitter.emit('update-files')
-  })
-  emitter.on('update-files', async () => {
-    log('update-files')
-    // state.blocking = true
-    // emitter.emit('render')
-    function sortFoldersFirst(allFiles) {
-      let folders = allFiles.filter(f => f.type === 'folder')
-      let files = allFiles.filter(f => f.type === 'file')
-      folders = folders.sort((a, b) => a.path.localeCompare(b.path))
-      files = files.sort((a, b) => a.path.localeCompare(b.path))
-      return folders.concat(files)
-    }
-    if (state.isConnected) {
-      await serial.get_prompt()
-      try {
-        const files = await serial.ilistFiles(
-          serial.getFullPath(
-            state.serialPath,
-            state.serialNavigation,
-            ''
-          )
-        )
-        state.serialFiles = files.map(f => ({
-          path: f[0],
-          type: f[1] === 0x4000 ? 'folder' : 'file'
-        }))
-        // Filter out dot files
-        state.serialFiles = state.serialFiles.filter(
-          f => f.path.indexOf('.') !== 0
-        )
-        // Sort alphabetically in case-insensitive fashion
-        state.serialFiles = state.serialFiles.sort(
-          (a, b) => a.path.localeCompare(b.path)
-        )
-        // Sort folders first
-        state.serialFiles = sortFoldersFirst(state.serialFiles)
-      } catch (e) {
-        state.serialNavigation = ''
-        state.serialFiles = []
-        console.log('error', e)
-      }
-
-    }
-    if (state.diskPath) {
-      try {
-        state.diskFiles = await disk.ilistFiles(
-          disk.getFullPath(
-            state.diskPath,
-            state.diskNavigation,
-            ''
-          )
-        )
-        // Filter out dot files
-        state.diskFiles = state.diskFiles.filter(f => f.path.indexOf('.') !== 0)
-        // Sort alphabetically in case-insensitive fashion
-        state.diskFiles = state.diskFiles.sort(
-          (a, b) => a.path.localeCompare(b.path)
-        )
-        // Sort folders first
-        state.diskFiles = sortFoldersFirst(state.diskFiles)
-      } catch (e) {
-        state.diskNavigation = ''
-        state.diskPath = null
-        state.diskFiles = []
-        localStorage.setItem('diskPath', null)
-        console.log('error', e)
-      }
-    }
-    state.blocking = false
-    emitter.emit('render')
-  })
-  emitter.on('upload', async () => {
-    log('upload')
-    state.blocking = true
-    emitter.emit('render')
-    let confirmation = true
-    if (state.serialFiles.find(f => f.path === state.selectedFile)) {
-      confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on board?`)
-    }
-    if (confirmation) {
-      emitter.emit('message', 'Uploading file...')
-      let editor = state.cache(AceEditor, 'editor').editor
-      let contents = cleanCharacters(editor.getValue())
-      editor.setValue(contents)
-      await disk.saveFileContent(
-        disk.getFullPath(
-          state.diskPath,
-          state.diskNavigation,
-          state.selectedFile
-        ),
-        contents
-      )
-      await serial.uploadFile(
-        disk.getFullPath(
-          state.diskPath,
-          state.diskNavigation,
-          state.selectedFile
-        ),
-        serial.getFullPath(
-          state.serialPath,
-          state.serialNavigation,
-          state.selectedFile
-        ),
-        (e) => emitter.emit('message', `Uploading file... ${e}`)
-      )
-      emitter.emit('message', 'File uploaded!', 500)
-      setTimeout(() => emitter.emit('update-files'), 500)
-      emitter.emit('render')
-    } else {
-      state.blocking = false
-      emitter.emit('render')
-    }
-  })
-  emitter.on('download', async () => {
-    log('download')
-    state.blocking = true
-    emitter.emit('render')
-    let confirmation = true
-    if (state.diskFiles.find(f => f.path === state.selectedFile)) {
-      confirmation = confirm(`Do you want to overwrite ${state.selectedFile} on disk?`)
-    }
-    if (confirmation) {
-      emitter.emit('message', 'Downloading file... Please wait')
-      let editor = state.cache(AceEditor, 'editor').editor
-      let contents = cleanCharacters(editor.getValue())
-      editor.setValue(contents)
-      if (state.unsavedChanges) {
-        await serial.get_prompt()
-        await serial.saveFileContent(
-          serial.getFullPath(
-            state.serialPath,
-            state.serialNavigation,
-            state.selectedFile
-          ),
-          contents,
-          (e) => emitter.emit('message', `Saving ${state.selectedFile} on ${getDeviceName('serial')}. ${e}`)
-        )
-        state.unsavedChanges = false
-      }
-      await disk.saveFileContent(
-        disk.getFullPath(
-          state.diskPath,
-          state.diskNavigation,
-          state.selectedFile
-        ),
-        contents
-      )
-
-      emitter.emit('message', 'File downloaded!', 500)
-      setTimeout(() => emitter.emit('update-files'), 500)
-      emitter.emit('render')
-    } else {
-      state.blocking = false
-      emitter.emit('render')
-    }
-  })
-
-  emitter.on('code-change', () => {
-    log('code-changed')
-    if (!state.blocking) {
-      state.unsavedChanges = true
-    }
-  })
-
-  // PANEL MANAGEMENT
-  emitter.on('show-terminal', () => {
-    log('show-terminal')
-    if (state.panelHeight === null) state.panelHeight = DEFAULT_PANEL_HEIGHT
-    state.isTerminalOpen = !state.isTerminalOpen
-    state.isFilesOpen = false
-    emitter.emit('render')
-    resizeEditor(state)
-  })
-  emitter.on('show-files', () => {
-    log('show-files')
-    if (state.panelHeight === null) state.panelHeight = DEFAULT_PANEL_HEIGHT
-    state.isTerminalOpen = false
-    state.isFilesOpen = !state.isFilesOpen
-    emitter.emit('update-files')
-    emitter.emit('render')
-    resizeEditor(state)
+    setTimeout(() => {
+      state.cache(XTerm, 'terminal').resizeTerm()
+    }, 200)
   })
   emitter.on('close-panel', () => {
-    log('close-panel')
-    state.isTerminalOpen = false
-    state.isFilesOpen = false
+    emitter.emit('stop-resizing-panel')
+    state.savedPanelHeight = state.panelHeight
+    state.panelHeight = 0
     emitter.emit('render')
-    resizeEditor(state)
+  })
+  emitter.on('clear-terminal', () => {
+    state.cache(XTerm, 'terminal').term.clear()
   })
   emitter.on('start-resizing-panel', () => {
     log('start-resizing-panel')
-    function handleMouseMove(e) {
-      let height = Math.max(window.innerHeight - e.clientY, 200)
-      height = Math.min(height, window.innerHeight - 200)
-      state.panelHeight = `${height}px`
-      emitter.emit('render')
-      resizeEditor(state)
-    }
-    function stopMouseListener() {
-      window.removeEventListener('mousemove', handleMouseMove)
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', (e) => {
-      stopMouseListener()
+    window.addEventListener('mousemove', state.resizePanel)
+    // Stop resizing when mouse leaves window or enters the tabs area
+    document.body.addEventListener('mouseleave', () => {
+      emitter.emit('stop-resizing-panel')
+    }, { once: true })
+    document.querySelector('#tabs').addEventListener('mouseenter', () => {
+      emitter.emit('stop-resizing-panel')
     }, { once: true })
   })
-
-  emitter.on('clean-terminal', () => {
-    state.cache(XTerm, 'terminal').term.clear()
+  emitter.on('stop-resizing-panel', () => {
+    log('stop-resizing-panel')
+    window.removeEventListener('mousemove', state.resizePanel)
   })
 
-  // NAMING/RENAMING FILE
-  emitter.on('edit-filename', () => {
-    state.isEditingFilename = true
+  // SAVING
+  emitter.on('save', async () => {
+    log('save')
+    let response = canSave({
+      view: state.view,
+      isConnected: state.isConnected,
+      openFiles: state.openFiles,
+      editingFile: state.editingFile
+    })
+    if (response == false) {
+      log("can't save")
+      return
+    }
+
+    state.isSaving = true
+    emitter.emit('render')
+
+    // Get open file
+    let openFile = state.openFiles.find(f => f.id === state.editingFile)
+
+    let willOverwrite = false
+    const oldParentFolder = openFile.parentFolder
+    const isNewFile = oldParentFolder === null
+
+    if (isNewFile) {
+      // Define parent folder
+      if (openFile.source == 'board') {
+        openFile.parentFolder = state.boardNavigationPath
+      } else if (openFile.source == 'disk') {
+        openFile.parentFolder = state.diskNavigationPath
+      }
+
+    }
+
+    // Check if the current full path exists
+    let fullPathExists = false
+    if (openFile.source == 'board') {
+      await serial.getPrompt()
+      fullPathExists = await serial.fileExists(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    } else if (openFile.source == 'disk') {
+      fullPathExists = await disk.fileExists(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    }
+
+    if (isNewFile || !fullPathExists) {
+      // Redefine parent folder
+      if (openFile.source == 'board') {
+        openFile.parentFolder = state.boardNavigationPath
+        // Check for overwrite
+        await serial.getPrompt()
+        willOverwrite = await serial.fileExists(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          )
+        )
+      } else if (openFile.source == 'disk') {
+        openFile.parentFolder = state.diskNavigationPath
+        // Check for overwrite
+        willOverwrite = await disk.fileExists(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          )
+        )
+      }
+    }
+
+    if (willOverwrite) {
+      const confirmation = confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      if (!confirmation) {
+        state.isSaving = false
+        openFile.parentFolder = oldParentFolder
+        emitter.emit('render')
+        return
+      }
+    }
+
+    // SAVE
+    const contents = openFile.editor.editor.state.doc.toString()
+    try {
+      if (openFile.source == 'board') {
+        await serial.getPrompt()
+        await serial.saveFileContent(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          ),
+          contents,
+          (e) => {
+            state.savingProgress = e
+            emitter.emit('render')
+          }
+        )
+      } else if (openFile.source == 'disk') {
+        await disk.saveFileContent(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            openFile.parentFolder,
+            openFile.fileName
+          ),
+          contents
+        )
+      }
+    } catch(e) {
+      log('error', e)
+    }
+
+    openFile.hasChanges = false
+    state.isSaving = false
+    state.savingProgress = 0
+    emitter.emit('refresh-files')
     emitter.emit('render')
   })
-  emitter.on('save-filename', async (filename) => {
-    log('save-filename', filename)
-    filename = cleanCharacters(filename)
-    // no changes
-    if (state.selectedFile === filename) {
-      state.isEditingFilename = false
+
+  // TABS
+  emitter.on('select-tab', (id) => {
+    log('select-tab', id)
+    state.editingFile = id
+    emitter.emit('render')
+  })
+  emitter.on('close-tab', (id) => {
+    log('close-tab', id)
+    const currentTab = state.openFiles.find(f => f.id === id)
+    if (currentTab.hasChanges && currentTab.parentFolder !== null) {
+      let response = confirm("Your file has unsaved changes. Are you sure you want to proceed?")
+      if (!response) return false
+    }
+    state.openFiles = state.openFiles.filter(f => f.id !== id)
+    // state.editingFile = null
+
+    if(state.openFiles.length > 0) {
+      state.editingFile = state.openFiles[0].id
+    } else {
+      const newFile = createEmptyFile({
+        source: 'disk',
+        parentFolder: null
+      })
+      newFile.editor.onChange = function() {
+        newFile.hasChanges = true
+        emitter.emit('render')
+      }
+      state.openFiles.push(newFile)
+      state.editingFile = newFile.id
+    }
+
+    emitter.emit('render')
+  })
+
+  // FILE OPERATIONS
+  emitter.on('refresh-files', async () => {
+    log('refresh-files')
+    if (state.isLoadingFiles) return
+    state.isLoadingFiles = true
+    emitter.emit('render')
+
+    if (state.isConnected) {
+      state.boardFiles = await getBoardFiles(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          ''
+        )
+      )
+    } else {
+      state.boardFiles = []
+    }
+
+    state.diskFiles = await getDiskFiles(
+      disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        ''
+      )
+    )
+
+    emitter.emit('refresh-selected-files')
+    state.isLoadingFiles = false
+    emitter.emit('render')
+  })
+  emitter.on('refresh-selected-files', () => {
+    log('refresh-selected-files')
+    state.selectedFiles = state.selectedFiles.filter(f => {
+      if (f.source === 'board') {
+        if (!state.isConnected) return false
+        return state.boardFiles.find(g => f.fileName === g.fileName)
+      } else {
+        return state.diskFiles.find(g => f.fileName === g.fileName)
+      }
+    })
+    emitter.emit('render')
+  })
+
+  emitter.on('create-file', (device) => {
+    log('create-file', device)
+    if (state.creatingFile !== null) return
+    state.creatingFile = device
+    state.creatingFolder = null
+    emitter.emit('render')
+  })
+  emitter.on('finish-creating-file', async (value) => {
+    log('finish-creating', value)
+    if (!state.creatingFile) return
+
+    if (!value) {
+      state.creatingFile = null
       emitter.emit('render')
       return
     }
 
-    state.blocking = true
+    if (state.creatingFile == 'board' && state.isConnected) {
+      let willOverwrite = await checkBoardFile({
+        root: state.boardNavigationRoot,
+        parentFolder: state.boardNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite the file ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFile = null
+          emitter.emit('render')
+          return
+        }
+        // TODO: Remove existing file
+      }
+      await serial.saveFileContent(
+        serial.getFullPath(
+          '/',
+          state.boardNavigationPath,
+          value
+        ),
+        newFileContent
+      )
+    } else if (state.creatingFile == 'disk') {
+      let willOverwrite = await checkDiskFile({
+        root: state.diskNavigationRoot,
+        parentFolder: state.diskNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite the file ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFile = null
+          emitter.emit('render')
+          return
+        }
+        // TODO: Remove existing file
+      }
+      await disk.saveFileContent(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        ),
+        newFileContent
+      )
+    }
+
+    setTimeout(() => {
+      state.creatingFile = null
+      emitter.emit('refresh-files')
+      emitter.emit('render')
+    }, 200)
+  })
+  emitter.on('create-folder', (device) => {
+    log('create-folder', device)
+    if (state.creatingFolder !== null) return
+    state.creatingFolder = device
+    state.creatingFile = null
+    emitter.emit('render')
+  })
+  emitter.on('finish-creating-folder', async (value) => {
+    log('finish-creating-folder', value)
+    if (!state.creatingFolder) return
+
+    if (!value) {
+      state.creatingFolder = null
+      emitter.emit('render')
+      return
+    }
+
+    if (state.creatingFolder == 'board' && state.isConnected) {
+      let willOverwrite = await checkBoardFile({
+        root: state.boardNavigationRoot,
+        parentFolder: state.boardNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFolder = null
+          emitter.emit('render')
+          return
+        }
+        // Remove existing folder
+        await removeBoardFolder(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            value
+          )
+        )
+      }
+      await serial.createFolder(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          value
+        )
+      )
+    } else if (state.creatingFolder == 'disk') {
+      let willOverwrite = await checkDiskFile({
+        root: state.diskNavigationRoot,
+        parentFolder: state.diskNavigationPath,
+        fileName: value
+      })
+      if (willOverwrite) {
+        const confirmAction = confirm(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFolder = null
+          emitter.emit('render')
+          return
+        }
+        // Remove existing folder
+        await disk.removeFolder(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            value
+          )
+        )
+      }
+      await disk.createFolder(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          value
+        )
+      )
+    }
+
+    setTimeout(() => {
+      state.creatingFolder = null
+      emitter.emit('refresh-files')
+      emitter.emit('render')
+    }, 200)
+  })
+
+  emitter.on('remove-files', async () => {
+    log('remove-files') // and folders
+    state.isRemoving = true
     emitter.emit('render')
 
-    let oldFilename = state.selectedFile
-    state.selectedFile = filename
-    let deviceName = getDeviceName(state.selectedDevice)
+    let boardNames = state.selectedFiles
+      .filter(file => file.source === 'board')
+      .map(file => file.fileName)
 
-    let editor = state.cache(AceEditor, 'editor').editor
-    let contents = cleanCharacters(editor.getValue())
-    editor.setValue(contents)
+    let diskNames = state.selectedFiles
+      .filter(file => file.source === 'disk')
+      .map(file => file.fileName)
 
-    if (state.isConnected && state.selectedDevice === 'serial') {
-      await serial.get_prompt()
-      // Ask for confirmation to overwrite existing file
-      let confirmation = true
-      if (state.serialFiles.find(f => f.path === filename)) {
-        confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
-      }
+    let message = `You are about to delete the following files:\n\n`
+    if (boardNames.length) {
+      message += `From your board:\n`
+      boardNames.forEach(name => message += `${name}\n`)
+      message += `\n`
+    }
+    if (diskNames.length) {
+      message += `From your disk:\n`
+      diskNames.forEach(name => message += `${name}\n`)
+      message += `\n`
+    }
 
-      if (confirmation) {
-        emitter.emit('message', `Saving ${filename} on ${deviceName}.`)
-        const newPath = serial.getFullPath(
-          state.serialPath,
-          state.serialNavigation,
-          filename
-        )
-        if (state.serialFiles.find(f => f.path === oldFilename)) {
-          const oldPath = serial.getFullPath(
-            state.serialPath,
-            state.serialNavigation,
-            oldFilename
+    message += `Are you sure you want to proceed?`
+    const confirmAction = confirm(message, 'Cancel', 'Yes')
+    if (!confirmAction) {
+      state.isRemoving = false
+      emitter.emit('render')
+      return
+    }
+
+    for (let i in state.selectedFiles) {
+      const file = state.selectedFiles[i]
+      if (file.type == 'folder') {
+        if (file.source === 'board') {
+          await removeBoardFolder(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              file.fileName
+            )
           )
-          // If old name exists, save old file and rename
-          await serial.saveFileContent(
-            oldPath,
-            contents,
-            (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
-          )
-          await serial.renameFile(oldPath, newPath)
         } else {
-          // If old name doesn't exist create new file
-          await serial.saveFileContent(
-            newPath,
-            contents,
-            (e) => emitter.emit('message', `Saving ${filename} on ${deviceName}. ${e}`)
+          await disk.removeFolder(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              file.fileName
+            )
           )
         }
-        state.isEditingFilename = false
-        emitter.emit('message', `Saved`, 500)
       } else {
-        state.selectedFile = oldFilename
-        state.isEditingFilename = false
-        state.blocking = false
-        state.unsavedChanges = false
-        emitter.emit('render')
+        if (file.source === 'board') {
+          await serial.removeFile(
+            serial.getFullPath(
+              '/',
+              state.boardNavigationPath,
+              file.fileName
+            )
+          )
+        } else {
+          await disk.removeFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              file.fileName
+            )
+          )
+        }
       }
     }
 
-    if (state.diskPath !== null && state.selectedDevice === 'disk') {
-      // Ask for confirmation to overwrite existing file
-      let confirmation = true
-      if (state.diskFiles.find((f) => f.path === filename)) {
-        confirmation = confirm(`Do you want to overwrite ${filename} on ${deviceName}?`)
-      }
-      if (confirmation) {
-        emitter.emit('message', `Renaming`)
-        const newPath = disk.getFullPath(
-          state.diskPath,
-          state.diskNavigation,
-          filename
-        )
-        if (state.diskFiles.find((f) => f.path === oldFilename)) {
-          // If old name exists, save old file and rename
-          const oldPath = disk.getFullPath(
-            state.diskPath,
-            state.diskNavigation,
-            oldFilename
-          )
-          await disk.saveFileContent(oldPath, contents)
-          await disk.renameFile(oldPath, newPath)
-        } else {
-          // If old name doesn't exist create new file
-          await disk.saveFileContent(newPath, contents)
+    emitter.emit('refresh-files')
+    state.selectedFiles = []
+    state.isRemoving = false
+    emitter.emit('render')
+  })
+
+  emitter.on('rename-file', (source, item) => {
+    log('rename-file', source, item)
+    state.renamingFile = source
+    emitter.emit('render')
+  })
+  emitter.on('finish-renaming-file', async (value) => {
+    log('finish-renaming-file', value)
+
+    // You can only rename one file, the selected one
+    const file = state.selectedFiles[0]
+
+    if (!value || file.fileName == value) {
+      state.renamingFile = null
+      emitter.emit('render')
+      return
+    }
+
+    state.isSaving = true
+    emitter.emit('render')
+
+    // Check if new name overwrites something
+    if (state.renamingFile == 'board' && state.isConnected) {
+      // Check if it will overwrite something
+      const willOverwrite = await checkOverwrite({
+        fileNames: [ value ],
+        parentPath: disk.getFullPath(
+          state.boardNavigationRoot, state.boardNavigationPath, ''
+        ),
+        source: 'board'
+      })
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following file/folder on your board:\n\n`
+        message += `${value}\n\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.isSaving = false
+          state.renamingFile = null
+          emitter.emit('render')
+          return
         }
-        state.isEditingFilename = false
-        emitter.emit('message', `Saved`, 500)
-      } else {
-        state.selectedFile = oldFilename
-        state.isEditingFilename = false
-        emitter.emit('render')
+
+        if (file.type == 'folder') {
+          await removeBoardFolder(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              value
+            )
+          )
+        } else if (file.type == 'file') {
+          await serial.removeFile(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              value
+            )
+          )
+        }
+      }
+    } else if (state.renamingFile == 'disk') {
+      // Check if it will overwrite something
+      const willOverwrite = await checkOverwrite({
+        fileNames: [ value ],
+        parentPath: disk.getFullPath(
+          state.diskNavigationRoot, state.diskNavigationPath, ''
+        ),
+        source: 'disk'
+      })
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following file/folder on your disk:\n\n`
+        message += `${value}\n\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.isSaving = false
+          state.renamingFile = null
+          emitter.emit('render')
+          return
+        }
+
+        if (file.type == 'folder') {
+          await disk.removeFolder(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              value
+            )
+          )
+        } else if (file.type == 'file') {
+          await disk.removeFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              value
+            )
+          )
+        }
+
       }
     }
 
-    emitter.emit('update-files')
+    try {
+      if (state.renamingFile == 'board') {
+        await serial.renameFile(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            file.fileName
+          ),
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            value
+          )
+        )
+      } else {
+        await disk.renameFile(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            file.fileName
+          ),
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            value
+          )
+        )
+      }
+    } catch (e) {
+      alert(`The file ${file.fileName} could not be renamed to ${value}`)
+    }
+
+    state.isSaving = false
+    state.renamingFile = null
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+
+  emitter.on('rename-tab', (id) => {
+    log('rename-tab', id)
+    state.renamingTab = id
+    emitter.emit('render')
+  })
+  emitter.on('finish-renaming-tab', async (value) => {
+    log('finish-renaming-tab', value)
+
+    // You can only rename one tab, the active one
+    const openFile = state.openFiles.find(f => f.id === state.renamingTab)
+
+    if (!value || openFile.fileName == value) {
+      state.renamingTab = null
+      state.isSaving = false
+      emitter.emit('render')
+      return
+    }
+
+    let response = canSave({
+      view: state.view,
+      isConnected: state.isConnected,
+      openFiles: state.openFiles,
+      editingFile: state.editingFile
+    })
+    if (response == false) {
+      log("can't save")
+      return
+    }
+
+    state.isSaving = true
+    emitter.emit('render')
+
+    const oldParentFolder = openFile.parentFolder
+    const oldName = openFile.fileName
+    openFile.fileName = value
+
+    const isNewFile = oldParentFolder === null
+    let fullPathExists = false
+    if (!isNewFile) {
+      // Check if full path exists
+      if (openFile.source == 'board') {
+        fullPathExists = await serial.fileExists(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            openFile.parentFolder,
+            oldName
+          )
+        )
+      } else if (openFile.source == 'disk') {
+        fullPathExists = await disk.fileExists(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            openFile.parentFolder,
+            oldName
+          )
+        )
+      }
+    }
+    if (isNewFile || !fullPathExists) {
+      // Define parent folder
+      if (openFile.source == 'board') {
+        openFile.parentFolder = state.boardNavigationPath
+      } else if (openFile.source == 'disk') {
+        openFile.parentFolder = state.diskNavigationPath
+      }
+    }
+
+    // Check if it will overwrite
+    let willOverwrite = false
+    if (openFile.source == 'board') {
+      willOverwrite = await serial.fileExists(
+        serial.getFullPath(
+          state.boardNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    } else if (openFile.source == 'disk') {
+      willOverwrite = await disk.fileExists(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          openFile.parentFolder,
+          openFile.fileName
+        )
+      )
+    }
+
+    if (willOverwrite) {
+      const confirmation = confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      if (!confirmation) {
+        state.renamingTab = null
+        state.isSaving = false
+        openFile.fileName = oldName
+        emitter.emit('render')
+        return
+      }
+    }
+
+    if (fullPathExists) {
+      // SAVE FILE CONTENTS
+      const contents = openFile.editor.editor.state.doc.toString()
+      try {
+        if (openFile.source == 'board') {
+          await serial.getPrompt()
+          await serial.saveFileContent(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            contents,
+            (e) => {
+              state.savingProgress = e
+              emitter.emit('render')
+            }
+          )
+        } else if (openFile.source == 'disk') {
+          await disk.saveFileContent(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            contents
+          )
+        }
+      } catch (e) {
+        log('error', e)
+      }
+      // RENAME FILE
+      try {
+        if (openFile.source == 'board') {
+          await serial.renameFile(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            )
+          )
+        } else if (openFile.source == 'disk') {
+          await disk.renameFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              oldName
+            ),
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            )
+          )
+        }
+      } catch(e) {
+        log('error', e)
+      }
+    } else if (!fullPathExists) {
+      // SAVE FILE CONTENTS
+      const contents = openFile.editor.editor.state.doc.toString()
+      try {
+        if (openFile.source == 'board') {
+          await serial.getPrompt()
+          await serial.saveFileContent(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            ),
+            contents,
+            (e) => {
+              state.savingProgress = e
+              emitter.emit('render')
+            }
+          )
+        } else if (openFile.source == 'disk') {
+          await disk.saveFileContent(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              openFile.parentFolder,
+              openFile.fileName
+            ),
+            contents
+          )
+        }
+      } catch (e) {
+        log('error', e)
+      }
+    }
+
+    openFile.hasChanges = false
+    state.renamingTab = null
+    state.isSaving = false
+    state.savingProgress = 0
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+
+  emitter.on('toggle-file-selection', (file, source, event) => {
+    log('toggle-file-selection', file, source, event)
+    // Single file selection unless holding keyboard key
+    if (event && !event.ctrlKey && !event.metaKey) {
+      state.selectedFiles = [{
+        fileName: file.fileName,
+        type: file.type,
+        source: source,
+        parentFolder: file.parentFolder
+      }]
+      emitter.emit('render')
+      return
+    }
+    const isSelected = state.selectedFiles.find((f) => {
+      return f.fileName === file.fileName && f.source === source
+    })
+    if (isSelected) {
+      state.selectedFiles = state.selectedFiles.filter((f) => {
+        return !(f.fileName === file.fileName && f.source === source)
+      })
+    } else {
+      state.selectedFiles.push({
+        fileName: file.fileName,
+        type: file.type,
+        source: source,
+        parentFolder: file.parentFolder
+      })
+    }
+    emitter.emit('render')
+  })
+  emitter.on('open-selected-files', async () => {
+    log('open-selected-files')
+    let files = []
+    for (let i in state.selectedFiles) {
+      let selectedFile = state.selectedFiles[i]
+      let openFile = null
+      if (selectedFile.type == 'folder') {
+        // Don't open folders
+        continue
+      }
+      if (selectedFile.source == 'board') {
+        const fileContent = await serial.loadFile(
+          serial.getFullPath(
+            '/',
+            state.boardNavigationPath,
+            selectedFile.fileName
+          )
+        )
+        openFile = createFile({
+          parentFolder: state.boardNavigationPath,
+          fileName: selectedFile.fileName,
+          source: selectedFile.source,
+          content: fileContent
+        })
+        openFile.editor.onChange = function() {
+          openFile.hasChanges = true
+          emitter.emit('render')
+        }
+      } else if (selectedFile.source == 'disk') {
+        const fileContent = await disk.loadFile(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            selectedFile.fileName
+          )
+        )
+        openFile = createFile({
+          parentFolder: state.diskNavigationPath,
+          fileName: selectedFile.fileName,
+          source: selectedFile.source,
+          content: fileContent
+        })
+        openFile.editor.onChange = function() {
+          openFile.hasChanges = true
+          emitter.emit('render')
+        }
+      }
+      files.push(openFile)
+    }
+
+    files = files.filter((f) => { // find files to open
+      let isAlready = false
+      state.openFiles.forEach((g) => { // check if file is already open
+        if (
+          g.fileName == f.fileName
+          && g.source == f.source
+          && g.parentFolder == f.parentFolder
+        ) {
+          isAlready = true
+        }
+      })
+      return !isAlready
+    })
+
+    if (files.length > 0) {
+      state.openFiles = state.openFiles.concat(files)
+      state.editingFile = files[0].id
+    }
+
+    state.view = 'editor'
+    emitter.emit('render')
+  })
+  emitter.on('open-file', (source, file) => {
+    log('open-file', source, file)
+    state.selectedFiles = [{
+      fileName: file.fileName,
+      type: file.type,
+      source: source,
+      parentFolder: state[`${source}NavigationPath`] // XXX
+    }]
+    emitter.emit('open-selected-files')
+  })
+
+  // DOWNLOAD AND UPLOAD FILES
+  emitter.on('upload-files', async () => {
+    log('upload-files')
+    state.isTransferring = true
+    emitter.emit('render')
+
+    // Check which files will be overwritten on the board
+    const willOverwrite = await checkOverwrite({
+      source: 'board',
+      fileNames: state.selectedFiles.map(f => f.fileName),
+      parentPath: serial.getFullPath(
+        state.boardNavigationRoot,
+        state.boardNavigationPath,
+        ''
+      ),
+    })
+
+    if (willOverwrite.length > 0) {
+      let message = `You are about to overwrite the following files/folders on your board:\n\n`
+      willOverwrite.forEach(f => message += `${f.fileName}\n`)
+      message += `\n`
+      message += `Are you sure you want to proceed?`
+      const confirmAction = confirm(message, 'Cancel', 'Yes')
+      if (!confirmAction) {
+        state.isTransferring = false
+        emitter.emit('render')
+        return
+      }
+    }
+
+    for (let i in state.selectedFiles) {
+      const file = state.selectedFiles[i]
+      const srcPath = disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        file.fileName
+      )
+      const destPath = serial.getFullPath(
+        state.boardNavigationRoot,
+        state.boardNavigationPath,
+        file.fileName
+      )
+      if (file.type == 'folder') {
+        await uploadFolder(
+          srcPath, destPath,
+          (e) => {
+            state.transferringProgress = e
+            emitter.emit('render')
+          }
+        )
+      } else {
+        await serial.uploadFile(
+          srcPath, destPath,
+          (e) => {
+            state.transferringProgress = e
+            emitter.emit('render')
+          }
+        )
+      }
+    }
+
+    state.isTransferring = false
+    state.selectedFiles = []
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+  emitter.on('download-files', async () => {
+    log('download-files')
+    state.isTransferring = true
+    emitter.emit('render')
+
+    // Check which files will be overwritten on the disk
+    const willOverwrite = await checkOverwrite({
+      source: 'disk',
+      fileNames: state.selectedFiles.map(f => f.fileName),
+      parentPath: disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        ''
+      ),
+    })
+
+    if (willOverwrite.length > 0) {
+      let message = `You are about to overwrite the following files/folders on your disk:\n\n`
+      willOverwrite.forEach(f => message += `${f.fileName}\n`)
+      message += `\n`
+      message += `Are you sure you want to proceed?`
+      const confirmAction = confirm(message, 'Cancel', 'Yes')
+      if (!confirmAction) {
+        state.isTransferring = false
+        emitter.emit('render')
+        return
+      }
+    }
+
+    for (let i in state.selectedFiles) {
+      const file = state.selectedFiles[i]
+      const srcPath = serial.getFullPath(
+        state.boardNavigationRoot,
+        state.boardNavigationPath,
+        file.fileName
+      )
+      const destPath = disk.getFullPath(
+        state.diskNavigationRoot,
+        state.diskNavigationPath,
+        file.fileName
+      )
+      if (file.type == 'folder') {
+        await downloadFolder(
+          srcPath, destPath,
+          (e) => {
+            state.transferringProgress = e
+            emitter.emit('render')
+          }
+        )
+      } else {
+        await serial.downloadFile(
+          srcPath, destPath,
+          (e) => {
+            state.transferringProgress = e
+            emitter.emit('render')
+          }
+        )
+      }
+    }
+
+    state.isTransferring = false
+    state.selectedFiles = []
+    emitter.emit('refresh-files')
+    emitter.emit('render')
   })
 
   // NAVIGATION
-  emitter.on('navigate-to', async (device, localPath) => {
-    log('navigate-to', device, localPath)
-    state.blocking = true
+  emitter.on('navigate-board-folder', (folder) => {
+    log('navigate-board-folder', folder)
+    state.boardNavigationPath = serial.getNavigationPath(
+      state.boardNavigationPath,
+      folder
+    )
+    emitter.emit('refresh-files')
     emitter.emit('render')
-    if (device === 'serial') {
-      state.serialNavigation = serial.getNavigationPath(
-        state.serialNavigation, localPath
-      )
-    }
-    if (device === 'disk') {
-      state.diskNavigation = disk.getNavigationPath(
-        state.diskNavigation, localPath
-      )
-    }
-    if (state.selectedDevice === device) {
-      state.selectedFile = null
-      state.unsavedChanges = false
-    }
-    emitter.emit('update-files')
   })
-  emitter.on('navigate-to-parent', async (device) => {
-    log('navigate-to-parent', device, state.serialNavigation, state.diskNavigation)
-    state.blocking = true
-    emitter.emit('render')
-    if (device === 'disk') {
-      state.diskNavigation = disk.getParentPath(state.diskNavigation)
-    }
-    if (device === 'serial') {
-      state.serialNavigation = serial.getParentPath(state.serialNavigation)
-    }
-
-    if (state.selectedDevice === device) {
-      state.selectedFile = null
-      state.unsavedChanges = false
-    }
-
-    emitter.emit('update-files')
-  })
-
-  emitter.on('message', (text, timeout) => {
-    log('message', text)
-    state.messageText = text
-    state.isShowingMessage = true
-    if (timeout) {
-      clearInterval(state.messageTimeout)
-      state.messageTimeout = setTimeout(() => {
-        state.isShowingMessage = false
-        emitter.emit('render')
-      }, timeout)
-    }
+  emitter.on('navigate-board-parent', () => {
+    log('navigate-board-parent')
+    state.boardNavigationPath = serial.getNavigationPath(
+      state.boardNavigationPath,
+      '..'
+    )
+    emitter.emit('refresh-files')
     emitter.emit('render')
   })
 
-  window.addEventListener('resize', () => {
-    console.log('resize window')
-    state.cache(AceEditor, 'editor').render()
+  emitter.on('navigate-disk-folder', (folder) => {
+    log('navigate-disk-folder', folder)
+    state.diskNavigationPath = disk.getNavigationPath(
+      state.diskNavigationPath,
+      folder
+    )
+    emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+  emitter.on('navigate-disk-parent', () => {
+    log('navigate-disk-parent')
+    state.diskNavigationPath = disk.getNavigationPath(
+      state.diskNavigationPath,
+      '..'
+    )
+    emitter.emit('refresh-files')
+    emitter.emit('render')
   })
 
-}
+  function createFile(args) {
+    const {
+      source,
+      parentFolder,
+      fileName,
+      content = newFileContent,
+      hasChanges = false
+    } = args
+    const id = generateHash()
+    const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
+    editor.content = content
+    return {
+      id,
+      source,
+      parentFolder,
+      fileName,
+      editor,
+      hasChanges
+    }
+  }
 
-function resizeEditor(state) {
-  const el = state.cache(AceEditor, 'editor').element
-  if (state.isTerminalOpen || state.isFilesOpen) {
-    el.style.height = `calc(100% - ${state.panelHeight || DEFAULT_PANEL_HEIGHT})`
-  } else {
-    el.style.height = '100%'
+  function createEmptyFile({ source, parentFolder }) {
+    return createFile({
+      fileName: generateFileName(),
+      parentFolder,
+      source,
+      hasChanges: true
+    })
   }
 }
 
-function cleanCharacters(str) {
-  return str.replace(/[\u{0080}-\u{FFFF}]/gu,"")
+
+function getDiskNavigationRootFromStorage() {
+  let diskNavigationRoot = localStorage.getItem('diskNavigationRoot')
+  if (!diskNavigationRoot || diskNavigationRoot == 'null') {
+    diskNavigationRoot = null
+  }
+  return diskNavigationRoot
 }
 
-function getDeviceName(dev) {
-  return dev === 'serial' ? 'board' : 'disk'
+function saveDiskNavigationRootToStorage(path) {
+  try {
+    localStorage.setItem('diskNavigationRoot', path)
+    return true
+  } catch(e) {
+    log('saveDiskNavigationRootToStorage', e)
+    return false
+  }
+}
+
+async function selectDiskFolder() {
+  let { folder, files } = await disk.openFolder()
+  if (folder !== null && folder != 'null') {
+    return folder
+  }
+  return null
+}
+
+async function getDiskFiles(path) {
+  let files = await disk.ilistFiles(path)
+  files = files.map(f => ({
+    fileName: f.path,
+    type: f.type
+  }))
+  files = files.sort(sortFilesAlphabetically)
+  return files
+}
+
+function sortFilesAlphabetically(entryA, entryB) {
+  return(entryA.fileName.localeCompare(entryB.fileName));
+}
+
+function generateHash() {
+  return `${Date.now()}_${parseInt(Math.random()*1024)}`
+}
+
+async function getAvailablePorts() {
+  return await serial.loadPorts()
+}
+
+async function getBoardFiles(path) {
+  await serial.getPrompt()
+  let files = await serial.ilistFiles(path)
+  files = files.map(f => ({
+    fileName: f[0],
+    type: f[1] === 0x4000 ? 'folder' : 'file'
+  }))
+  files = files.sort(sortFilesAlphabetically)
+  return files
+}
+
+function checkDiskFile({ root, parentFolder, fileName }) {
+  if (root == null || parentFolder == null || fileName == null) return false
+  return disk.fileExists(
+    disk.getFullPath(root, parentFolder, fileName)
+  )
+}
+
+async function checkBoardFile({ root, parentFolder, fileName }) {
+  if (root == null || parentFolder == null || fileName == null) return false
+  await serial.getPrompt()
+  return serial.fileExists(
+    serial.getFullPath(root, parentFolder, fileName)
+  )
+}
+
+async function checkOverwrite({ fileNames = [], parentPath, source }) {
+  let files = []
+  if (source === 'board') {
+    files = await getBoardFiles(parentPath)
+  } else {
+    files = await getDiskFiles(parentPath)
+  }
+  return files.filter((f) => fileNames.indexOf(f.fileName) !== -1)
+}
+
+function generateFileName(filename) {
+  if (filename) {
+    let name = filename.split('.py')
+    return `${name[0]}_${Date.now()}.py`
+  } else {
+    return `${pickRandom(adjectives)}_${pickRandom(nouns)}.py`
+  }
+}
+
+function pickRandom(array) {
+  return array[parseInt(Math.random()*array.length)]
+}
+
+function canSave({ view, isConnected, openFiles, editingFile }) {
+  const isEditor = view === 'editor'
+  const file = openFiles.find(f => f.id === editingFile)
+  // Can only save on editor
+  if (!isEditor) return false
+  // Can always save disk files
+  if (file.source === 'disk') return true
+  // Can save board files if connected
+  return isConnected
+}
+
+function canExecute({ view, isConnected }) {
+  const isEditor = view === 'editor'
+  return isEditor && isConnected
+}
+
+function canDownload({ isConnected, selectedFiles }) {
+  const selectedDiskFiles = selectedFiles.filter((f) => f.source === 'disk')
+  return isConnected
+      && selectedFiles.length > 0
+      && selectedDiskFiles.length === 0
+}
+
+function canUpload({ isConnected, selectedFiles }) {
+  const selectedBoardFiles = selectedFiles.filter((f) => f.source === 'board')
+  return isConnected
+      && selectedFiles.length > 0
+      && selectedBoardFiles.length === 0
+}
+
+function canEdit({ selectedFiles }) {
+  const files = selectedFiles.filter((f) => f.type == 'file')
+  return files.length != 0
+}
+
+function toggleFileSelection({ fileName, source, selectedFiles }) {
+  let result = []
+  let file = selectedFiles.find((f) => {
+    return f.fileName === fileName && f.source === source
+  })
+  if (file) {
+    // filter file out
+    result = selectedFiles.filter((f) => {
+      return f.fileName !== fileName && f.source !== source
+    })
+  } else {
+    // push file
+    selectedFiles.push({ fileName, source })
+  }
+  return result
+}
+
+async function removeBoardFolder(fullPath) {
+  // TODO: Replace with getting the file tree from the board and deleting one by one
+  let output = await serial.execFile('./ui/arduino/helpers.py')
+  await serial.run(`delete_folder('${fullPath}')`)
+}
+
+async function uploadFolder(srcPath, destPath, dataConsumer) {
+  dataConsumer = dataConsumer || function() {}
+  await serial.createFolder(destPath)
+  let allFiles = await disk.ilistAllFiles(srcPath)
+  for (let i in allFiles) {
+    const file = allFiles[i]
+    const relativePath = file.path.substring(srcPath.length)
+    if (file.type === 'folder') {
+      await serial.createFolder(
+        serial.getFullPath(
+          destPath,
+          relativePath,
+          ''
+        )
+      )
+    } else {
+      await serial.uploadFile(
+        disk.getFullPath(srcPath, relativePath, ''),
+        serial.getFullPath(destPath, relativePath, ''),
+        dataConsumer
+      )
+    }
+  }
+}
+
+async function downloadFolder(srcPath, destPath, dataConsumer) {
+  dataConsumer = dataConsumer || function() {}
+  await disk.createFolder(destPath)
+  let output = await serial.execFile('./ui/arduino/helpers.py')
+  output = await serial.run(`ilist_all('${srcPath}')`)
+  let files = []
+  try {
+    // Extracting the json output from serial response
+    output = output.substring(
+      output.indexOf('OK')+2,
+      output.indexOf('\x04')
+    )
+    files = JSON.parse(output)
+  } catch (e) {
+    log('error', output)
+  }
+  for (let i in files) {
+    const file = files[i]
+    const relativePath = file.path.substring(srcPath.length)
+    if (file.type == 'folder') {
+      await disk.createFolder(
+        disk.getFullPath( destPath, relativePath, '')
+      )
+    } else {
+      await serial.downloadFile(
+        serial.getFullPath(srcPath, relativePath, ''),
+        serial.getFullPath(destPath, relativePath, '')
+      )
+    }
+  }
 }

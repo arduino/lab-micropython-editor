@@ -272,6 +272,7 @@ async function store(state, emitter) {
     // Check if the current full path exists
     let fullPathExists = false
     if (openFile.source == 'board') {
+      await serial.get_prompt()
       fullPathExists = await serial.fileExists(
         serial.getFullPath(
           state.boardNavigationRoot,
@@ -294,6 +295,7 @@ async function store(state, emitter) {
       if (openFile.source == 'board') {
         openFile.parentFolder = state.boardNavigationPath
         // Check for overwrite
+        await serial.get_prompt()
         willOverwrite = await serial.fileExists(
           serial.getFullPath(
             state.boardNavigationRoot,

@@ -2,8 +2,8 @@ console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
 
-const Micropython = require('micropython.js')
-const board = new Micropython()
+const MicroPython = require('micropython.js')
+const board = new MicroPython()
 board.chunk_size = 192
 board.chunk_sleep = 200
 

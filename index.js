@@ -23,11 +23,17 @@ function createWindow () {
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
 
-  registerIPCHandlers(win, ipcMain)
+  registerIPCHandlers(win, ipcMain, app)
   registerMenu(win)
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+  // app.on('window-all-closed', () => {
+  //   if (process.platform !== 'darwin') app.quit()
+  // })
 }
 
 
 // TODO: Loading splash screen
-
 app.whenReady().then(createWindow)

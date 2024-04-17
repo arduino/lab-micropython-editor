@@ -1303,6 +1303,15 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
+  win.beforeClose(async () => {
+    const hasChanges = !!state.openFiles.find(f => f.parentFolder && f.hasChanges)
+    if (hasChanges) {
+      const response = await confirm('You may have unsaved changes. Are you sure you want to proceed?', 'Yes', 'Cancel')
+      if (!response) return false
+    }
+    await win.confirmClose()
+  })
+
   function createFile(args) {
     const {
       source,

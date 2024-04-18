@@ -4,12 +4,12 @@ const path = require('path')
 
 async function openFolderDialog(win) {
   // https://stackoverflow.com/questions/46027287/electron-open-folder-dialog
-  let dir = await dialog.showOpenDialog(win, { properties: [ 'openDirectory' ] })
+  const dir = await dialog.showOpenDialog(win, { properties: [ 'openDirectory' ] })
   return dir.filePaths[0] || null
 }
 
 function listFolder(folder) {
-  files = fs.readdirSync(path.resolve(folder))
+  let files = fs.readdirSync(path.resolve(folder))
   // Filter out directories
   files = files.filter(f => {
     let filePath = path.resolve(folder, f)
@@ -38,7 +38,7 @@ function ilistFolder(folder) {
 
 function getAllFiles(dirPath, arrayOfFiles) {
   // https://coderrocketfuel.com/article/recursively-list-all-the-files-in-a-directory-using-node-js
-  files = ilistFolder(dirPath)
+  let files = ilistFolder(dirPath)
   arrayOfFiles = arrayOfFiles || []
   files.forEach(function(file) {
     const p = path.join(dirPath, file.path)

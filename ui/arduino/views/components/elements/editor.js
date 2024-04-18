@@ -37,7 +37,6 @@ class CodeMirrorEditor extends Component {
   }
 
   updateScrollPosition(e) {
-    console.log(e.target.scrollTop)
     this.scrollTop = e.target.scrollTop
   }
 

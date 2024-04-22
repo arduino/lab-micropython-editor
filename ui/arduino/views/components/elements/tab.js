@@ -57,7 +57,7 @@ function Tab(args) {
   }
 
   function selectTab(e) {
-    if(e.target.tagName === 'BUTTON' || e.target.tagName === 'IMG') return
+    if(e.target.classList.contains('close-tab')) return
     onSelectTab(e)
   }
 
@@ -71,9 +71,9 @@ function Tab(args) {
       <div class="text">
         ${hasChanges ? '*' : ''} ${text}
       </div>
-      <div class="options">
-        <button onclick=${onCloseTab}>
-          <img class="icon" src="media/close.svg" />
+      <div class="options close-tab">
+        <button class="close-tab" onclick=${onCloseTab}>
+          <img class="close-tab icon" src="media/close.svg" />
         </button>
       </div>
     </div>

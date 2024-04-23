@@ -7,7 +7,7 @@ const registerMenu = require('./backend/menu.js')
 
 let win = null // main window
 let splash = null
-let splashTimeout = null
+let splashTimestamp = null
 
 // START APP
 function createWindow () {
@@ -25,22 +25,27 @@ function createWindow () {
   })
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
+
   // If the app takes a while to open, show splash screen
-  splashTimeout = setTimeout(() => {
-    // Create the splash screen
-    splash = new BrowserWindow({
-      width: 560,
-      height: 180,
-      transparent: true,
-      frame: false,
-      alwaysOnTop: true
-    });
-    splash.loadFile('ui/arduino/splash.html')
-  }, 250)
+  // Create the splash screen
+  splash = new BrowserWindow({
+    width: 450,
+    height: 140,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true
+  });
+  splash.loadFile('ui/arduino/splash.html')
+  splashTimestamp = Date.now()
 
   win.once('ready-to-show', () => {
-    clearTimeout(splashTimeout)
-    if (splash) splash.destroy()
+    if (Date.now()-splashTimestamp > 1000) {
+      splash.destroy()
+    } else {
+      setTimeout(() => {
+        splash.destroy()
+      }, 500)
+    }
     win.show()
   })
 

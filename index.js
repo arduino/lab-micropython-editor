@@ -6,6 +6,8 @@ const registerIPCHandlers = require('./backend/ipc.js')
 const registerMenu = require('./backend/menu.js')
 
 let win = null // main window
+let splash = null
+let splashTimeout = null
 
 // START APP
 function createWindow () {
@@ -17,11 +19,30 @@ function createWindow () {
       nodeIntegration: false,
       webSecurity: true,
       enableRemoteModule: false,
-      preload: path.join(__dirname, "preload.js")
+      preload: path.join(__dirname, "preload.js"),
+      show: false
     }
   })
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
+  // If the app takes a while to open, show splash screen
+  splashTimeout = setTimeout(() => {
+    // Create the splash screen
+    splash = new BrowserWindow({
+      width: 560,
+      height: 180,
+      transparent: true,
+      frame: false,
+      alwaysOnTop: true
+    });
+    splash.loadFile('ui/arduino/splash.html')
+  }, 250)
+
+  win.once('ready-to-show', () => {
+    clearTimeout(splashTimeout)
+    if (splash) splash.destroy()
+    win.show()
+  })
 
   registerIPCHandlers(win, ipcMain, app)
   registerMenu(win)
@@ -29,11 +50,6 @@ function createWindow () {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-  // app.on('window-all-closed', () => {
-  //   if (process.platform !== 'darwin') app.quit()
-  // })
 }
 
-
-// TODO: Loading splash screen
-app.whenReady().then(createWindow)
+app.on('ready', createWindow)

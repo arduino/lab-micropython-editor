@@ -4,7 +4,6 @@ const openAboutWindow = require('about-window').default
 
 module.exports = function registerMenu(win) {
   const isMac = process.platform === 'darwin'
-  const isDev = !app.isPackaged
   const template = [
     ...(isMac ? [{
       label: app.name,
@@ -56,17 +55,13 @@ module.exports = function registerMenu(win) {
       label: 'View',
       submenu: [
         { role: 'reload' },
+        { role: 'toggleDevTools' },
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        ...(isDev ? [
-          { type: 'separator' },
-          { role: 'toggleDevTools' },
-        ]:[
-        ])
       ]
     },
     {

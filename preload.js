@@ -13,10 +13,10 @@ const Serial = {
     return ports.filter(p => p.vendorId && p.productId)
   },
   connect: async (path) => {
-    return await board.open(path)
+    return board.open(path)
   },
   disconnect: async () => {
-    return await board.close()
+    return board.close()
   },
   run: async (code) => {
     return board.run(code)

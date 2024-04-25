@@ -1198,7 +1198,7 @@ async function store(state, emitter) {
         await serial.uploadFile(
           srcPath, destPath,
           (e) => {
-            state.transferringProgress = e
+            state.transferringProgress = `${file.fileName}: ${e}`
             emitter.emit('render')
           }
         )

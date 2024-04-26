@@ -145,6 +145,9 @@ const Disk = {
   },
   fileExists: async (filePath) => {
     return ipcRenderer.invoke('file-exists', filePath)
+  },
+  getAppPath: () => {
+    return ipcRenderer.invoke('get-app-path')
   }
 }
 
@@ -153,7 +156,8 @@ const Window = {
     ipcRenderer.invoke('set-window-size', minWidth, minHeight)
   },
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
-  confirmClose: () => ipcRenderer.invoke('confirm-close')
+  confirmClose: () => ipcRenderer.invoke('confirm-close'),
+  isPackaged: () => ipcRenderer.invoke('is-packaged')
 }
 
 

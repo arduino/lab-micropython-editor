@@ -113,6 +113,15 @@ module.exports = function registerIPCHandlers(win, ipcMain, app) {
     app.exit()
   })
 
+  ipcMain.handle('is-packaged', () => {
+    return app.isPackaged
+  })
+
+  ipcMain.handle('get-app-path', () => {
+    console.log('ipcMain', 'get-app-path')
+    return app.getAppPath()
+  })
+
   win.on('close', (event) => {
     console.log('BrowserWindow', 'close')
     event.preventDefault()

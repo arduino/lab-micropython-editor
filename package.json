@@ -21,6 +21,7 @@
   "build": {
     "appId": "cc.arduino.micropython-lab",
     "artifactName": "${productName}-${os}_${arch}.${ext}",
+    "extraResources": "./ui/arduino/helpers.py",
     "mac": {
       "target": "zip",
       "icon": "build_resources/icon.icns"

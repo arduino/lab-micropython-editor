@@ -3,15 +3,7 @@ class CodeMirrorEditor extends Component {
     super()
     this.editor = null
     this.content = '# empty file'
-  }
-
-  load(el) {
-    const onCodeChange = (update) => {
-      // console.log('code change', this.content)
-      this.content = update.state.doc.toString()
-      this.onChange()
-    }
-    this.editor = createEditor(this.content, el, onCodeChange)
+    this.scrollTop = 0
   }
 
   createElement(content) {
@@ -19,8 +11,33 @@ class CodeMirrorEditor extends Component {
     return html`<div id="code-editor"></div>`
   }
 
+
+  load(el) {
+    const onCodeChange = (update) => {
+      this.content = update.state.doc.toString()
+      this.onChange()
+    }
+    this.editor = createEditor(this.content, el, onCodeChange)
+
+    setTimeout(() => {
+      this.editor.scrollDOM.addEventListener('scroll', this.updateScrollPosition.bind(this))
+      this.editor.scrollDOM.scrollTo({
+        top: this.scrollTop,
+        left: 0
+      })
+    }, 10)
+  }
+
   update() {
     return false
+  }
+
+  unload() {
+    this.editor.scrollDOM.removeEventListener('scroll', this.updateScrollPosition)
+  }
+
+  updateScrollPosition(e) {
+    this.scrollTop = e.target.scrollTop
   }
 
   onChange() {

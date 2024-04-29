@@ -24,7 +24,8 @@ jobs:
         config:
           - os: windows-2019
           - os: ubuntu-latest
-          - os: macos-latest
+          - os: macos-13
+          - os: macos-14
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 
@@ -99,6 +100,8 @@ jobs:
             name: Arduino-Lab-for-MicroPython_Linux_X86-64
           - path: "*-mac_x64.zip"
             name: Arduino-Lab-for-MicroPython_macOS_X86-64
+          - path: "*-mac_arm64.zip"
+            name: Arduino-Lab-for-MicroPython_macOS_arm-64
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
           # - path: "*Windows_64bit.msi"

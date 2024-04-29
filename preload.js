@@ -13,10 +13,10 @@ const Serial = {
     return ports.filter(p => p.vendorId && p.productId)
   },
   connect: async (path) => {
-    return await board.open(path)
+    return board.open(path)
   },
   disconnect: async () => {
-    return await board.close()
+    return board.close()
   },
   run: async (code) => {
     return board.run(code)
@@ -145,14 +145,21 @@ const Disk = {
   },
   fileExists: async (filePath) => {
     return ipcRenderer.invoke('file-exists', filePath)
+  },
+  getAppPath: () => {
+    return ipcRenderer.invoke('get-app-path')
   }
 }
 
 const Window = {
   setWindowSize: (minWidth, minHeight) => {
     ipcRenderer.invoke('set-window-size', minWidth, minHeight)
-  }
+  },
+  beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
+  confirmClose: () => ipcRenderer.invoke('confirm-close'),
+  isPackaged: () => ipcRenderer.invoke('is-packaged')
 }
+
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)

@@ -1021,17 +1021,19 @@ async function store(state, emitter) {
 
   emitter.on('toggle-file-selection', (file, source, event) => {
     log('toggle-file-selection', file, source, event)
+    let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
     // Single file selection unless holding keyboard key
     if (event && !event.ctrlKey && !event.metaKey) {
       state.selectedFiles = [{
         fileName: file.fileName,
         type: file.type,
         source: source,
-        parentFolder: file.parentFolder
+        parentFolder: parentFolder
       }]
       emitter.emit('render')
       return
     }
+
     const isSelected = state.selectedFiles.find((f) => {
       return f.fileName === file.fileName && f.source === source
     })
@@ -1044,79 +1046,89 @@ async function store(state, emitter) {
         fileName: file.fileName,
         type: file.type,
         source: source,
-        parentFolder: file.parentFolder
+        parentFolder: parentFolder
       })
     }
     emitter.emit('render')
   })
   emitter.on('open-selected-files', async () => {
     log('open-selected-files')
-    let files = []
+    let filesToOpen = []
+    let filesAlreadyOpen = []
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
-      let openFile = null
       if (selectedFile.type == 'folder') {
         // Don't open folders
         continue
       }
-      if (selectedFile.source == 'board') {
-        const fileContent = await serial.loadFile(
-          serial.getFullPath(
-            '/',
-            state.boardNavigationPath,
-            selectedFile.fileName
-          )
-        )
-        openFile = createFile({
-          parentFolder: state.boardNavigationPath,
-          fileName: selectedFile.fileName,
-          source: selectedFile.source,
-          content: fileContent
-        })
-        openFile.editor.onChange = function() {
-          openFile.hasChanges = true
-          emitter.emit('render')
-        }
-      } else if (selectedFile.source == 'disk') {
-        const fileContent = await disk.loadFile(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            state.diskNavigationPath,
-            selectedFile.fileName
-          )
-        )
-        openFile = createFile({
-          parentFolder: state.diskNavigationPath,
-          fileName: selectedFile.fileName,
-          source: selectedFile.source,
-          content: fileContent
-        })
-        openFile.editor.onChange = function() {
-          openFile.hasChanges = true
-          emitter.emit('render')
-        }
-      }
-      files.push(openFile)
-    }
+      // ALl good until here
 
-    files = files.filter((f) => { // find files to open
-      let isAlready = false
-      state.openFiles.forEach((g) => { // check if file is already open
-        if (
-          g.fileName == f.fileName
-          && g.source == f.source
-          && g.parentFolder == f.parentFolder
-        ) {
-          isAlready = true
-        }
+      const alreadyOpen = state.openFiles.find((f) => {
+        return f.fileName == selectedFile.fileName
+              && f.source == selectedFile.source
+              && f.parentFolder == selectedFile.parentFolder
       })
-      return !isAlready
-    })
+      console.log('already open', alreadyOpen)
 
-    if (files.length > 0) {
-      state.openFiles = state.openFiles.concat(files)
-      state.editingFile = files[0].id
+      if (!alreadyOpen) {
+        // This file is not open yet,
+        // load content and append it to the list of files to open
+        let file = null
+        if (selectedFile.source == 'board') {
+          const fileContent = await serial.loadFile(
+            serial.getFullPath(
+              state.boardNavigationRoot,
+              state.boardNavigationPath,
+              selectedFile.fileName
+            )
+          )
+          file = createFile({
+            parentFolder: state.boardNavigationPath,
+            fileName: selectedFile.fileName,
+            source: selectedFile.source,
+            content: fileContent
+          })
+          file.editor.onChange = function() {
+            file.hasChanges = true
+            emitter.emit('render')
+          }
+        } else if (selectedFile.source == 'disk') {
+          const fileContent = await disk.loadFile(
+            disk.getFullPath(
+              state.diskNavigationRoot,
+              state.diskNavigationPath,
+              selectedFile.fileName
+            )
+          )
+          file = createFile({
+            parentFolder: state.diskNavigationPath,
+            fileName: selectedFile.fileName,
+            source: selectedFile.source,
+            content: fileContent
+          })
+          file.editor.onChange = function() {
+            file.hasChanges = true
+            emitter.emit('render')
+          }
+        }
+        filesToOpen.push(file)
+      } else {
+        // This file is already open,
+        // append it to the list of files that are already open
+        filesAlreadyOpen.push(alreadyOpen)
+      }
     }
+
+    // If opening an already open file, switch to its tab
+    if (filesAlreadyOpen.length > 0) {
+      state.editingFile = filesAlreadyOpen[0].id
+    }
+    // If there are new files to open, they take priority
+    if (filesToOpen.length > 0) {
+      state.editingFile = filesToOpen[0].id
+    }
+
+    state.openFiles = state.openFiles.concat(filesToOpen)
 
     state.view = 'editor'
     emitter.emit('render')
@@ -1303,6 +1315,15 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
+  win.beforeClose(async () => {
+    const hasChanges = !!state.openFiles.find(f => f.parentFolder && f.hasChanges)
+    if (hasChanges) {
+      const response = await confirm('You may have unsaved changes. Are you sure you want to proceed?', 'Yes', 'Cancel')
+      if (!response) return false
+    }
+    await win.confirmClose()
+  })
+
   function createFile(args) {
     const {
       source,
@@ -1467,26 +1488,9 @@ function canEdit({ selectedFiles }) {
   return files.length != 0
 }
 
-function toggleFileSelection({ fileName, source, selectedFiles }) {
-  let result = []
-  let file = selectedFiles.find((f) => {
-    return f.fileName === fileName && f.source === source
-  })
-  if (file) {
-    // filter file out
-    result = selectedFiles.filter((f) => {
-      return f.fileName !== fileName && f.source !== source
-    })
-  } else {
-    // push file
-    selectedFiles.push({ fileName, source })
-  }
-  return result
-}
-
 async function removeBoardFolder(fullPath) {
   // TODO: Replace with getting the file tree from the board and deleting one by one
-  let output = await serial.execFile('./ui/arduino/helpers.py')
+  let output = await serial.execFile(await getHelperFullPath())
   await serial.run(`delete_folder('${fullPath}')`)
 }
 
@@ -1518,7 +1522,7 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
 async function downloadFolder(srcPath, destPath, dataConsumer) {
   dataConsumer = dataConsumer || function() {}
   await disk.createFolder(destPath)
-  let output = await serial.execFile('./ui/arduino/helpers.py')
+  let output = await serial.execFile(await getHelperFullPath())
   output = await serial.run(`ilist_all('${srcPath}')`)
   let files = []
   try {
@@ -1544,5 +1548,22 @@ async function downloadFolder(srcPath, destPath, dataConsumer) {
         serial.getFullPath(destPath, relativePath, '')
       )
     }
+  }
+}
+
+async function getHelperFullPath() {
+  const appPath = await disk.getAppPath()
+  if (await win.isPackaged()) {
+    return disk.getFullPath(
+      appPath,
+      '..',
+      'ui/arduino/helpers.py'
+    )
+  } else {
+    return disk.getFullPath(
+      appPath,
+      'ui/arduino/helpers.py',
+      ''
+    )
   }
 }

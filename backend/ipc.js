@@ -6,7 +6,7 @@ const {
   getAllFiles
 } = require('./helpers.js')
 
-module.exports = function registerIPCHandlers(win, ipcMain) {
+module.exports = function registerIPCHandlers(win, ipcMain, app) {
   ipcMain.handle('open-folder', async (event) => {
     console.log('ipcMain', 'open-folder')
     const folder = await openFolderDialog(win)
@@ -106,5 +106,25 @@ module.exports = function registerIPCHandlers(win, ipcMain) {
     }
 
     win.setMinimumSize(minWidth, minHeight)
+  })
+
+  ipcMain.handle('confirm-close', () => {
+    console.log('ipcMain', 'confirm-close')
+    app.exit()
+  })
+
+  ipcMain.handle('is-packaged', () => {
+    return app.isPackaged
+  })
+
+  ipcMain.handle('get-app-path', () => {
+    console.log('ipcMain', 'get-app-path')
+    return app.getAppPath()
+  })
+
+  win.on('close', (event) => {
+    console.log('BrowserWindow', 'close')
+    event.preventDefault()
+    win.webContents.send('check-before-close')
   })
 }

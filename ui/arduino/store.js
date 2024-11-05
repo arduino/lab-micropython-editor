@@ -406,24 +406,36 @@ async function store(state, emitter) {
     emitter.emit('render')
 
     if (state.isConnected) {
-      state.boardFiles = await getBoardFiles(
-        serial.getFullPath(
-          state.boardNavigationRoot,
-          state.boardNavigationPath,
-          ''
+      try {
+        state.boardFiles = await getBoardFiles(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            ''
+          )
         )
-      )
+      } catch (e) {
+        state.boardFiles = []
+      }
     } else {
       state.boardFiles = []
     }
 
-    state.diskFiles = await getDiskFiles(
-      disk.getFullPath(
-        state.diskNavigationRoot,
-        state.diskNavigationPath,
-        ''
+    try {
+      state.diskFiles = await getDiskFiles(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          ''
+        )
       )
-    )
+    } catch (e) {
+      state.diskNavigationRoot = null
+      state.diskNavigationPath = '/'
+      state.isLoadingFiles = false
+      emitter.emit('render')
+      return
+    }
 
     emitter.emit('refresh-selected-files')
     state.isLoadingFiles = false

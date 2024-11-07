@@ -1324,7 +1324,7 @@ async function store(state, emitter) {
   })
 
   win.beforeClose(async () => {
-    const hasChanges = !!state.openFiles.find(f => f.parentFolder && f.hasChanges)
+    const hasChanges = !!state.openFiles.find(f => f.hasChanges)
     if (hasChanges) {
       const response = await confirm('You may have unsaved changes. Are you sure you want to proceed?', 'Yes', 'Cancel')
       if (!response) return false

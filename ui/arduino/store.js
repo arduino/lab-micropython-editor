@@ -117,10 +117,6 @@ async function store(state, emitter) {
     // Recover from getting stuck in raw repl
     await serial.getPrompt()
 
-    // Make sure there is a lib folder
-    log('creating lib folder')
-    await serial.createFolder('/lib')
-
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true

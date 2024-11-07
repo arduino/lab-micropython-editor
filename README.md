@@ -62,7 +62,7 @@ In order for the UI code to be independent of Electron code, there is an API def
 
 There are 3 main operation "channels": Serial communication, local filesystem and window operations. These channels offer methods that should always return promises and are used mostly through [`async`/`await`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
 
-While the serial communication is mediated by `/micropython.js`, the local filesystem and window operations are done through Electron's `ipcRenderer` calls. The handlers for these calls are defined at `/index.js`
+While the serial communication is mediated by [`micropython.js`](https://github.com/arduino/micropython.js), the local filesystem and window operations are done through Electron's `ipcRenderer` calls. The handlers for these calls are defined at [`backend`](https://github.com/arduino/lab-micropython-editor/tree/main/backend) folder.
 
 ## Running Arduino Lab for MicroPython from source code
 

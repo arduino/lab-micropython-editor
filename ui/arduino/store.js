@@ -117,10 +117,6 @@ async function store(state, emitter) {
     // Recover from getting stuck in raw repl
     await serial.getPrompt()
 
-    // Make sure there is a lib folder
-    log('creating lib folder')
-    await serial.createFolder('/lib')
-
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
@@ -406,24 +402,36 @@ async function store(state, emitter) {
     emitter.emit('render')
 
     if (state.isConnected) {
-      state.boardFiles = await getBoardFiles(
-        serial.getFullPath(
-          state.boardNavigationRoot,
-          state.boardNavigationPath,
-          ''
+      try {
+        state.boardFiles = await getBoardFiles(
+          serial.getFullPath(
+            state.boardNavigationRoot,
+            state.boardNavigationPath,
+            ''
+          )
         )
-      )
+      } catch (e) {
+        state.boardFiles = []
+      }
     } else {
       state.boardFiles = []
     }
 
-    state.diskFiles = await getDiskFiles(
-      disk.getFullPath(
-        state.diskNavigationRoot,
-        state.diskNavigationPath,
-        ''
+    try {
+      state.diskFiles = await getDiskFiles(
+        disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          ''
+        )
       )
-    )
+    } catch (e) {
+      state.diskNavigationRoot = null
+      state.diskNavigationPath = '/'
+      state.isLoadingFiles = false
+      emitter.emit('render')
+      return
+    }
 
     emitter.emit('refresh-selected-files')
     state.isLoadingFiles = false
@@ -1490,7 +1498,7 @@ function canEdit({ selectedFiles }) {
 
 async function removeBoardFolder(fullPath) {
   // TODO: Replace with getting the file tree from the board and deleting one by one
-  let output = await serial.execFile('./ui/arduino/helpers.py')
+  let output = await serial.execFile(await getHelperFullPath())
   await serial.run(`delete_folder('${fullPath}')`)
 }
 
@@ -1522,7 +1530,7 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
 async function downloadFolder(srcPath, destPath, dataConsumer) {
   dataConsumer = dataConsumer || function() {}
   await disk.createFolder(destPath)
-  let output = await serial.execFile('./ui/arduino/helpers.py')
+  let output = await serial.execFile(await getHelperFullPath())
   output = await serial.run(`ilist_all('${srcPath}')`)
   let files = []
   try {
@@ -1548,5 +1556,22 @@ async function downloadFolder(srcPath, destPath, dataConsumer) {
         serial.getFullPath(destPath, relativePath, '')
       )
     }
+  }
+}
+
+async function getHelperFullPath() {
+  const appPath = await disk.getAppPath()
+  if (await win.isPackaged()) {
+    return disk.getFullPath(
+      appPath,
+      '..',
+      'ui/arduino/helpers.py'
+    )
+  } else {
+    return disk.getFullPath(
+      appPath,
+      'ui/arduino/helpers.py',
+      ''
+    )
   }
 }

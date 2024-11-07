@@ -369,7 +369,7 @@ async function store(state, emitter) {
   emitter.on('close-tab', (id) => {
     log('close-tab', id)
     const currentTab = state.openFiles.find(f => f.id === id)
-    if (currentTab.hasChanges && currentTab.parentFolder !== null) {
+    if (currentTab.hasChanges) {
       let response = confirm("Your file has unsaved changes. Are you sure you want to proceed?")
       if (!response) return false
     }

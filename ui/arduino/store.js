@@ -1197,16 +1197,16 @@ async function store(state, emitter) {
       if (file.type == 'folder') {
         await uploadFolder(
           srcPath, destPath,
-          (e) => {
-            state.transferringProgress = e
+          (progress, fileName) => {
+            state.transferringProgress = `${fileName}: ${progress}`
             emitter.emit('render')
           }
         )
       } else {
         await serial.uploadFile(
           srcPath, destPath,
-          (e) => {
-            state.transferringProgress = `${file.fileName}: ${e}`
+          (progress) => {
+            state.transferringProgress = `${file.fileName}: ${progress}`
             emitter.emit('render')
           }
         )
@@ -1521,7 +1521,9 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
       await serial.uploadFile(
         disk.getFullPath(srcPath, relativePath, ''),
         serial.getFullPath(destPath, relativePath, ''),
-        dataConsumer
+        (progress) => {
+          dataConsumer(progress, relativePath.slice(1))
+        }
       )
     }
   }

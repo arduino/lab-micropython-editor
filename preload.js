@@ -53,6 +53,10 @@ const Serial = {
     const output = await board.fs_cat(file)
     return output || ''
   },
+  loadFileBytes: async (file) => {
+    const output = await board.fs_cat_bytes(file)
+    return output || ''
+  },
   removeFile: async (file) => {
     return board.fs_rm(file)
   },
@@ -63,7 +67,7 @@ const Serial = {
     return board.fs_put(src, dest, dataConsumer)
   },
   downloadFile: async (src, dest) => {
-    let contents = await Serial.loadFile(src)
+    let contents = await Serial.loadFileBytes(src)
     return ipcRenderer.invoke('save-file', dest, contents)
   },
   renameFile: async (oldName, newName) => {
@@ -123,6 +127,7 @@ const Disk = {
     return ipcRenderer.invoke('remove-file', filePath)
   },
   saveFileContent: async (filePath, content) => {
+    console.log('saveFileContent', filePath, content)
     return ipcRenderer.invoke('save-file', filePath, content)
   },
   renameFile: async (oldName, newName) => {

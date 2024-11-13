@@ -43,7 +43,8 @@ module.exports = function registerIPCHandlers(win, ipcMain, app) {
 
   ipcMain.handle('save-file', (event, filePath, content) => {
     console.log('ipcMain', 'save-file', filePath, content)
-    fs.writeFileSync(filePath, content, 'utf8')
+    const data = Buffer.from(content);
+    fs.writeFileSync(filePath, data)
     return true
   })
 

@@ -50,7 +50,7 @@ const Serial = {
     return board.fs_ils(folder)
   },
   loadFile: async (file) => {
-    const output = await board.fs_cat(file)
+    const output = await board.fs_cat_binary(file)
     return output || ''
   },
   removeFile: async (file) => {

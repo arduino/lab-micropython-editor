@@ -123,7 +123,6 @@ const Disk = {
     return ipcRenderer.invoke('remove-file', filePath)
   },
   saveFileContent: async (filePath, content) => {
-    console.log('saveFileContent', filePath, content)
     return ipcRenderer.invoke('save-file', filePath, content)
   },
   renameFile: async (oldName, newName) => {

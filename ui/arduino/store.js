@@ -1090,7 +1090,7 @@ async function store(state, emitter) {
               selectedFile.fileName
             )
           )
-          const bytesToSource = String.fromCharCode.apply(null, fileContent);
+          const bytesToSource = String.fromCharCode(...fileContent);
           file = createFile({
             parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,

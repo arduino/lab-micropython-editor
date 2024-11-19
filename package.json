@@ -28,6 +28,7 @@
     },
     "win": {
       "target": "zip",
+      "sign": "./build_resources/windowsCustomSign.js",
       "icon": "build_resources/icon.png"
     },
     "linux": {

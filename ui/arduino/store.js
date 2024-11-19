@@ -1090,11 +1090,12 @@ async function store(state, emitter) {
               selectedFile.fileName
             )
           )
+          const bytesToSource = String.fromCharCode(...fileContent);
           file = createFile({
             parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,
             source: selectedFile.source,
-            content: fileContent
+            content: bytesToSource
           })
           file.editor.onChange = function() {
             file.hasChanges = true

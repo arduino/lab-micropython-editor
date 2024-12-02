@@ -157,7 +157,8 @@ const Window = {
   },
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
-  isPackaged: () => ipcRenderer.invoke('is-packaged')
+  isPackaged: () => ipcRenderer.invoke('is-packaged'),
+  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt)
 }
 
 

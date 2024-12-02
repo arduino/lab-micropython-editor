@@ -60,7 +60,7 @@ const Serial = {
     return board.fs_save(content || ' ', filename, dataConsumer)
   },
   uploadFile: async (src, dest, dataConsumer) => {
-    return board.fs_put(src, dest, dataConsumer)
+    return board.fs_put(src, dest.replace(path.win32.sep, '/'), dataConsumer)
   },
   downloadFile: async (src, dest) => {
     let contents = await Serial.loadFile(src)

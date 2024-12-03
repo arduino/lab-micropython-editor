@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
@@ -49,7 +49,7 @@ function createWindow () {
     win.show()
   })
 
-  registerIPCHandlers(win, ipcMain, app)
+  registerIPCHandlers(win, ipcMain, app, dialog)
   registerMenu(win)
 
   app.on('activate', () => {

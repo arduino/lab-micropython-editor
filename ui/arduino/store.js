@@ -1536,7 +1536,7 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
         disk.getFullPath(srcPath, relativePath, ''),
         serial.getFullPath(destPath, relativePath, ''),
         (progress) => {
-          dataConsumer(progress, relativePath.slice(1))
+          dataConsumer(progress, relativePath)
         }
       )
     }

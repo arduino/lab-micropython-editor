@@ -50,7 +50,7 @@ const Serial = {
     return board.fs_ils(folder)
   },
   loadFile: async (file) => {
-    const output = await board.fs_cat(file)
+    const output = await board.fs_cat_binary(file)
     return output || ''
   },
   removeFile: async (file) => {
@@ -60,7 +60,7 @@ const Serial = {
     return board.fs_save(content || ' ', filename, dataConsumer)
   },
   uploadFile: async (src, dest, dataConsumer) => {
-    return board.fs_put(src, dest, dataConsumer)
+    return board.fs_put(src, dest.replaceAll(path.win32.sep, path.posix.sep), dataConsumer)
   },
   downloadFile: async (src, dest) => {
     let contents = await Serial.loadFile(src)
@@ -157,7 +157,8 @@ const Window = {
   },
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
-  isPackaged: () => ipcRenderer.invoke('is-packaged')
+  isPackaged: () => ipcRenderer.invoke('is-packaged'),
+  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt)
 }
 
 

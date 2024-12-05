@@ -1,7 +1,7 @@
 {
   "name": "arduino-lab-micropython-ide",
   "productName": "Arduino Lab for MicroPython",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Arduino Lab for MicroPython is a project sponsored by Arduino, based on original work by Murilo Polese.\nThis is an experimental pre-release software, please direct any questions exclusively to Github issues.",
   "main": "index.js",
   "scripts": {
@@ -28,6 +28,7 @@
     },
     "win": {
       "target": "zip",
+      "sign": "./build_resources/windowsCustomSign.js",
       "icon": "build_resources/icon.png"
     },
     "linux": {
@@ -39,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "about-window": "^1.15.2",
-    "micropython.js": "github:arduino/micropython.js#v1.4.4"
+    "micropython.js": "github:arduino/micropython.js#v1.5.0"
   },
   "engines": {
     "node": "18"

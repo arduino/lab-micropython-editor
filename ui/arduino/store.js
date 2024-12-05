@@ -8,6 +8,19 @@ const newFileContent = `# This program was created in Arduino Lab for MicroPytho
 print('Hello, MicroPython!')
 `
 
+async function confirm(msg, cancelMsg, confirmMsg) {
+  cancelMsg = cancelMsg || 'Cancel'
+  confirmMsg = confirmMsg || 'Yes'
+  let response = await win.openDialog({
+    type: 'question',
+    buttons: [cancelMsg, confirmMsg],
+    cancelId: 0,
+    message: msg
+  })
+  console.log('confirm', response)
+  return Promise.resolve(response)
+}
+
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
@@ -116,10 +129,6 @@ async function store(state, emitter) {
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
     await serial.getPrompt()
-
-    // Make sure there is a lib folder
-    log('creating lib folder')
-    await serial.createFolder('/lib')
 
     // Connected and ready
     state.isConnecting = false
@@ -317,7 +326,7 @@ async function store(state, emitter) {
     }
 
     if (willOverwrite) {
-      const confirmation = confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      const confirmation = await confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmation) {
         state.isSaving = false
         openFile.parentFolder = oldParentFolder
@@ -370,11 +379,11 @@ async function store(state, emitter) {
     state.editingFile = id
     emitter.emit('render')
   })
-  emitter.on('close-tab', (id) => {
+  emitter.on('close-tab', async (id) => {
     log('close-tab', id)
     const currentTab = state.openFiles.find(f => f.id === id)
-    if (currentTab.hasChanges && currentTab.parentFolder !== null) {
-      let response = confirm("Your file has unsaved changes. Are you sure you want to proceed?")
+    if (currentTab.hasChanges) {
+      let response = await confirm("Your file has unsaved changes. Are you sure you want to proceed?")
       if (!response) return false
     }
     state.openFiles = state.openFiles.filter(f => f.id !== id)
@@ -478,7 +487,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = confirm(`You are about to overwrite the file ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirm(`You are about to overwrite the file ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -501,7 +510,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = confirm(`You are about to overwrite the file ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirm(`You are about to overwrite the file ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -549,7 +558,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = confirm(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirm(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFolder = null
           emitter.emit('render')
@@ -578,7 +587,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = confirm(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirm(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFolder = null
           emitter.emit('render')
@@ -635,7 +644,7 @@ async function store(state, emitter) {
     }
 
     message += `Are you sure you want to proceed?`
-    const confirmAction = confirm(message, 'Cancel', 'Yes')
+    const confirmAction = await confirm(message, 'Cancel', 'Yes')
     if (!confirmAction) {
       state.isRemoving = false
       emitter.emit('render')
@@ -723,7 +732,7 @@ async function store(state, emitter) {
         let message = `You are about to overwrite the following file/folder on your board:\n\n`
         message += `${value}\n\n`
         message += `Are you sure you want to proceed?`
-        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        const confirmAction = await confirm(message, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.isSaving = false
           state.renamingFile = null
@@ -762,7 +771,7 @@ async function store(state, emitter) {
         let message = `You are about to overwrite the following file/folder on your disk:\n\n`
         message += `${value}\n\n`
         message += `Are you sure you want to proceed?`
-        const confirmAction = confirm(message, 'Cancel', 'Yes')
+        const confirmAction = await confirm(message, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.isSaving = false
           state.renamingFile = null
@@ -917,7 +926,7 @@ async function store(state, emitter) {
     }
 
     if (willOverwrite) {
-      const confirmation = confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      const confirmation = await confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmation) {
         state.renamingTab = null
         state.isSaving = false
@@ -1094,11 +1103,12 @@ async function store(state, emitter) {
               selectedFile.fileName
             )
           )
+          const bytesToSource = String.fromCharCode(...fileContent);
           file = createFile({
             parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,
             source: selectedFile.source,
-            content: fileContent
+            content: bytesToSource
           })
           file.editor.onChange = function() {
             file.hasChanges = true
@@ -1178,7 +1188,7 @@ async function store(state, emitter) {
       willOverwrite.forEach(f => message += `${f.fileName}\n`)
       message += `\n`
       message += `Are you sure you want to proceed?`
-      const confirmAction = confirm(message, 'Cancel', 'Yes')
+      const confirmAction = await confirm(message, 'Cancel', 'Yes')
       if (!confirmAction) {
         state.isTransferring = false
         emitter.emit('render')
@@ -1201,16 +1211,16 @@ async function store(state, emitter) {
       if (file.type == 'folder') {
         await uploadFolder(
           srcPath, destPath,
-          (e) => {
-            state.transferringProgress = e
+          (progress, fileName) => {
+            state.transferringProgress = `${fileName}: ${progress}`
             emitter.emit('render')
           }
         )
       } else {
         await serial.uploadFile(
           srcPath, destPath,
-          (e) => {
-            state.transferringProgress = e
+          (progress) => {
+            state.transferringProgress = `${file.fileName}: ${progress}`
             emitter.emit('render')
           }
         )
@@ -1243,7 +1253,7 @@ async function store(state, emitter) {
       willOverwrite.forEach(f => message += `${f.fileName}\n`)
       message += `\n`
       message += `Are you sure you want to proceed?`
-      const confirmAction = confirm(message, 'Cancel', 'Yes')
+      const confirmAction = await confirm(message, 'Cancel', 'Yes')
       if (!confirmAction) {
         state.isTransferring = false
         emitter.emit('render')
@@ -1328,9 +1338,9 @@ async function store(state, emitter) {
   })
 
   win.beforeClose(async () => {
-    const hasChanges = !!state.openFiles.find(f => f.parentFolder && f.hasChanges)
+    const hasChanges = !!state.openFiles.find(f => f.hasChanges)
     if (hasChanges) {
-      const response = await confirm('You may have unsaved changes. Are you sure you want to proceed?', 'Yes', 'Cancel')
+      const response = await confirm('You may have unsaved changes. Are you sure you want to proceed?', 'Cancel', 'Yes')
       if (!response) return false
     }
     await win.confirmClose()
@@ -1525,7 +1535,9 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
       await serial.uploadFile(
         disk.getFullPath(srcPath, relativePath, ''),
         serial.getFullPath(destPath, relativePath, ''),
-        dataConsumer
+        (progress) => {
+          dataConsumer(progress, relativePath)
+        }
       )
     }
   }

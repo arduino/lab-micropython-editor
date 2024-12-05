@@ -14,6 +14,7 @@ on:
 
 env:
   JOB_TRANSFER_ARTIFACT: build-artifacts
+  NODE_VERSION: 18.17
 
 jobs:
   build:
@@ -22,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - os: windows-2019
+          - os: [self-hosted, windows-sign-pc]
           - os: ubuntu-latest
           - os: macos-13
           - os: macos-14
@@ -31,15 +32,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install Node.js 16.x
-        uses: actions/setup-node@v3
+      - name: Install Node.js ${{ env.NODE_VERSION }} 
+        if: runner.name != 'WINDOWS-SIGN-PC'
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Python 3.x
+        if: runner.name != 'WINDOWS-SIGN-PC'
         uses: actions/setup-python@v4
         with:
           python-version: '3.11.x'
@@ -51,11 +54,18 @@ jobs:
           AC_USERNAME: ${{ secrets.AC_USERNAME }}
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
           AC_TEAM_ID: ${{ secrets.AC_TEAM_ID }}
+          INSTALLER_CERT_WINDOWS_CER: "/tmp/cert.cer"
+          # We are hardcoding the path for signtool because is not present on the windows PATH env var by default.
+          # Keep in mind that this path could change when upgrading to a new runner version
+          SIGNTOOL_PATH: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0/x86/signtool.exe"
+          WIN_CERT_PASSWORD: ${{ secrets.INSTALLER_CERT_WINDOWS_PASSWORD }}
+          WIN_CERT_CONTAINER_NAME: ${{ secrets.INSTALLER_CERT_WINDOWS_CONTAINER }}
           # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           # IS_NIGHTLY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
+
         run: |
             # See: https://www.electron.build/code-signing
             if [ $IS_FORK = true ]; then

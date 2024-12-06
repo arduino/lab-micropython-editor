@@ -122,14 +122,28 @@ async function store(state, emitter) {
     state.isConnecting = true
     emitter.emit('render')
 
-    let timeout_id = setTimeout(() => emitter.emit('connection-timeout'), 5000)
-    await serial.connect(path)
-    clearTimeout(timeout_id)
-
+    // The following Timeout operation will be cleared after a succesful getPrompt()
+    // If a board has crashed and/or cannot return a REPL prompt, the connection will fail
+    // and the user will be prompted to reset the device and try again.
+    let timeout_id = setTimeout(() => {
+      let response = win.openDialog({
+        type: 'question',
+        buttons: ['OK'],
+        cancelId: 0,
+        message: "Could not connect to the board. Reset it and try again."
+      })
+      console.log('Reset request acknowledged', response)
+      emitter.emit('connection-timeout')
+    }, 3500)
+    try {
+      await serial.connect(path)
+    } catch(e) {
+      console.error(e)
+    }
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
     await serial.getPrompt()
-
+    clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true

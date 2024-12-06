@@ -131,7 +131,7 @@ button.small .icon {
 
 #tabs {
   display: flex;
-  padding: 10px 10px 0px 40px;
+  padding: 10px 10px 0px 60px;
   align-items: center;
   gap: 10px;
   align-self: stretch;
@@ -231,7 +231,7 @@ button.small .icon {
 #code-editor .cm-gutters {
   background-color: #ECF1F1;
   border-right: none;
-  width: 40px;
+  width: 60px;
   font-size: 14px;
 }
 

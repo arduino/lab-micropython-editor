@@ -104,15 +104,18 @@ function generateFileList(source) {
       }
       return 0
     })
+    const parentNavigationDots = html`<div class="item"
+  onclick=${() => emit(`navigate-${source}-parent`)}
+  style="cursor: pointer"
+  >
+  ..
+</div>`
+
     const list = html`
       <div class="file-list">
         <div class="list">
-          <div class="item"
-            onclick=${() => emit(`navigate-${source}-parent`)}
-            style="cursor: pointer"
-            >
-            ..
-          </div>
+          ${source === 'disk' && state.diskNavigationPath != '/' ? parentNavigationDots : ''}
+          ${source === 'board' && state.boardNavigationPath != '/' ? parentNavigationDots : ''}
           ${state.creatingFile == source ? newFileItem : null}
           ${state.creatingFolder == source ? newFolderItem : null}
           ${files.map(FileItem)}

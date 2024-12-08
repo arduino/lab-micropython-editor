@@ -129,11 +129,6 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     return response != opt.cancelId
   })
 
-  ipcMain.handle('reload', (event, message = 'ciao, cane') => {
-    console.log('reload?')
-    win.webContents.send('reload', message)
-  })
-
   win.on('close', (event) => {
     console.log('BrowserWindow', 'close')
     event.preventDefault()

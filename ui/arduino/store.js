@@ -1368,7 +1368,7 @@ async function store(state, emitter) {
     
   // })
 
-  win.anyShortcut((key) => {
+  win.onKeyboardShortcut((key) => {
     if (key === 'C') {
       emitter.emit('open-connection-dialog')
     }

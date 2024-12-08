@@ -157,7 +157,7 @@ const Window = {
   setWindowSize: (minWidth, minHeight) => {
     ipcRenderer.invoke('set-window-size', minWidth, minHeight)
   },
-  anyShortcut: (callback, key) => {
+  onKeyboardShortcut: (callback, key) => {
     ipcRenderer.on('shortcut-cmd', (event, k) => {
       // Get the active element
       const activeElement = document.activeElement;

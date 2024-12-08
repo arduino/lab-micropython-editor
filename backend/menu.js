@@ -10,7 +10,6 @@ module.exports = function registerMenu(win) {
       submenu: [
         { role: 'about'},
         { type: 'separator' },
-        { role: 'services' },
         { type: 'separator' },
         { role: 'hide' },
         { role: 'hideOthers' },
@@ -54,8 +53,8 @@ module.exports = function registerMenu(win) {
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'toggleDevTools' },
+        { role: 'reload', accelerator: '' },
+        { role: 'toggleDevTools', accelerator: ''},
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },

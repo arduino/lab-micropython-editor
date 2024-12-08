@@ -58,8 +58,6 @@ async function store(state, emitter) {
 
   state.isTerminalBound = false
 
-  state.shortcutsContext = 'editor'
-
   const newFile = createEmptyFile({
     parentFolder: null, // Null parent folder means not saved?
     source: 'disk'

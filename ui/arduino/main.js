@@ -51,10 +51,4 @@ window.addEventListener('load', () => {
       app.emitter.emit('refresh-files')
     }
   })
-  app.emitter.on('', () => {
-    if (app.state.diskNavigationRoot) {
-      app.emitter.emit('refresh-files')
-    }
-  })
-
 })

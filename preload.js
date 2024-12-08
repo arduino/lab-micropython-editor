@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
 
 const MicroPython = require('micropython.js')
+const { emit, platform } = require('process')
+// const { platform } = requireprocess.platform
 const board = new MicroPython()
 board.chunk_size = 192
 board.chunk_sleep = 200
@@ -155,12 +157,31 @@ const Window = {
   setWindowSize: (minWidth, minHeight) => {
     ipcRenderer.invoke('set-window-size', minWidth, minHeight)
   },
+  anyShortcut: (callback, key) => {
+    ipcRenderer.on('shortcut-cmd', (event, k) => {
+      // Get the active element
+      const activeElement = document.activeElement;
+      // Check if the active element is the terminal
+      const isTerminalFocused = activeElement.classList.contains('xterm-helper-textarea');
+      // Only trigger callback if terminal is not focused AND we're in editor view
+      if (!isTerminalFocused) {
+        console.log('shortcut-cmd-r executed')
+        callback(k);
+      }
+    })
+  },
+
+
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
   isPackaged: () => ipcRenderer.invoke('is-packaged'),
-  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt)
-}
+  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt),
 
+  getOS: () => platform,
+  isWindows: () => platform === 'win32',
+  isMac: () => platform === 'darwin',
+  isLinux: () => platform === 'linux'
+}
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)

@@ -24,6 +24,7 @@ async function confirm(msg, cancelMsg, confirmMsg) {
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
+  state.platform = window.BridgeWindow.getOS()
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
@@ -56,6 +57,8 @@ async function store(state, emitter) {
   state.dialogs = []
 
   state.isTerminalBound = false
+
+  state.shortcutsContext = 'editor'
 
   const newFile = createEmptyFile({
     parentFolder: null, // Null parent folder means not saved?
@@ -1360,6 +1363,47 @@ async function store(state, emitter) {
     await win.confirmClose()
   })
 
+  // win.shortcutCmdR(() => {
+  //   // Only run if we can execute
+    
+  // })
+
+  win.anyShortcut((key) => {
+    if (key === 'C') {
+      emitter.emit('open-connection-dialog')
+    }
+    if (key === 'D') {
+      emitter.emit('disconnect')
+    }
+    if (key === 'R') {
+      if (state.view != 'editor') return
+      emitter.emit('reset')
+    }
+    if (key === 'r') {
+      if (state.view != 'editor') return
+      runCode()
+    }
+    if (key === 'h') {
+      if (state.view != 'editor') return
+      stopCode()
+    }
+    if (key === 's') {
+      if (state.view != 'editor') return
+      emitter.emit('save')
+    }
+
+  })
+
+  function runCode() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('run')
+    }
+  }
+  function stopCode() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('stop')
+    }
+  }
   function createFile(args) {
     const {
       source,

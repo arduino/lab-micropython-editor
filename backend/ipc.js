@@ -133,6 +133,5 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     console.log('BrowserWindow', 'close')
     event.preventDefault()
     win.webContents.send('check-before-close')
-  })
-  
+  }) 
 }

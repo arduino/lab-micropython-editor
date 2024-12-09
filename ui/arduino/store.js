@@ -1401,6 +1401,11 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       emitter.emit('save')
     }
+    if (key === 'ESC') {
+      if (state.isConnectionDialogOpen) {
+        emitter.emit('close-connection-dialog')
+      }
+    }
 
   })
 

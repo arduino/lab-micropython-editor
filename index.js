@@ -92,6 +92,9 @@ function registerShortcuts() {
   globalShortcut.register('CommandOrControl+Shift+D', () => {
     console.log('Disconnect from Board')
     shortcutAction('D')
+  }),
+  globalShortcut.register('Escape', () => {
+    shortcutAction('ESC')
   })
 }
 

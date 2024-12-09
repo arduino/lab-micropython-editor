@@ -129,6 +129,11 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     return response != opt.cancelId
   })
 
+  ipcMain.handle('update-menu-state', (event, state) => {
+    const registerMenu = require('./menu.js')
+    registerMenu(win, state)
+  })
+
   win.on('close', (event) => {
     console.log('BrowserWindow', 'close')
     event.preventDefault()

@@ -180,7 +180,12 @@ const Window = {
   getOS: () => platform,
   isWindows: () => platform === 'win32',
   isMac: () => platform === 'darwin',
-  isLinux: () => platform === 'linux'
+  isLinux: () => platform === 'linux',
+
+  updateMenuState: (state) => {
+    return ipcRenderer.invoke('update-menu-state', state)
+  }
+
 }
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)

@@ -81,6 +81,14 @@ async function store(state, emitter) {
     emitter.emit('render')
   }
 
+  // Menu management
+  const updateMenu = () => {
+    window.BridgeWindow.updateMenuState({
+      isConnected: state.isConnected,
+      view: state.view
+    })
+  }
+
   // START AND BASIC ROUTING
   emitter.on('select-disk-navigation-root', async () => {
     const folder = await selectDiskFolder()
@@ -98,6 +106,7 @@ async function store(state, emitter) {
       emitter.emit('refresh-files')
     }
     emitter.emit('render')
+    updateMenu()
   })
 
   // CONNECTION DIALOG
@@ -143,11 +152,13 @@ async function store(state, emitter) {
     }
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
+    
     await serial.getPrompt()
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
+    updateMenu()
     if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
     }
@@ -181,6 +192,7 @@ async function store(state, emitter) {
     state.boardNavigationPath = '/'
     emitter.emit('refresh-files')
     emitter.emit('render')
+    updateMenu()
   })
   emitter.on('connection-timeout', async () => {
     state.isConnected = false
@@ -1646,4 +1658,5 @@ async function getHelperFullPath() {
       ''
     )
   }
+
 }

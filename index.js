@@ -49,8 +49,13 @@ function createWindow () {
     win.show()
   })
 
+  const initialMenuState = {
+    isConnected: false,
+    view: 'editor'
+  }
+
   registerIPCHandlers(win, ipcMain, app, dialog)
-  registerMenu(win)
+  registerMenu(win, initialMenuState)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

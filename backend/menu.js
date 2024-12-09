@@ -2,7 +2,7 @@ const { app, Menu } = require('electron')
 const path = require('path')
 const openAboutWindow = require('about-window').default
 
-module.exports = function registerMenu(win) {
+module.exports = function registerMenu(win, state = {}) {
   const isMac = process.platform === 'darwin'
   const template = [
     ...(isMac ? [{
@@ -11,7 +11,7 @@ module.exports = function registerMenu(win) {
         { role: 'about'},
         { type: 'separator' },
         { type: 'separator' },
-        { role: 'hide' },
+        { role: 'hide', accelerator: 'CmdOrCtrl+Shift+H' },
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
@@ -48,6 +48,40 @@ module.exports = function registerMenu(win) {
           { type: 'separator' },
           { role: 'selectAll' }
         ])
+      ]
+    },
+    {
+      label: 'Board',
+      submenu: [
+        { 
+          label: 'Connect',
+          accelerator: 'CmdOrCtrl+Shift+C',
+          click: () => win.webContents.send('shortcut-cmd', 'C')
+        },
+        { 
+          label: 'Disconnect',
+          accelerator: 'CmdOrCtrl+Shift+D',
+          click: () => win.webContents.send('shortcut-cmd', 'D')
+        },
+        { role: 'separator' },
+        { 
+          label: 'Run',
+          accelerator: 'CmdOrCtrl+R',
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', 'r')
+        },
+        { 
+          label: 'Stop',
+          accelerator: 'CmdOrCtrl+H',
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', 'h')
+        },
+        { 
+          label: 'Reset',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', 'R')
+        }
       ]
     },
     {

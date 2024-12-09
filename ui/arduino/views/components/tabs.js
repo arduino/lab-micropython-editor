@@ -4,7 +4,7 @@ function Tabs(state, emit) {
       ${state.openFiles.map((file) => {
         return Tab({
           text: file.fileName,
-          icon: file.source === 'board'? 'connect.svg': 'computer.svg',
+          icon: file.source === 'board'? 'board.svg': 'computer.svg',
           active: file.id === state.editingFile,
           renaming: file.id === state.renamingTab,
           hasChanges: file.hasChanges,

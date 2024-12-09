@@ -52,7 +52,7 @@ function Toolbar(state, emit) {
       <div class="separator"></div>
 
       ${Button({
-        icon: 'console.svg',
+        icon: 'editor.svg',
         tooltip: 'Editor and REPL',
         active: state.view === 'editor',
         onClick: () => emit('change-view', 'editor')

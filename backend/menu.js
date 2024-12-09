@@ -34,7 +34,6 @@ module.exports = function registerMenu(win, state = {}) {
         { role: 'copy' },
         { role: 'paste' },
         ...(isMac ? [
-          { role: 'pasteAndMatchStyle' },
           { role: 'selectAll' },
           { type: 'separator' },
           {
@@ -108,7 +107,7 @@ module.exports = function registerMenu(win, state = {}) {
           { type: 'separator' },
           { role: 'window' }
         ] : [
-          { role: 'close' }
+          
         ])
       ]
     },

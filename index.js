@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
@@ -49,12 +49,73 @@ function createWindow () {
     win.show()
   })
 
+  const initialMenuState = {
+    isConnected: false,
+    view: 'editor'
+  }
+
   registerIPCHandlers(win, ipcMain, app, dialog)
-  registerMenu(win)
+  registerMenu(win, initialMenuState)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 }
 
-app.on('ready', createWindow)
+function shortcutAction(key) {
+  win.webContents.send('shortcut-cmd', key);
+}
+
+// Shortcuts
+function registerShortcuts() {
+  globalShortcut.register('CommandOrControl+R', () => {
+    console.log('Running Program')
+    shortcutAction('r')
+  })
+  globalShortcut.register('CommandOrControl+H', () => {
+    console.log('Stopping Program (Halt)')
+    shortcutAction('h')
+  })
+  globalShortcut.register('CommandOrControl+S', () => {
+    console.log('Saving File')
+    shortcutAction('s')
+  })
+  
+  globalShortcut.register('CommandOrControl+Shift+R', () => {
+    console.log('Resetting Board')
+    shortcutAction('R')
+  })
+  globalShortcut.register('CommandOrControl+Shift+C', () => {
+    console.log('Connect to Board')
+    shortcutAction('C')
+  })
+  globalShortcut.register('CommandOrControl+Shift+D', () => {
+    console.log('Disconnect from Board')
+    shortcutAction('D')
+  }),
+  globalShortcut.register('CommandOrControl+K', () => {
+    console.log('Clear Terminal')
+    shortcutAction('K')
+  }),
+  // Future: Toggle REPL Panel
+  // globalShortcut.register('CommandOrControl+T', () => {
+  //   console.log('Toggle Terminal')
+  //   shortcutAction('T')
+  // }),
+  globalShortcut.register('Escape', () => {
+    shortcutAction('ESC')
+  })
+}
+
+app.on('ready', () => {
+  createWindow()
+  registerShortcuts()
+
+  win.on('focus', () => {
+    registerShortcuts()
+  })
+  win.on('blur', () => {
+    globalShortcut.unregisterAll()
+  })
+  
+})

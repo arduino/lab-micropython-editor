@@ -24,6 +24,7 @@ async function confirm(msg, cancelMsg, confirmMsg) {
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
+  state.platform = window.BridgeWindow.getOS()
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
@@ -80,6 +81,14 @@ async function store(state, emitter) {
     emitter.emit('render')
   }
 
+  // Menu management
+  const updateMenu = () => {
+    window.BridgeWindow.updateMenuState({
+      isConnected: state.isConnected,
+      view: state.view
+    })
+  }
+
   // START AND BASIC ROUTING
   emitter.on('select-disk-navigation-root', async () => {
     const folder = await selectDiskFolder()
@@ -97,6 +106,7 @@ async function store(state, emitter) {
       emitter.emit('refresh-files')
     }
     emitter.emit('render')
+    updateMenu()
   })
 
   // CONNECTION DIALOG
@@ -142,11 +152,13 @@ async function store(state, emitter) {
     }
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
+    
     await serial.getPrompt()
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
+    updateMenu()
     if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
     }
@@ -180,6 +192,7 @@ async function store(state, emitter) {
     state.boardNavigationPath = '/'
     emitter.emit('refresh-files')
     emitter.emit('render')
+    updateMenu()
   })
   emitter.on('connection-timeout', async () => {
     state.isConnected = false
@@ -1360,6 +1373,61 @@ async function store(state, emitter) {
     await win.confirmClose()
   })
 
+  // win.shortcutCmdR(() => {
+  //   // Only run if we can execute
+    
+  // })
+
+  win.onKeyboardShortcut((key) => {
+    if (key === 'C') {
+      emitter.emit('open-connection-dialog')
+    }
+    if (key === 'D') {
+      emitter.emit('disconnect')
+    }
+    if (key === 'R') {
+      if (state.view != 'editor') return
+      emitter.emit('reset')
+    }
+    if (key === 'K') {
+      if (state.view != 'editor') return
+      emitter.emit('clear-terminal')
+    }
+    // Future: Toggle REPL panel
+    // if (key === 'T') {
+    //   if (state.view != 'editor') return
+    //   emitter.emit('clear-terminal')
+    // }
+    if (key === 'r') {
+      if (state.view != 'editor') return
+      runCode()
+    }
+    if (key === 'h') {
+      if (state.view != 'editor') return
+      stopCode()
+    }
+    if (key === 's') {
+      if (state.view != 'editor') return
+      emitter.emit('save')
+    }
+    if (key === 'ESC') {
+      if (state.isConnectionDialogOpen) {
+        emitter.emit('close-connection-dialog')
+      }
+    }
+
+  })
+
+  function runCode() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('run')
+    }
+  }
+  function stopCode() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('stop')
+    }
+  }
   function createFile(args) {
     const {
       source,
@@ -1604,4 +1672,5 @@ async function getHelperFullPath() {
       ''
     )
   }
+
 }

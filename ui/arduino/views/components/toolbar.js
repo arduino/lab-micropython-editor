@@ -9,12 +9,13 @@ function Toolbar(state, emit) {
     view: state.view,
     isConnected: state.isConnected
   })
-
+  const metaKeyString = state.platform === 'darwin' ? 'Cmd' : 'Ctrl'
+  
   return html`
     <div id="toolbar">
       ${Button({
         icon: state.isConnected ? 'connect.svg' : 'disconnect.svg',
-        tooltip: state.isConnected ? 'Disconnect' : 'Connect',
+        tooltip: state.isConnected ? `Disconnect (${metaKeyString}+Shift+D)` : `Connect (${metaKeyString}+Shift+C)`,
         onClick: () => emit('open-connection-dialog'),
         active: state.isConnected
       })}
@@ -23,19 +24,19 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'run.svg',
-        tooltip: 'Run',
+        tooltip: `Run (${metaKeyString}+r)`,
         disabled: !_canExecute,
         onClick: () => emit('run')
       })}
       ${Button({
         icon: 'stop.svg',
-        tooltip: 'Stop',
+        tooltip: `Stop (${metaKeyString}+h)`,
         disabled: !_canExecute,
         onClick: () => emit('stop')
       })}
       ${Button({
         icon: 'reboot.svg',
-        tooltip: 'Reset',
+        tooltip: `Reset (${metaKeyString}+Shift+r)`,
         disabled: !_canExecute,
         onClick: () => emit('reset')
       })}
@@ -44,7 +45,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'save.svg',
-        tooltip: 'Save',
+        tooltip: `Save (${metaKeyString}+s)`,
         disabled: !_canSave,
         onClick: () => emit('save')
       })}

@@ -159,15 +159,18 @@ const Window = {
   },
   onKeyboardShortcut: (callback, key) => {
     ipcRenderer.on('shortcut-cmd', (event, k) => {
-      // Get the active element
-      const activeElement = document.activeElement;
-      // Check if the active element is the terminal
-      const isTerminalFocused = activeElement.classList.contains('xterm-helper-textarea');
+      
+
       // Only trigger callback if terminal is not focused AND we're in editor view
-      if (!isTerminalFocused) {
-        console.log('shortcut-cmd-r executed')
-        callback(k);
-      }
+      // This has been deemed unnecessary since there are no real conflicts with the terminal
+      // The REPL shortcuts Ctrl+a|b|c|d are not used as application shortcuts and will
+      // only be triggered when the user has focused the REPL
+      // The code is left here for reference
+      // const activeElement = document.activeElement;
+      // const isTerminalFocused = activeElement.classList.contains('xterm-helper-textarea');
+      // if (!isTerminalFocused) {
+      callback(k);
+      // }
     })
   },
 

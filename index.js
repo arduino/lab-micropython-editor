@@ -93,6 +93,15 @@ function registerShortcuts() {
     console.log('Disconnect from Board')
     shortcutAction('D')
   }),
+  globalShortcut.register('CommandOrControl+K', () => {
+    console.log('Clear Terminal')
+    shortcutAction('K')
+  }),
+  // Future: Toggle REPL Panel
+  // globalShortcut.register('CommandOrControl+T', () => {
+  //   console.log('Toggle Terminal')
+  //   shortcutAction('T')
+  // }),
   globalShortcut.register('Escape', () => {
     shortcutAction('ESC')
   })

@@ -1389,6 +1389,15 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       emitter.emit('reset')
     }
+    if (key === 'K') {
+      if (state.view != 'editor') return
+      emitter.emit('clear-terminal')
+    }
+    // Future: Toggle REPL panel
+    // if (key === 'T') {
+    //   if (state.view != 'editor') return
+    //   emitter.emit('clear-terminal')
+    // }
     if (key === 'r') {
       if (state.view != 'editor') return
       runCode()

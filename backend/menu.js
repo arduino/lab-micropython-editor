@@ -86,7 +86,20 @@ module.exports = function registerMenu(win, state = {}) {
     {
       label: 'View',
       submenu: [
-        { role: 'reload', accelerator: '' },
+        { 
+          label: 'Reload',
+          accelerator: '',
+          click: async () => {
+            try {
+              win.webContents.send('cleanup-before-reload')
+              setTimeout(() => {
+                win.reload()
+              }, 500)
+            } catch(e) {
+              console.error('Reload from menu failed:', e)
+            }
+          }
+        },
         { role: 'toggleDevTools', accelerator: ''},
         { type: 'separator' },
         { role: 'resetZoom' },

@@ -139,4 +139,9 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     event.preventDefault()
     win.webContents.send('check-before-close')
   })
+
+  // handle disconnection before reload
+  ipcMain.handle('prepare-reload', async (event) => {
+    return win.webContents.send('before-reload')
+  })
 }

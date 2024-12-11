@@ -114,7 +114,8 @@ async function store(state, emitter) {
   // CONNECTION DIALOG
   emitter.on('open-connection-dialog', async () => {
     log('open-connection-dialog')
-    emitter.emit('disconnect')
+    // UI should be in disconnected state, no need to update
+    await serial.disconnect()
     state.availablePorts = await getAvailablePorts()
     state.isConnectionDialogOpen = true
     emitter.emit('render')
@@ -180,14 +181,16 @@ async function store(state, emitter) {
       term.write(data)
       term.scrollToBottom()
     })
-    serial.onConnectionLost(() => emitter.emit('disconnect'))
+
+    // Update the UI when the conncetion is closed
+    // This may happen when unplugging the board
+    serial.onConnectionClosed(() => emitter.emit('disconnected'))
 
     emitter.emit('close-connection-dialog')
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
-  emitter.on('disconnect', async () => {
-    await serial.disconnect()
+  emitter.on('disconnected', () => {
     state.isConnected = false
     state.panelHeight = PANEL_CLOSED
     state.boardFiles = []
@@ -195,6 +198,11 @@ async function store(state, emitter) {
     emitter.emit('refresh-files')
     emitter.emit('render')
     updateMenu()
+  })
+  emitter.on('disconnect', async () => {
+    await serial.disconnect()
+    // Update the UI after closing the connection
+    emitter.emit('disconnected')
   })
   emitter.on('connection-timeout', async () => {
     state.isConnected = false

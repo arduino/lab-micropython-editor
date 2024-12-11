@@ -1,7 +1,6 @@
 const fs = require('fs')
-const Serial = require('./serial.js')
-let serial
 const registerMenu = require('./menu.js')
+const serial = require('./serial.js').sharedInstance
 
 const {
   openFolderDialog,
@@ -11,7 +10,7 @@ const {
 } = require('./helpers.js')
 
 module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
-  serial = new Serial(win)
+  serial.win = win // Required to send callback messages to renderer
   
   ipcMain.handle('open-folder', async (event) => {
     console.log('ipcMain', 'open-folder')

@@ -1,7 +1,7 @@
 const MicroPython = require('micropython.js')
 
 class Serial {
-    constructor(win) {
+    constructor(win = null) {
         this.win = win
         this.board = new MicroPython()
         this.board.chunk_size = 192
@@ -110,4 +110,6 @@ except OSError:
     }
 }
 
-module.exports = Serial
+const sharedInstance = new Serial()
+
+module.exports = {sharedInstance, Serial}

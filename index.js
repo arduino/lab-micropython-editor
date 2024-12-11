@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron')
 const path = require('path')
-const fs = require('fs')
 
 const registerIPCHandlers = require('./backend/ipc.js')
 const registerMenu = require('./backend/menu.js')

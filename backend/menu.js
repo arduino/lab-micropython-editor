@@ -1,5 +1,6 @@
 const { app, Menu } = require('electron')
 const path = require('path')
+const serial = require('./serial.js').sharedInstance
 const openAboutWindow = require('about-window').default
 
 module.exports = function registerMenu(win, state = {}) {
@@ -91,10 +92,8 @@ module.exports = function registerMenu(win, state = {}) {
           accelerator: '',
           click: async () => {
             try {
-              win.webContents.send('cleanup-before-reload')
-              setTimeout(() => {
-                win.reload()
-              }, 500)
+              await serial.disconnect()
+              win.reload()
             } catch(e) {
               console.error('Reload from menu failed:', e)
             }

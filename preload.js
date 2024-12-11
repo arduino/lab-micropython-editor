@@ -1,7 +1,7 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
-const Serial = require('./backend/serial.js')
+const SerialBridge = require('./backend/bridge/serial-bridge.js')
 
 const { platform } = require('process')
 
@@ -101,6 +101,6 @@ const Window = {
 
 }
 
-contextBridge.exposeInMainWorld('BridgeSerial', Serial)
+contextBridge.exposeInMainWorld('BridgeSerial', SerialBridge)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)
 contextBridge.exposeInMainWorld('BridgeWindow', Window)

@@ -1,6 +1,7 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
+const Serial = require('./backend/serial.js')
 const shortcuts = require('./backend/shortcuts.js').global
 const MicroPython = require('micropython.js')
 const { emit, platform } = require('process')

@@ -1,5 +1,6 @@
 const { app, Menu } = require('electron')
 const path = require('path')
+const Serial = require('./serial.js')
 const openAboutWindow = require('about-window').default
 const shortcuts  = require('./shortcuts.js')
 const { type } = require('os')
@@ -127,10 +128,8 @@ module.exports = function registerMenu(win, state = {}) {
           accelerator: '',
           click: async () => {
             try {
-              win.webContents.send('cleanup-before-reload')
-              setTimeout(() => {
-                win.reload()
-              }, 500)
+              await Serial.disconnect()
+              win.reload()
             } catch(e) {
               console.error('Reload from menu failed:', e)
             }

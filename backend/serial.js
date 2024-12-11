@@ -66,7 +66,7 @@ const Serial = {
   renameFile: async (oldName, newName) => {
     return board.fs_rename(oldName, newName)
   },
-  onConnectionLost: async (fn) => {
+  onConnectionClosed: async (fn) => {
     board.serial.on('close', fn)
   },
   createFolder: async (folder) => {

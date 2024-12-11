@@ -1,4 +1,6 @@
 const fs = require('fs')
+const Serial = require('./serial.js')
+let serial
 const registerMenu = require('./menu.js')
 
 const {
@@ -9,6 +11,8 @@ const {
 } = require('./helpers.js')
 
 module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
+  serial = new Serial(win)
+  
   ipcMain.handle('open-folder', async (event) => {
     console.log('ipcMain', 'open-folder')
     const folder = await openFolderDialog(win)
@@ -144,5 +148,10 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   // handle disconnection before reload
   ipcMain.handle('prepare-reload', async (event) => {
     return win.webContents.send('before-reload')
+  })
+
+  ipcMain.handle('serial', (event, command, ...args) => {
+    console.debug('Handling IPC serial command:', command, ...args)
+    return serial[command](...args)
   })
 }

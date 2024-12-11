@@ -5,6 +5,7 @@ const Serial = require('./backend/serial.js')
 const shortcuts = require('./backend/shortcuts.js').global
 const MicroPython = require('micropython.js')
 const { emit, platform } = require('process')
+const SerialBridge = require('./backend/bridge/serial-bridge.js')
 
 const board = new MicroPython()
 board.chunk_size = 192
@@ -190,6 +191,6 @@ const Window = {
   getShortcuts: () => shortcuts
 }
 
-contextBridge.exposeInMainWorld('BridgeSerial', Serial)
+contextBridge.exposeInMainWorld('BridgeSerial', SerialBridge)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)
 contextBridge.exposeInMainWorld('BridgeWindow', Window)

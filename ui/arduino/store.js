@@ -180,7 +180,7 @@ async function store(state, emitter) {
       term.write(data)
       term.scrollToBottom()
     })
-    serial.onDisconnect(() => emitter.emit('disconnect'))
+    serial.onConnectionLost(() => emitter.emit('disconnect'))
 
     emitter.emit('close-connection-dialog')
     emitter.emit('refresh-files')

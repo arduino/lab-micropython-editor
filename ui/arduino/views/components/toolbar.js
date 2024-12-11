@@ -26,7 +26,13 @@ function Toolbar(state, emit) {
         icon: 'run.svg',
         tooltip: `Run (${metaKeyString}+r)`,
         disabled: !_canExecute,
-        onClick: () => emit('run')
+        onClick: (e) => {
+          if (e.altKey) {
+            emit('run', true)
+          }else{
+            emit('run')
+          }
+        }
       })}
       ${Button({
         icon: 'stop.svg',

@@ -90,6 +90,10 @@ function registerShortcuts() {
     console.log('Running Program')
     shortcutAction('r')
   })
+  globalShortcut.register('CommandOrControl+Alt+R', () => {
+    console.log('Running Code Selection')
+    shortcutAction('_r')
+  })
   globalShortcut.register('CommandOrControl+H', () => {
     console.log('Stopping Program (Halt)')
     shortcutAction('h')

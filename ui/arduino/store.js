@@ -203,7 +203,7 @@ async function store(state, emitter) {
   })
 
   // CODE EXECUTION
-  emitter.on('run', async () => {
+  emitter.on('run', async (selection = false) => {
     log('run')
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
     let code = openFile.editor.editor.state.doc.toString()
@@ -211,7 +211,7 @@ async function store(state, emitter) {
     // If there is a selection, run only the selected code
     const startIndex = openFile.editor.editor.state.selection.ranges[0].from
     const endIndex = openFile.editor.editor.state.selection.ranges[0].to
-    if (endIndex - startIndex > 0) {
+    if (endIndex - startIndex > 0 && selection) {
       selectedCode = openFile.editor.editor.state.doc.toString().substring(startIndex, endIndex)
       // Checking to see if the user accidentally double-clicked some whitespace
       // While a random selection would yield an error when executed, 
@@ -1430,6 +1430,10 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       runCode()
     }
+    if (key === '_r') {
+      if (state.view != 'editor') return
+      runCodeSelection()
+    }
     if (key === 'h') {
       if (state.view != 'editor') return
       stopCode()
@@ -1449,6 +1453,11 @@ async function store(state, emitter) {
   function runCode() {
     if (canExecute({ view: state.view, isConnected: state.isConnected })) {
       emitter.emit('run')
+    }
+  }
+  function runCodeSelection() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('run', true)
     }
   }
   function stopCode() {

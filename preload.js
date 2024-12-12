@@ -1,7 +1,7 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
-
+const shortcuts = require('./backend/shortcuts.js').global
 const MicroPython = require('micropython.js')
 const { emit, platform } = require('process')
 // const { platform } = requireprocess.platform
@@ -196,8 +196,8 @@ const Window = {
 
   updateMenuState: (state) => {
     return ipcRenderer.invoke('update-menu-state', state)
-  }
-
+  },
+  getShortcuts: () => shortcuts
 }
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)

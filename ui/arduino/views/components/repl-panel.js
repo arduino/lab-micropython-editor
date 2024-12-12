@@ -50,7 +50,7 @@ function ReplOperations(state, emit) {
     Button({
       icon: 'delete.svg',
       size: 'small',
-      tooltip: `Clean (${state.platform === 'darwin' ? 'Cmd' : 'Ctrl'}+k)`,
+      tooltip: `Clean (${state.platform === 'darwin' ? 'Cmd' : 'Ctrl'}+L)`,
       onClick: () => emit('clear-terminal')
     })
   ]

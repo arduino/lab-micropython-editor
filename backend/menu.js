@@ -1,6 +1,7 @@
 const { app, Menu } = require('electron')
 const path = require('path')
 const openAboutWindow = require('about-window').default
+const shortcuts  = require('./shortcuts.js')
 
 module.exports = function registerMenu(win, state = {}) {
   const isMac = process.platform === 'darwin'
@@ -54,32 +55,45 @@ module.exports = function registerMenu(win, state = {}) {
       submenu: [
         { 
           label: 'Connect',
-          accelerator: 'CmdOrCtrl+Shift+C',
-          click: () => win.webContents.send('shortcut-cmd', 'C')
+          accelerator: shortcuts.menu.CONNECT,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CONNECT)
         },
         { 
           label: 'Disconnect',
-          accelerator: 'CmdOrCtrl+Shift+D',
-          click: () => win.webContents.send('shortcut-cmd', 'D')
+          accelerator: shortcuts.menu.DISCONNECT,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.DISCONNECT)
         },
-        { role: 'separator' },
+        { type: 'separator' },
         { 
           label: 'Run',
-          accelerator: 'CmdOrCtrl+R',
+          accelerator: shortcuts.menu.RUN,
           enabled: state.isConnected && state.view === 'editor',
-          click: () => win.webContents.send('shortcut-cmd', 'r')
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RUN)
+        },
+        { 
+          label: 'Run selection',
+          accelerator: shortcuts.menu.RUN_SELECTION,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RUN_SELECTION)
         },
         { 
           label: 'Stop',
-          accelerator: 'CmdOrCtrl+H',
+          accelerator: shortcuts.menu.STOP,
           enabled: state.isConnected && state.view === 'editor',
-          click: () => win.webContents.send('shortcut-cmd', 'h')
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.STOP)
         },
         { 
           label: 'Reset',
-          accelerator: 'CmdOrCtrl+Shift+R',
+          accelerator: shortcuts.menu.RESET,
           enabled: state.isConnected && state.view === 'editor',
-          click: () => win.webContents.send('shortcut-cmd', 'R')
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RESET)
+        },
+        { type: 'separator' },
+        { 
+          label: 'Clear terminal',
+          accelerator: shortcuts.menu.CLEAR_TERMINAL,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
         }
       ]
     },
@@ -100,7 +114,7 @@ module.exports = function registerMenu(win, state = {}) {
             }
           }
         },
-        { role: 'toggleDevTools', accelerator: ''},
+        { role: 'toggleDevTools'},
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },

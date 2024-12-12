@@ -3,6 +3,8 @@ const serial = window.BridgeSerial
 const disk = window.BridgeDisk
 const win = window.BridgeWindow
 
+const shortcuts = window.BridgeWindow.getShortcuts()
+
 const newFileContent = `# This program was created in Arduino Lab for MicroPython
 
 print('Hello, MicroPython!')
@@ -1407,17 +1409,17 @@ async function store(state, emitter) {
   // })
 
   win.onKeyboardShortcut((key) => {
-    if (key === 'C') {
+    if (key === shortcuts.CONNECT) {
       emitter.emit('open-connection-dialog')
     }
-    if (key === 'D') {
+    if (key === shortcuts.DISCONNECT) {
       emitter.emit('disconnect')
     }
-    if (key === 'R') {
+    if (key === shortcuts.RESET) {
       if (state.view != 'editor') return
       emitter.emit('reset')
     }
-    if (key === 'K') {
+    if (key === shortcuts.CLEAR_TERMINAL) {
       if (state.view != 'editor') return
       emitter.emit('clear-terminal')
     }
@@ -1426,23 +1428,23 @@ async function store(state, emitter) {
     //   if (state.view != 'editor') return
     //   emitter.emit('clear-terminal')
     // }
-    if (key === 'r') {
+    if (key === shortcuts.RUN) {
       if (state.view != 'editor') return
       runCode()
     }
-    if (key === '_r') {
+    if (key === shortcuts.RUN_SELECTION) {
       if (state.view != 'editor') return
       runCodeSelection()
     }
-    if (key === 'h') {
+    if (key === shortcuts.STOP) {
       if (state.view != 'editor') return
       stopCode()
     }
-    if (key === 's') {
+    if (key === shortcuts.SAVE) {
       if (state.view != 'editor') return
       emitter.emit('save')
     }
-    if (key === 'ESC') {
+    if (key === shortcuts.ESC) {
       if (state.isConnectionDialogOpen) {
         emitter.emit('close-connection-dialog')
       }

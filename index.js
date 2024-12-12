@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const shortcuts = require('./backend/shortcuts.js').global
 
 const registerIPCHandlers = require('./backend/ipc.js')
 const registerMenu = require('./backend/menu.js')
@@ -86,47 +87,58 @@ function shortcutAction(key) {
 
 // Shortcuts
 function registerShortcuts() {
-  globalShortcut.register('CommandOrControl+R', () => {
-    console.log('Running Program')
-    shortcutAction('r')
+  Object.entries(shortcuts).forEach(([command, shortcut]) => {
+    globalShortcut.register(shortcut, () => {
+      shortcutAction(shortcut)
+    });
   })
-  globalShortcut.register('CommandOrControl+Alt+R', () => {
-    console.log('Running Code Selection')
-    shortcutAction('_r')
-  })
-  globalShortcut.register('CommandOrControl+H', () => {
-    console.log('Stopping Program (Halt)')
-    shortcutAction('h')
-  })
-  globalShortcut.register('CommandOrControl+S', () => {
-    console.log('Saving File')
-    shortcutAction('s')
-  })
+  // shortcuts.forEach(element => {
+  //   globalShortcut.register(element, () => {
+      
+  //     shortcutAction(element)
+  //   });
+  // });
+  // globalShortcut.register(shortcuts.RUN, () => {
+  //   console.log('Running Program')
+  //   shortcutAction(shortcuts.RUN)
+  // })
+  // globalShortcut.register('CommandOrControl+Alt+R', () => {
+  //   console.log('Running Code Selection')
+  //   shortcutAction('meta_alt_r')
+  // })
+  // globalShortcut.register('CommandOrControl+H', () => {
+  //   console.log('Stopping Program (Halt)')
+  //   shortcutAction('meta_h')
+  // })
+  // globalShortcut.register('CommandOrControl+S', () => {
+  //   console.log('Saving File')
+  //   shortcutAction('meta_s')
+  // })
   
-  globalShortcut.register('CommandOrControl+Shift+R', () => {
-    console.log('Resetting Board')
-    shortcutAction('R')
-  })
-  globalShortcut.register('CommandOrControl+Shift+C', () => {
-    console.log('Connect to Board')
-    shortcutAction('C')
-  })
-  globalShortcut.register('CommandOrControl+Shift+D', () => {
-    console.log('Disconnect from Board')
-    shortcutAction('D')
-  }),
-  globalShortcut.register('CommandOrControl+K', () => {
-    console.log('Clear Terminal')
-    shortcutAction('K')
-  }),
-  // Future: Toggle REPL Panel
-  // globalShortcut.register('CommandOrControl+T', () => {
-  //   console.log('Toggle Terminal')
-  //   shortcutAction('T')
+  // globalShortcut.register('CommandOrControl+Shift+R', () => {
+  //   console.log('Resetting Board')
+  //   shortcutAction('meta_shift_r')
+  // })
+  // globalShortcut.register(shortcuts.CONNECT, () => {
+  //   console.log('Connect to Board')
+  //   shortcutAction(shortcuts.CONNECT)
+  // })
+  // globalShortcut.register(shortcuts.DISCONNECT, () => {
+  //   console.log('Disconnect from Board')
+  //   shortcutAction(shortcuts.DISCONNECT)
   // }),
-  globalShortcut.register('Escape', () => {
-    shortcutAction('ESC')
-  })
+  // globalShortcut.register('CommandOrControl+K', () => {
+  //   console.log('Clear Terminal')
+  //   shortcutAction('K')
+  // }),
+  // // Future: Toggle REPL Panel
+  // // globalShortcut.register('CommandOrControl+T', () => {
+  // //   console.log('Toggle Terminal')
+  // //   shortcutAction('T')
+  // // }),
+  // globalShortcut.register('Escape', () => {
+  //   shortcutAction('ESC')
+  // })
 }
 
 app.on('ready', () => {

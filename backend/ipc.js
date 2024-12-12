@@ -1,4 +1,6 @@
 const fs = require('fs')
+const registerMenu = require('./menu.js')
+
 const {
   openFolderDialog,
   listFolder,
@@ -130,7 +132,6 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   })
 
   ipcMain.handle('update-menu-state', (event, state) => {
-    const registerMenu = require('./menu.js')
     registerMenu(win, state)
   })
 

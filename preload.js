@@ -1,8 +1,10 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
-
+const shortcuts = require('./backend/shortcuts.js').global
 const MicroPython = require('micropython.js')
+const { emit, platform } = require('process')
+// const { platform } = requireprocess.platform
 const board = new MicroPython()
 board.chunk_size = 192
 board.chunk_sleep = 200
@@ -155,12 +157,48 @@ const Window = {
   setWindowSize: (minWidth, minHeight) => {
     ipcRenderer.invoke('set-window-size', minWidth, minHeight)
   },
+  onKeyboardShortcut: (callback, key) => {
+    ipcRenderer.on('shortcut-cmd', (event, k) => {
+      
+
+      // Only trigger callback if terminal is not focused AND we're in editor view
+      // This has been deemed unnecessary since there are no real conflicts with the terminal
+      // The REPL shortcuts Ctrl+a|b|c|d are not used as application shortcuts and will
+      // only be triggered when the user has focused the REPL
+      // The code is left here for reference
+      // const activeElement = document.activeElement;
+      // const isTerminalFocused = activeElement.classList.contains('xterm-helper-textarea');
+      // if (!isTerminalFocused) {
+      callback(k);
+      // }
+    })
+  },
+
+  onBeforeReload: (callback) => {
+    ipcRenderer.on('cleanup-before-reload', async () => {
+      try {
+        await callback()
+      } catch(e) {
+        console.error('Cleanup before reload failed:', e)
+      }
+    })
+  },
+
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
   isPackaged: () => ipcRenderer.invoke('is-packaged'),
-  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt)
-}
+  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt),
 
+  getOS: () => platform,
+  isWindows: () => platform === 'win32',
+  isMac: () => platform === 'darwin',
+  isLinux: () => platform === 'linux',
+
+  updateMenuState: (state) => {
+    return ipcRenderer.invoke('update-menu-state', state)
+  },
+  getShortcuts: () => shortcuts
+}
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)

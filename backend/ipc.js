@@ -1,4 +1,6 @@
 const fs = require('fs')
+const registerMenu = require('./menu.js')
+
 const {
   openFolderDialog,
   listFolder,
@@ -129,9 +131,18 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     return response != opt.cancelId
   })
 
+  ipcMain.handle('update-menu-state', (event, state) => {
+    registerMenu(win, state)
+  })
+
   win.on('close', (event) => {
     console.log('BrowserWindow', 'close')
     event.preventDefault()
     win.webContents.send('check-before-close')
+  })
+
+  // handle disconnection before reload
+  ipcMain.handle('prepare-reload', async (event) => {
+    return win.webContents.send('before-reload')
   })
 }

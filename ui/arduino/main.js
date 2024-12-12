@@ -46,11 +46,9 @@ window.addEventListener('load', () => {
   app.use(store);
   app.route('*', App)
   app.mount('#app')
-
   app.emitter.on('DOMContentLoaded', () => {
     if (app.state.diskNavigationRoot) {
       app.emitter.emit('refresh-files')
     }
   })
-
 })

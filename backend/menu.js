@@ -1,8 +1,9 @@
 const { app, Menu } = require('electron')
 const path = require('path')
 const openAboutWindow = require('about-window').default
+const shortcuts  = require('./shortcuts.js')
 
-module.exports = function registerMenu(win) {
+module.exports = function registerMenu(win, state = {}) {
   const isMac = process.platform === 'darwin'
   const template = [
     ...(isMac ? [{
@@ -10,9 +11,8 @@ module.exports = function registerMenu(win) {
       submenu: [
         { role: 'about'},
         { type: 'separator' },
-        { role: 'services' },
         { type: 'separator' },
-        { role: 'hide' },
+        { role: 'hide', accelerator: 'CmdOrCtrl+Shift+H' },
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
@@ -35,7 +35,6 @@ module.exports = function registerMenu(win) {
         { role: 'copy' },
         { role: 'paste' },
         ...(isMac ? [
-          { role: 'pasteAndMatchStyle' },
           { role: 'selectAll' },
           { type: 'separator' },
           {
@@ -52,10 +51,70 @@ module.exports = function registerMenu(win) {
       ]
     },
     {
+      label: 'Board',
+      submenu: [
+        { 
+          label: 'Connect',
+          accelerator: shortcuts.menu.CONNECT,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CONNECT)
+        },
+        { 
+          label: 'Disconnect',
+          accelerator: shortcuts.menu.DISCONNECT,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.DISCONNECT)
+        },
+        { type: 'separator' },
+        { 
+          label: 'Run',
+          accelerator: shortcuts.menu.RUN,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RUN)
+        },
+        { 
+          label: 'Run selection',
+          accelerator: shortcuts.menu.RUN_SELECTION,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RUN_SELECTION)
+        },
+        { 
+          label: 'Stop',
+          accelerator: shortcuts.menu.STOP,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.STOP)
+        },
+        { 
+          label: 'Reset',
+          accelerator: shortcuts.menu.RESET,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RESET)
+        },
+        { type: 'separator' },
+        { 
+          label: 'Clear terminal',
+          accelerator: shortcuts.menu.CLEAR_TERMINAL,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
+        }
+      ]
+    },
+    {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'toggleDevTools' },
+        { 
+          label: 'Reload',
+          accelerator: '',
+          click: async () => {
+            try {
+              win.webContents.send('cleanup-before-reload')
+              setTimeout(() => {
+                win.reload()
+              }, 500)
+            } catch(e) {
+              console.error('Reload from menu failed:', e)
+            }
+          }
+        },
+        { role: 'toggleDevTools'},
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
@@ -75,7 +134,7 @@ module.exports = function registerMenu(win) {
           { type: 'separator' },
           { role: 'window' }
         ] : [
-          { role: 'close' }
+          
         ])
       ]
     },

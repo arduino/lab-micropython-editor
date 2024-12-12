@@ -205,7 +205,7 @@ async function store(state, emitter) {
   })
 
   // CODE EXECUTION
-  emitter.on('run', async (selection = false) => {
+  emitter.on('run', async (onlySelected = false) => {
     log('run')
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
     let code = openFile.editor.editor.state.doc.toString()
@@ -213,7 +213,7 @@ async function store(state, emitter) {
     // If there is a selection, run only the selected code
     const startIndex = openFile.editor.editor.state.selection.ranges[0].from
     const endIndex = openFile.editor.editor.state.selection.ranges[0].to
-    if (endIndex - startIndex > 0 && selection) {
+    if (endIndex - startIndex > 0 && onlySelected) {
       selectedCode = openFile.editor.editor.state.doc.toString().substring(startIndex, endIndex)
       // Checking to see if the user accidentally double-clicked some whitespace
       // While a random selection would yield an error when executed, 

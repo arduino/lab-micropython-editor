@@ -1391,18 +1391,6 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  win.onBeforeReload(async () => {
-    // Perform any cleanup needed
-    if (state.isConnected) {
-      await serialBridge.disconnect()
-      state.isConnected = false
-      state.panelHeight = PANEL_CLOSED
-      state.boardFiles = []
-      state.boardNavigationPath = '/'
-    }
-    // Any other cleanup needed
-  })
-
   win.beforeClose(async () => {
     const hasChanges = !!state.openFiles.find(f => f.hasChanges)
     if (hasChanges) {

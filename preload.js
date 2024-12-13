@@ -64,16 +64,6 @@ const Window = {
     })
   },
 
-  onBeforeReload: (callback) => {
-    ipcRenderer.on('cleanup-before-reload', async () => {
-      try {
-        await callback()
-      } catch(e) {
-        console.error('Cleanup before reload failed:', e)
-      }
-    })
-  },
-
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
   isPackaged: () => ipcRenderer.invoke('is-packaged'),

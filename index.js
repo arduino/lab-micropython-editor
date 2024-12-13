@@ -50,24 +50,6 @@ function createWindow () {
     win.show()
   })
 
-  win.webContents.on('before-reload', async (event) => {
-    // Prevent the default reload behavior
-    event.preventDefault()
-    
-    try {
-      // Tell renderer to do cleanup
-      win.webContents.send('cleanup-before-reload')
-      
-      // Wait for cleanup then reload
-      setTimeout(() => {
-        // This will trigger a page reload, but won't trigger 'before-reload' again
-        win.reload()
-      }, 500)
-    } catch(e) {
-      console.error('Reload preparation failed:', e)
-    }
-  })
-
   const initialMenuState = {
     isConnected: false,
     view: 'editor'

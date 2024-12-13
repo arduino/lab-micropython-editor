@@ -144,11 +144,6 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     win.webContents.send('check-before-close')
   })
 
-  // handle disconnection before reload
-  ipcMain.handle('prepare-reload', async (event) => {
-    return win.webContents.send('before-reload')
-  })
-
   ipcMain.handle('serial', (event, command, ...args) => {
     console.debug('Handling IPC serial command:', command, ...args)
     return serial[command](...args)

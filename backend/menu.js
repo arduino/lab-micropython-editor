@@ -73,9 +73,9 @@ module.exports = function registerMenu(win, state = {}) {
         },
         { 
           label: 'Run selection',
-          accelerator: shortcuts.menu.RUN_SELECTION,
+          accelerator: isMac ? shortcuts.menu.RUN_SELECTION : shortcuts.menu.RUN_SELECTION_WL,
           enabled: state.isConnected && state.view === 'editor',
-          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RUN_SELECTION)
+          click: () => win.webContents.send('shortcut-cmd', (isMac ? shortcuts.global.RUN_SELECTION : shortcuts.global.RUN_SELECTION_WL))
         },
         { 
           label: 'Stop',

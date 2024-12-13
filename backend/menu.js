@@ -89,13 +89,7 @@ module.exports = function registerMenu(win, state = {}) {
           enabled: state.isConnected && state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RESET)
         },
-        { type: 'separator' },
-        { 
-          label: 'Clear terminal',
-          accelerator: shortcuts.menu.CLEAR_TERMINAL,
-          enabled: state.isConnected && state.view === 'editor',
-          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
-        }
+        { type: 'separator' }
       ]
     },
     {
@@ -110,6 +104,12 @@ module.exports = function registerMenu(win, state = {}) {
           label: 'Files',
           accelerator: shortcuts.menu.FILES_VIEW,
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.FILES_VIEW)
+        },
+        { 
+          label: 'Clear terminal',
+          accelerator: shortcuts.menu.CLEAR_TERMINAL,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
         },
         { type: 'separator' },
         { role: 'resetZoom' },

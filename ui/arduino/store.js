@@ -1444,6 +1444,14 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       emitter.emit('save')
     }
+    if (key === shortcuts.EDITOR_VIEW) {
+      if (state.view != 'file-manager') return
+      emitter.emit('change-view', 'editor')
+    }
+    if (key === shortcuts.FILES_VIEW) {
+      if (state.view != 'editor') return
+      emitter.emit('change-view', 'file-manager')
+    }
     if (key === shortcuts.ESC) {
       if (state.isConnectionDialogOpen) {
         emitter.emit('close-connection-dialog')

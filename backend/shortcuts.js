@@ -8,6 +8,8 @@ module.exports = {
     STOP: 'CommandOrControl+H',
     RESET: 'CommandOrControl+Shift+R',
     CLEAR_TERMINAL: 'CommandOrControl+L',
+    EDITOR_VIEW: 'CommandOrControl+Alt+1',
+    FILES_VIEW: 'CommandOrControl+Alt+2',
     ESC: 'Escape'
   },
   menu: {
@@ -19,5 +21,7 @@ module.exports = {
     STOP: 'CmdOrCtrl+H',
     RESET: 'CmdOrCtrl+Shift+R',
     CLEAR_TERMINAL: 'CmdOrCtrl+L',
+    EDITOR_VIEW: 'CmdOrCtrl+Alt+1',
+    FILES_VIEW: 'CmdOrCtrl+Alt+2'
   }
 }

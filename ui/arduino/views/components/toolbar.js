@@ -24,7 +24,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'run.svg',
-        tooltip: `Run (${metaKeyString}+r)`,
+        tooltip: `Run (${metaKeyString}+R)`,
         disabled: !_canExecute,
         onClick: (e) => {
           if (e.altKey) {
@@ -36,13 +36,13 @@ function Toolbar(state, emit) {
       })}
       ${Button({
         icon: 'stop.svg',
-        tooltip: `Stop (${metaKeyString}+h)`,
+        tooltip: `Stop (${metaKeyString}+H)`,
         disabled: !_canExecute,
         onClick: () => emit('stop')
       })}
       ${Button({
         icon: 'reboot.svg',
-        tooltip: `Reset (${metaKeyString}+Shift+r)`,
+        tooltip: `Reset (${metaKeyString}+Shift+R)`,
         disabled: !_canExecute,
         onClick: () => emit('reset')
       })}
@@ -51,7 +51,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'save.svg',
-        tooltip: `Save (${metaKeyString}+s)`,
+        tooltip: `Save (${metaKeyString}+S)`,
         disabled: !_canSave,
         onClick: () => emit('save')
       })}
@@ -59,14 +59,14 @@ function Toolbar(state, emit) {
       <div class="separator"></div>
 
       ${Button({
-        icon: 'editor.svg',
-        tooltip: 'Editor and REPL',
+        icon: 'code.svg',
+        tooltip: `Editor (${metaKeyString}+Alt+1)`,
         active: state.view === 'editor',
         onClick: () => emit('change-view', 'editor')
       })}
       ${Button({
         icon: 'files.svg',
-        tooltip: 'File Manager',
+        tooltip: `Files (${metaKeyString}+Alt+2)`,
         active: state.view === 'file-manager',
         onClick: () => emit('change-view', 'file-manager')
       })}

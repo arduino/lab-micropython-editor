@@ -2,6 +2,7 @@ const { app, Menu } = require('electron')
 const path = require('path')
 const openAboutWindow = require('about-window').default
 const shortcuts  = require('./shortcuts.js')
+const { type } = require('os')
 
 module.exports = function registerMenu(win, state = {}) {
   const isMac = process.platform === 'darwin'
@@ -101,6 +102,27 @@ module.exports = function registerMenu(win, state = {}) {
       label: 'View',
       submenu: [
         { 
+          label: 'Editor',
+          accelerator: shortcuts.menu.EDITOR_VIEW,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.EDITOR_VIEW,)
+        },
+        { 
+          label: 'Files',
+          accelerator: shortcuts.menu.FILES_VIEW,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.FILES_VIEW)
+        },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { 
           label: 'Reload',
           accelerator: '',
           click: async () => {
@@ -116,16 +138,6 @@ module.exports = function registerMenu(win, state = {}) {
         },
         { role: 'toggleDevTools'},
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-      ]
-    },
-    {
-      label: 'Window',
-      submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
         ...(isMac ? [

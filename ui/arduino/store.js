@@ -1599,6 +1599,7 @@ function pickRandom(array) {
 function canSave({ view, isConnected, openFiles, editingFile }) {
   const isEditor = view === 'editor'
   const file = openFiles.find(f => f.id === editingFile)
+  if (!file.hasChanges) return false
   // Can only save on editor
   if (!isEditor) return false
   // Can always save disk files

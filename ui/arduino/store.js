@@ -3,6 +3,8 @@ const serial = window.BridgeSerial
 const disk = window.BridgeDisk
 const win = window.BridgeWindow
 
+const shortcuts = window.BridgeWindow.getShortcuts()
+
 const newFileContent = `# This program was created in Arduino Lab for MicroPython
 
 print('Hello, MicroPython!')
@@ -24,6 +26,7 @@ async function confirm(msg, cancelMsg, confirmMsg) {
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
+  state.platform = window.BridgeWindow.getOS()
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
@@ -80,6 +83,14 @@ async function store(state, emitter) {
     emitter.emit('render')
   }
 
+  // Menu management
+  const updateMenu = () => {
+    window.BridgeWindow.updateMenuState({
+      isConnected: state.isConnected,
+      view: state.view
+    })
+  }
+
   // START AND BASIC ROUTING
   emitter.on('select-disk-navigation-root', async () => {
     const folder = await selectDiskFolder()
@@ -97,6 +108,7 @@ async function store(state, emitter) {
       emitter.emit('refresh-files')
     }
     emitter.emit('render')
+    updateMenu()
   })
 
   // CONNECTION DIALOG
@@ -142,11 +154,13 @@ async function store(state, emitter) {
     }
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
+    
     await serial.getPrompt()
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
+    updateMenu()
     if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
     }
@@ -180,6 +194,7 @@ async function store(state, emitter) {
     state.boardNavigationPath = '/'
     emitter.emit('refresh-files')
     emitter.emit('render')
+    updateMenu()
   })
   emitter.on('connection-timeout', async () => {
     state.isConnected = false
@@ -190,7 +205,7 @@ async function store(state, emitter) {
   })
 
   // CODE EXECUTION
-  emitter.on('run', async () => {
+  emitter.on('run', async (onlySelected = false) => {
     log('run')
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
     let code = openFile.editor.editor.state.doc.toString()
@@ -198,7 +213,7 @@ async function store(state, emitter) {
     // If there is a selection, run only the selected code
     const startIndex = openFile.editor.editor.state.selection.ranges[0].from
     const endIndex = openFile.editor.editor.state.selection.ranges[0].to
-    if (endIndex - startIndex > 0) {
+    if (endIndex - startIndex > 0 && onlySelected) {
       selectedCode = openFile.editor.editor.state.doc.toString().substring(startIndex, endIndex)
       // Checking to see if the user accidentally double-clicked some whitespace
       // While a random selection would yield an error when executed, 
@@ -1367,6 +1382,18 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
+  win.onBeforeReload(async () => {
+    // Perform any cleanup needed
+    if (state.isConnected) {
+      await serial.disconnect()
+      state.isConnected = false
+      state.panelHeight = PANEL_CLOSED
+      state.boardFiles = []
+      state.boardNavigationPath = '/'
+    }
+    // Any other cleanup needed
+  })
+
   win.beforeClose(async () => {
     const hasChanges = !!state.openFiles.find(f => f.hasChanges)
     if (hasChanges) {
@@ -1376,6 +1403,78 @@ async function store(state, emitter) {
     await win.confirmClose()
   })
 
+  // win.shortcutCmdR(() => {
+  //   // Only run if we can execute
+    
+  // })
+
+  win.onKeyboardShortcut((key) => {
+    if (key === shortcuts.CONNECT) {
+      emitter.emit('open-connection-dialog')
+    }
+    if (key === shortcuts.DISCONNECT) {
+      emitter.emit('disconnect')
+    }
+    if (key === shortcuts.RESET) {
+      if (state.view != 'editor') return
+      emitter.emit('reset')
+    }
+    if (key === shortcuts.CLEAR_TERMINAL) {
+      if (state.view != 'editor') return
+      emitter.emit('clear-terminal')
+    }
+    // Future: Toggle REPL panel
+    // if (key === 'T') {
+    //   if (state.view != 'editor') return
+    //   emitter.emit('clear-terminal')
+    // }
+    if (key === shortcuts.RUN) {
+      if (state.view != 'editor') return
+      runCode()
+    }
+    if (key === shortcuts.RUN_SELECTION || key === shortcuts.RUN_SELECTION_WL) { 
+      if (state.view != 'editor') return
+      runCodeSelection()
+    }
+    if (key === shortcuts.STOP) {
+      if (state.view != 'editor') return
+      stopCode()
+    }
+    if (key === shortcuts.SAVE) {
+      if (state.view != 'editor') return
+      emitter.emit('save')
+    }
+    if (key === shortcuts.EDITOR_VIEW) {
+      if (state.view != 'file-manager') return
+      emitter.emit('change-view', 'editor')
+    }
+    if (key === shortcuts.FILES_VIEW) {
+      if (state.view != 'editor') return
+      emitter.emit('change-view', 'file-manager')
+    }
+    if (key === shortcuts.ESC) {
+      if (state.isConnectionDialogOpen) {
+        emitter.emit('close-connection-dialog')
+      }
+    }
+
+  })
+
+  function runCode() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('run')
+    }
+  }
+  function runCodeSelection() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('run', true)
+    }
+  }
+  function stopCode() {
+    if (canExecute({ view: state.view, isConnected: state.isConnected })) {
+      emitter.emit('stop')
+    }
+  }
   function createFile(args) {
     const {
       source,
@@ -1508,6 +1607,7 @@ function pickRandom(array) {
 function canSave({ view, isConnected, openFiles, editingFile }) {
   const isEditor = view === 'editor'
   const file = openFiles.find(f => f.id === editingFile)
+  if (!file.hasChanges) return false
   // Can only save on editor
   if (!isEditor) return false
   // Can always save disk files
@@ -1620,4 +1720,5 @@ async function getHelperFullPath() {
       ''
     )
   }
+
 }

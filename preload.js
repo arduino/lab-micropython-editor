@@ -1,8 +1,10 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
-
+const shortcuts = require('./backend/shortcuts.js').global
 const MicroPython = require('micropython.js')
+const { emit, platform } = require('process')
+
 const board = new MicroPython()
 board.chunk_size = 192
 board.chunk_sleep = 200
@@ -155,12 +157,37 @@ const Window = {
   setWindowSize: (minWidth, minHeight) => {
     ipcRenderer.invoke('set-window-size', minWidth, minHeight)
   },
+  onKeyboardShortcut: (callback, key) => {
+    ipcRenderer.on('shortcut-cmd', (event, k) => {
+      callback(k);
+    })
+  },
+
+  onBeforeReload: (callback) => {
+    ipcRenderer.on('cleanup-before-reload', async () => {
+      try {
+        await callback()
+      } catch(e) {
+        console.error('Cleanup before reload failed:', e)
+      }
+    })
+  },
+
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
   isPackaged: () => ipcRenderer.invoke('is-packaged'),
-  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt)
-}
+  openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt),
 
+  getOS: () => platform,
+  isWindows: () => platform === 'win32',
+  isMac: () => platform === 'darwin',
+  isLinux: () => platform === 'linux',
+
+  updateMenuState: (state) => {
+    return ipcRenderer.invoke('update-menu-state', state)
+  },
+  getShortcuts: () => shortcuts
+}
 
 contextBridge.exposeInMainWorld('BridgeSerial', Serial)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)

@@ -9,12 +9,13 @@ function Toolbar(state, emit) {
     view: state.view,
     isConnected: state.isConnected
   })
-
+  const metaKeyString = state.platform === 'darwin' ? 'Cmd' : 'Ctrl'
+  
   return html`
     <div id="toolbar">
       ${Button({
         icon: state.isConnected ? 'connect.svg' : 'disconnect.svg',
-        tooltip: state.isConnected ? 'Disconnect' : 'Connect',
+        tooltip: state.isConnected ? `Disconnect (${metaKeyString}+Shift+D)` : `Connect (${metaKeyString}+Shift+C)`,
         onClick: () => emit('open-connection-dialog'),
         active: state.isConnected
       })}
@@ -23,19 +24,25 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'run.svg',
-        tooltip: 'Run',
+        tooltip: `Run (${metaKeyString}+R)`,
         disabled: !_canExecute,
-        onClick: () => emit('run')
+        onClick: (e) => {
+          if (e.altKey) {
+            emit('run', true)
+          }else{
+            emit('run')
+          }
+        }
       })}
       ${Button({
         icon: 'stop.svg',
-        tooltip: 'Stop',
+        tooltip: `Stop (${metaKeyString}+H)`,
         disabled: !_canExecute,
         onClick: () => emit('stop')
       })}
       ${Button({
         icon: 'reboot.svg',
-        tooltip: 'Reset',
+        tooltip: `Reset (${metaKeyString}+Shift+R)`,
         disabled: !_canExecute,
         onClick: () => emit('reset')
       })}
@@ -44,7 +51,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'save.svg',
-        tooltip: 'Save',
+        tooltip: `Save (${metaKeyString}+S)`,
         disabled: !_canSave,
         onClick: () => emit('save')
       })}
@@ -52,14 +59,14 @@ function Toolbar(state, emit) {
       <div class="separator"></div>
 
       ${Button({
-        icon: 'editor.svg',
-        tooltip: 'Editor and REPL',
+        icon: 'code.svg',
+        tooltip: `Editor (${metaKeyString}+Alt+1)`,
         active: state.view === 'editor',
         onClick: () => emit('change-view', 'editor')
       })}
       ${Button({
         icon: 'files.svg',
-        tooltip: 'File Manager',
+        tooltip: `Files (${metaKeyString}+Alt+2)`,
         active: state.view === 'file-manager',
         onClick: () => emit('change-view', 'file-manager')
       })}

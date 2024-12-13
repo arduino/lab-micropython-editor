@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const shortcuts = require('./backend/shortcuts.js').global
 
 const registerIPCHandlers = require('./backend/ipc.js')
 const registerMenu = require('./backend/menu.js')
@@ -49,12 +50,59 @@ function createWindow () {
     win.show()
   })
 
+  win.webContents.on('before-reload', async (event) => {
+    // Prevent the default reload behavior
+    event.preventDefault()
+    
+    try {
+      // Tell renderer to do cleanup
+      win.webContents.send('cleanup-before-reload')
+      
+      // Wait for cleanup then reload
+      setTimeout(() => {
+        // This will trigger a page reload, but won't trigger 'before-reload' again
+        win.reload()
+      }, 500)
+    } catch(e) {
+      console.error('Reload preparation failed:', e)
+    }
+  })
+
+  const initialMenuState = {
+    isConnected: false,
+    view: 'editor'
+  }
+
   registerIPCHandlers(win, ipcMain, app, dialog)
-  registerMenu(win)
+  registerMenu(win, initialMenuState)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 }
 
-app.on('ready', createWindow)
+function shortcutAction(key) {
+  win.webContents.send('shortcut-cmd', key);
+}
+
+// Shortcuts
+function registerShortcuts() {
+  Object.entries(shortcuts).forEach(([command, shortcut]) => {
+    globalShortcut.register(shortcut, () => {
+      shortcutAction(shortcut)
+    });
+  })
+}
+
+app.on('ready', () => {
+  createWindow()
+  registerShortcuts()
+
+  win.on('focus', () => {
+    registerShortcuts()
+  })
+  win.on('blur', () => {
+    globalShortcut.unregisterAll()
+  })
+  
+})

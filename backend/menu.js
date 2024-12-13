@@ -173,7 +173,6 @@ module.exports = function registerMenu(win, state = {}) {
               openAboutWindow({
                   icon_path: path.resolve(__dirname, '../ui/arduino/media/about_image.png'),
                   css_path: path.resolve(__dirname, '../ui/arduino/views/about.css'),
-                  // about_page_dir: path.resolve(__dirname, '../ui/arduino/views/'),
                   copyright: '© Arduino SA 2022',
                   package_json_dir: path.resolve(__dirname, '..'),
                   bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",

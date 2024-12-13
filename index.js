@@ -92,53 +92,6 @@ function registerShortcuts() {
       shortcutAction(shortcut)
     });
   })
-  // shortcuts.forEach(element => {
-  //   globalShortcut.register(element, () => {
-      
-  //     shortcutAction(element)
-  //   });
-  // });
-  // globalShortcut.register(shortcuts.RUN, () => {
-  //   console.log('Running Program')
-  //   shortcutAction(shortcuts.RUN)
-  // })
-  // globalShortcut.register('CommandOrControl+Alt+R', () => {
-  //   console.log('Running Code Selection')
-  //   shortcutAction('meta_alt_r')
-  // })
-  // globalShortcut.register('CommandOrControl+H', () => {
-  //   console.log('Stopping Program (Halt)')
-  //   shortcutAction('meta_h')
-  // })
-  // globalShortcut.register('CommandOrControl+S', () => {
-  //   console.log('Saving File')
-  //   shortcutAction('meta_s')
-  // })
-  
-  // globalShortcut.register('CommandOrControl+Shift+R', () => {
-  //   console.log('Resetting Board')
-  //   shortcutAction('meta_shift_r')
-  // })
-  // globalShortcut.register(shortcuts.CONNECT, () => {
-  //   console.log('Connect to Board')
-  //   shortcutAction(shortcuts.CONNECT)
-  // })
-  // globalShortcut.register(shortcuts.DISCONNECT, () => {
-  //   console.log('Disconnect from Board')
-  //   shortcutAction(shortcuts.DISCONNECT)
-  // }),
-  // globalShortcut.register('CommandOrControl+K', () => {
-  //   console.log('Clear Terminal')
-  //   shortcutAction('K')
-  // }),
-  // // Future: Toggle REPL Panel
-  // // globalShortcut.register('CommandOrControl+T', () => {
-  // //   console.log('Toggle Terminal')
-  // //   shortcutAction('T')
-  // // }),
-  // globalShortcut.register('Escape', () => {
-  //   shortcutAction('ESC')
-  // })
 }
 
 app.on('ready', () => {

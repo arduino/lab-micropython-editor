@@ -4,7 +4,7 @@ const path = require('path')
 const shortcuts = require('./backend/shortcuts.js').global
 const MicroPython = require('micropython.js')
 const { emit, platform } = require('process')
-// const { platform } = requireprocess.platform
+
 const board = new MicroPython()
 board.chunk_size = 192
 board.chunk_sleep = 200
@@ -159,18 +159,7 @@ const Window = {
   },
   onKeyboardShortcut: (callback, key) => {
     ipcRenderer.on('shortcut-cmd', (event, k) => {
-      
-
-      // Only trigger callback if terminal is not focused AND we're in editor view
-      // This has been deemed unnecessary since there are no real conflicts with the terminal
-      // The REPL shortcuts Ctrl+a|b|c|d are not used as application shortcuts and will
-      // only be triggered when the user has focused the REPL
-      // The code is left here for reference
-      // const activeElement = document.activeElement;
-      // const isTerminalFocused = activeElement.classList.contains('xterm-helper-textarea');
-      // if (!isTerminalFocused) {
       callback(k);
-      // }
     })
   },
 

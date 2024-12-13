@@ -1198,6 +1198,7 @@ async function store(state, emitter) {
     state.openFiles = state.openFiles.concat(filesToOpen)
 
     state.view = 'editor'
+    updateMenu()
     emitter.emit('render')
   })
   emitter.on('open-file', (source, file) => {

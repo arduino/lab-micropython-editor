@@ -1,6 +1,6 @@
 const fs = require('fs')
 const registerMenu = require('./menu.js')
-const serial = require('./serial.js').sharedInstance
+const serial = require('./serial/serial.js').sharedInstance
 
 const {
   openFolderDialog,

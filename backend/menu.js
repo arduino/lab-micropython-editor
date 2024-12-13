@@ -1,6 +1,6 @@
 const { app, Menu } = require('electron')
 const path = require('path')
-const serial = require('./serial.js').sharedInstance
+const serial = require('./serial/serial.js').sharedInstance
 const openAboutWindow = require('about-window').default
 const shortcuts  = require('./shortcuts.js')
 const { type } = require('os')

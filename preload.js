@@ -3,7 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
 const shortcuts = require('./backend/shortcuts.js').global
 const { emit, platform } = require('process')
-const SerialBridge = require('./backend/bridge/serial-bridge.js')
+const SerialBridge = require('./backend/serial/serial-bridge.js')
 
 const Disk = {
   openFolder: async () => {

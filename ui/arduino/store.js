@@ -1432,7 +1432,7 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       runCode()
     }
-    if (key === shortcuts.RUN_SELECTION) {
+    if (key === shortcuts.RUN_SELECTION || key === shortcuts.RUN_SELECTION_WL) { 
       if (state.view != 'editor') return
       runCodeSelection()
     }

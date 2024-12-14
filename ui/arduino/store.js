@@ -201,8 +201,6 @@ async function store(state, emitter) {
   })
   emitter.on('disconnect', async () => {
     await serialBridge.disconnect()
-    // Update the UI after closing the connection
-    emitter.emit('disconnected')
   })
   emitter.on('connection-timeout', async () => {
     state.isConnected = false

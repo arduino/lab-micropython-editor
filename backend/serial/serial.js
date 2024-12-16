@@ -56,6 +56,8 @@ class Serial {
         })
 
         this.board.serial.on('close', () => {
+            this.board.serial.removeAllListeners("data")
+            this.board.serial.removeAllListeners("close")
             this.win.webContents.send('serial-on-connection-closed')
         })
     }

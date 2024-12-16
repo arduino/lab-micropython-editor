@@ -12,7 +12,7 @@ function FileManagerView(state, emit) {
       <div id="file-manager">
         <div id="board-files">
           <div class="device-header">
-            <img class="icon" src="media/${state.isConnected?'connect':'disconnect'}.svg" />
+            <img class="icon" src="media/${state.isConnected?'board':'disconnect'}.svg" />
             <div onclick=${() => emit('open-connection-dialog')} class="text">
               <span>${boardFullPath}</span>
             </div>

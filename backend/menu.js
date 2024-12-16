@@ -1,8 +1,11 @@
 const { app, Menu } = require('electron')
 const path = require('path')
+const serial = require('./serial/serial.js').sharedInstance
 const openAboutWindow = require('about-window').default
+const shortcuts  = require('./shortcuts.js')
+const { type } = require('os')
 
-module.exports = function registerMenu(win) {
+module.exports = function registerMenu(win, state = {}) {
   const isMac = process.platform === 'darwin'
   const template = [
     ...(isMac ? [{
@@ -10,9 +13,8 @@ module.exports = function registerMenu(win) {
       submenu: [
         { role: 'about'},
         { type: 'separator' },
-        { role: 'services' },
         { type: 'separator' },
-        { role: 'hide' },
+        { role: 'hide', accelerator: 'CmdOrCtrl+Shift+H' },
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
@@ -35,7 +37,6 @@ module.exports = function registerMenu(win) {
         { role: 'copy' },
         { role: 'paste' },
         ...(isMac ? [
-          { role: 'pasteAndMatchStyle' },
           { role: 'selectAll' },
           { type: 'separator' },
           {
@@ -52,10 +53,65 @@ module.exports = function registerMenu(win) {
       ]
     },
     {
+      label: 'Board',
+      submenu: [
+        { 
+          label: 'Connect',
+          accelerator: shortcuts.menu.CONNECT,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CONNECT)
+        },
+        { 
+          label: 'Disconnect',
+          accelerator: shortcuts.menu.DISCONNECT,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.DISCONNECT)
+        },
+        { type: 'separator' },
+        { 
+          label: 'Run',
+          accelerator: shortcuts.menu.RUN,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RUN)
+        },
+        { 
+          label: 'Run selection',
+          accelerator: isMac ? shortcuts.menu.RUN_SELECTION : shortcuts.menu.RUN_SELECTION_WL,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', (isMac ? shortcuts.global.RUN_SELECTION : shortcuts.global.RUN_SELECTION_WL))
+        },
+        { 
+          label: 'Stop',
+          accelerator: shortcuts.menu.STOP,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.STOP)
+        },
+        { 
+          label: 'Reset',
+          accelerator: shortcuts.menu.RESET,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RESET)
+        },
+        { type: 'separator' }
+      ]
+    },
+    {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'toggleDevTools' },
+        { 
+          label: 'Editor',
+          accelerator: shortcuts.menu.EDITOR_VIEW,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.EDITOR_VIEW,)
+        },
+        { 
+          label: 'Files',
+          accelerator: shortcuts.menu.FILES_VIEW,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.FILES_VIEW)
+        },
+        { 
+          label: 'Clear terminal',
+          accelerator: shortcuts.menu.CLEAR_TERMINAL,
+          enabled: state.isConnected && state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
+        },
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
@@ -67,6 +123,20 @@ module.exports = function registerMenu(win) {
     {
       label: 'Window',
       submenu: [
+        { 
+          label: 'Reload',
+          accelerator: '',
+          click: async () => {
+            try {
+              await serial.disconnect()
+              win.reload()
+            } catch(e) {
+              console.error('Reload from menu failed:', e)
+            }
+          }
+        },
+        { role: 'toggleDevTools'},
+        { type: 'separator' },
         { role: 'minimize' },
         { role: 'zoom' },
         ...(isMac ? [
@@ -75,7 +145,7 @@ module.exports = function registerMenu(win) {
           { type: 'separator' },
           { role: 'window' }
         ] : [
-          { role: 'close' }
+          
         ])
       ]
     },
@@ -102,7 +172,6 @@ module.exports = function registerMenu(win) {
               openAboutWindow({
                   icon_path: path.resolve(__dirname, '../ui/arduino/media/about_image.png'),
                   css_path: path.resolve(__dirname, '../ui/arduino/views/about.css'),
-                  // about_page_dir: path.resolve(__dirname, '../ui/arduino/views/'),
                   copyright: '© Arduino SA 2022',
                   package_json_dir: path.resolve(__dirname, '..'),
                   bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",

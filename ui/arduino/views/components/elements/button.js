@@ -2,7 +2,7 @@ function Button(args) {
   const {
     size = '',
     icon = 'connect.svg',
-    onClick = () => false,
+    onClick = (e) => false,
     disabled = false,
     active = false,
     tooltip,

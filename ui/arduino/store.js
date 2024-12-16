@@ -1,5 +1,5 @@
 const log = console.log
-const serial = window.BridgeSerial
+const serialBridge = window.BridgeSerial
 const disk = window.BridgeDisk
 const win = window.BridgeWindow
 
@@ -114,7 +114,8 @@ async function store(state, emitter) {
   // CONNECTION DIALOG
   emitter.on('open-connection-dialog', async () => {
     log('open-connection-dialog')
-    emitter.emit('disconnect')
+    // UI should be in disconnected state, no need to update
+    await serialBridge.disconnect()
     state.availablePorts = await getAvailablePorts()
     state.isConnectionDialogOpen = true
     emitter.emit('render')
@@ -148,14 +149,14 @@ async function store(state, emitter) {
       emitter.emit('connection-timeout')
     }, 3500)
     try {
-      await serial.connect(path)
+      await serialBridge.connect(path)
     } catch(e) {
       console.error(e)
     }
     // Stop whatever is going on
     // Recover from getting stuck in raw repl
     
-    await serial.getPrompt()
+    await serialBridge.getPrompt()
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
@@ -171,23 +172,25 @@ async function store(state, emitter) {
     if (!state.isTerminalBound) {
       state.isTerminalBound = true
       term.onData((data) => {
-        serial.eval(data)
+        serialBridge.eval(data)
         term.scrollToBottom()
       })
-      serial.eval('\x02')
+      serialBridge.eval('\x02') // Send Ctrl+B to enter normal repl mode
     }
-    serial.onData((data) => {
+    serialBridge.onData((data) => {
       term.write(data)
       term.scrollToBottom()
     })
-    serial.onDisconnect(() => emitter.emit('disconnect'))
+
+    // Update the UI when the conncetion is closed
+    // This may happen when unplugging the board
+    serialBridge.onConnectionClosed(() => emitter.emit('disconnected'))
 
     emitter.emit('close-connection-dialog')
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
-  emitter.on('disconnect', async () => {
-    await serial.disconnect()
+  emitter.on('disconnected', () => {
     state.isConnected = false
     state.panelHeight = PANEL_CLOSED
     state.boardFiles = []
@@ -195,6 +198,9 @@ async function store(state, emitter) {
     emitter.emit('refresh-files')
     emitter.emit('render')
     updateMenu()
+  })
+  emitter.on('disconnect', async () => {
+    await serialBridge.disconnect()
   })
   emitter.on('connection-timeout', async () => {
     state.isConnected = false
@@ -228,8 +234,8 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     emitter.emit('render')
     try {
-      await serial.getPrompt()
-      await serial.run(code)
+      await serialBridge.getPrompt()
+      await serialBridge.run(code)
     } catch(e) {
       log('error', e)
     }
@@ -241,7 +247,7 @@ async function store(state, emitter) {
     }
     emitter.emit('open-panel')
     emitter.emit('render')
-    await serial.getPrompt()
+    await serialBridge.getPrompt()
   })
   emitter.on('reset', async () => {
     log('reset')
@@ -250,7 +256,7 @@ async function store(state, emitter) {
     }
     emitter.emit('open-panel')
     emitter.emit('render')
-    await serial.reset()
+    await serialBridge.reset()
     emitter.emit('update-files')
     emitter.emit('render')
   })
@@ -326,9 +332,9 @@ async function store(state, emitter) {
     // Check if the current full path exists
     let fullPathExists = false
     if (openFile.source == 'board') {
-      await serial.getPrompt()
-      fullPathExists = await serial.fileExists(
-        serial.getFullPath(
+      await serialBridge.getPrompt()
+      fullPathExists = await serialBridge.fileExists(
+        serialBridge.getFullPath(
           state.boardNavigationRoot,
           openFile.parentFolder,
           openFile.fileName
@@ -349,9 +355,9 @@ async function store(state, emitter) {
       if (openFile.source == 'board') {
         openFile.parentFolder = state.boardNavigationPath
         // Check for overwrite
-        await serial.getPrompt()
-        willOverwrite = await serial.fileExists(
-          serial.getFullPath(
+        await serialBridge.getPrompt()
+        willOverwrite = await serialBridge.fileExists(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             openFile.parentFolder,
             openFile.fileName
@@ -384,9 +390,9 @@ async function store(state, emitter) {
     const contents = openFile.editor.editor.state.doc.toString()
     try {
       if (openFile.source == 'board') {
-        await serial.getPrompt()
-        await serial.saveFileContent(
-          serial.getFullPath(
+        await serialBridge.getPrompt()
+        await serialBridge.saveFileContent(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             openFile.parentFolder,
             openFile.fileName
@@ -462,7 +468,7 @@ async function store(state, emitter) {
     if (state.isConnected) {
       try {
         state.boardFiles = await getBoardFiles(
-          serial.getFullPath(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             state.boardNavigationPath,
             ''
@@ -540,8 +546,8 @@ async function store(state, emitter) {
         }
         // TODO: Remove existing file
       }
-      await serial.saveFileContent(
-        serial.getFullPath(
+      await serialBridge.saveFileContent(
+        serialBridge.getFullPath(
           '/',
           state.boardNavigationPath,
           value
@@ -611,15 +617,15 @@ async function store(state, emitter) {
         }
         // Remove existing folder
         await removeBoardFolder(
-          serial.getFullPath(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             state.boardNavigationPath,
             value
           )
         )
       }
-      await serial.createFolder(
-        serial.getFullPath(
+      await serialBridge.createFolder(
+        serialBridge.getFullPath(
           state.boardNavigationRoot,
           state.boardNavigationPath,
           value
@@ -701,7 +707,7 @@ async function store(state, emitter) {
       if (file.type == 'folder') {
         if (file.source === 'board') {
           await removeBoardFolder(
-            serial.getFullPath(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               state.boardNavigationPath,
               file.fileName
@@ -718,8 +724,8 @@ async function store(state, emitter) {
         }
       } else {
         if (file.source === 'board') {
-          await serial.removeFile(
-            serial.getFullPath(
+          await serialBridge.removeFile(
+            serialBridge.getFullPath(
               '/',
               state.boardNavigationPath,
               file.fileName
@@ -787,15 +793,15 @@ async function store(state, emitter) {
 
         if (file.type == 'folder') {
           await removeBoardFolder(
-            serial.getFullPath(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               state.boardNavigationPath,
               value
             )
           )
         } else if (file.type == 'file') {
-          await serial.removeFile(
-            serial.getFullPath(
+          await serialBridge.removeFile(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               state.boardNavigationPath,
               value
@@ -847,13 +853,13 @@ async function store(state, emitter) {
 
     try {
       if (state.renamingFile == 'board') {
-        await serial.renameFile(
-          serial.getFullPath(
+        await serialBridge.renameFile(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             state.boardNavigationPath,
             file.fileName
           ),
-          serial.getFullPath(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             state.boardNavigationPath,
             value
@@ -924,8 +930,8 @@ async function store(state, emitter) {
     if (!isNewFile) {
       // Check if full path exists
       if (openFile.source == 'board') {
-        fullPathExists = await serial.fileExists(
-          serial.getFullPath(
+        fullPathExists = await serialBridge.fileExists(
+          serialBridge.getFullPath(
             state.boardNavigationRoot,
             openFile.parentFolder,
             oldName
@@ -953,8 +959,8 @@ async function store(state, emitter) {
     // Check if it will overwrite
     let willOverwrite = false
     if (openFile.source == 'board') {
-      willOverwrite = await serial.fileExists(
-        serial.getFullPath(
+      willOverwrite = await serialBridge.fileExists(
+        serialBridge.getFullPath(
           state.boardNavigationRoot,
           openFile.parentFolder,
           openFile.fileName
@@ -986,9 +992,9 @@ async function store(state, emitter) {
       const contents = openFile.editor.editor.state.doc.toString()
       try {
         if (openFile.source == 'board') {
-          await serial.getPrompt()
-          await serial.saveFileContent(
-            serial.getFullPath(
+          await serialBridge.getPrompt()
+          await serialBridge.saveFileContent(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               openFile.parentFolder,
               oldName
@@ -1015,13 +1021,13 @@ async function store(state, emitter) {
       // RENAME FILE
       try {
         if (openFile.source == 'board') {
-          await serial.renameFile(
-            serial.getFullPath(
+          await serialBridge.renameFile(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               openFile.parentFolder,
               oldName
             ),
-            serial.getFullPath(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               openFile.parentFolder,
               openFile.fileName
@@ -1049,9 +1055,9 @@ async function store(state, emitter) {
       const contents = openFile.editor.editor.state.doc.toString()
       try {
         if (openFile.source == 'board') {
-          await serial.getPrompt()
-          await serial.saveFileContent(
-            serial.getFullPath(
+          await serialBridge.getPrompt()
+          await serialBridge.saveFileContent(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               openFile.parentFolder,
               openFile.fileName
@@ -1141,8 +1147,8 @@ async function store(state, emitter) {
         // load content and append it to the list of files to open
         let file = null
         if (selectedFile.source == 'board') {
-          const fileContent = await serial.loadFile(
-            serial.getFullPath(
+          const fileContent = await serialBridge.loadFile(
+            serialBridge.getFullPath(
               state.boardNavigationRoot,
               state.boardNavigationPath,
               selectedFile.fileName
@@ -1222,7 +1228,7 @@ async function store(state, emitter) {
     const willOverwrite = await checkOverwrite({
       source: 'board',
       fileNames: state.selectedFiles.map(f => f.fileName),
-      parentPath: serial.getFullPath(
+      parentPath: serialBridge.getFullPath(
         state.boardNavigationRoot,
         state.boardNavigationPath,
         ''
@@ -1249,7 +1255,7 @@ async function store(state, emitter) {
         state.diskNavigationPath,
         file.fileName
       )
-      const destPath = serial.getFullPath(
+      const destPath = serialBridge.getFullPath(
         state.boardNavigationRoot,
         state.boardNavigationPath,
         file.fileName
@@ -1263,7 +1269,7 @@ async function store(state, emitter) {
           }
         )
       } else {
-        await serial.uploadFile(
+        await serialBridge.uploadFile(
           srcPath, destPath,
           (progress) => {
             state.transferringProgress = `${file.fileName}: ${progress}`
@@ -1309,7 +1315,7 @@ async function store(state, emitter) {
 
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
-      const srcPath = serial.getFullPath(
+      const srcPath = serialBridge.getFullPath(
         state.boardNavigationRoot,
         state.boardNavigationPath,
         file.fileName
@@ -1328,7 +1334,7 @@ async function store(state, emitter) {
           }
         )
       } else {
-        await serial.downloadFile(
+        await serialBridge.downloadFile(
           srcPath, destPath,
           (e) => {
             state.transferringProgress = e
@@ -1347,7 +1353,7 @@ async function store(state, emitter) {
   // NAVIGATION
   emitter.on('navigate-board-folder', (folder) => {
     log('navigate-board-folder', folder)
-    state.boardNavigationPath = serial.getNavigationPath(
+    state.boardNavigationPath = serialBridge.getNavigationPath(
       state.boardNavigationPath,
       folder
     )
@@ -1356,7 +1362,7 @@ async function store(state, emitter) {
   })
   emitter.on('navigate-board-parent', () => {
     log('navigate-board-parent')
-    state.boardNavigationPath = serial.getNavigationPath(
+    state.boardNavigationPath = serialBridge.getNavigationPath(
       state.boardNavigationPath,
       '..'
     )
@@ -1381,18 +1387,6 @@ async function store(state, emitter) {
     )
     emitter.emit('refresh-files')
     emitter.emit('render')
-  })
-
-  win.onBeforeReload(async () => {
-    // Perform any cleanup needed
-    if (state.isConnected) {
-      await serial.disconnect()
-      state.isConnected = false
-      state.panelHeight = PANEL_CLOSED
-      state.boardFiles = []
-      state.boardNavigationPath = '/'
-    }
-    // Any other cleanup needed
   })
 
   win.beforeClose(async () => {
@@ -1553,12 +1547,12 @@ function generateHash() {
 }
 
 async function getAvailablePorts() {
-  return await serial.loadPorts()
+  return await serialBridge.loadPorts()
 }
 
 async function getBoardFiles(path) {
-  await serial.getPrompt()
-  let files = await serial.ilistFiles(path)
+  await serialBridge.getPrompt()
+  let files = await serialBridge.ilistFiles(path)
   files = files.map(f => ({
     fileName: f[0],
     type: f[1] === 0x4000 ? 'folder' : 'file'
@@ -1576,9 +1570,9 @@ function checkDiskFile({ root, parentFolder, fileName }) {
 
 async function checkBoardFile({ root, parentFolder, fileName }) {
   if (root == null || parentFolder == null || fileName == null) return false
-  await serial.getPrompt()
-  return serial.fileExists(
-    serial.getFullPath(root, parentFolder, fileName)
+  await serialBridge.getPrompt()
+  return serialBridge.fileExists(
+    serialBridge.getFullPath(root, parentFolder, fileName)
   )
 }
 
@@ -1643,29 +1637,29 @@ function canEdit({ selectedFiles }) {
 
 async function removeBoardFolder(fullPath) {
   // TODO: Replace with getting the file tree from the board and deleting one by one
-  let output = await serial.execFile(await getHelperFullPath())
-  await serial.run(`delete_folder('${fullPath}')`)
+  let output = await serialBridge.execFile(await getHelperFullPath())
+  await serialBridge.run(`delete_folder('${fullPath}')`)
 }
 
 async function uploadFolder(srcPath, destPath, dataConsumer) {
   dataConsumer = dataConsumer || function() {}
-  await serial.createFolder(destPath)
+  await serialBridge.createFolder(destPath)
   let allFiles = await disk.ilistAllFiles(srcPath)
   for (let i in allFiles) {
     const file = allFiles[i]
     const relativePath = file.path.substring(srcPath.length)
     if (file.type === 'folder') {
-      await serial.createFolder(
-        serial.getFullPath(
+      await serialBridge.createFolder(
+        serialBridge.getFullPath(
           destPath,
           relativePath,
           ''
         )
       )
     } else {
-      await serial.uploadFile(
+      await serialBridge.uploadFile(
         disk.getFullPath(srcPath, relativePath, ''),
-        serial.getFullPath(destPath, relativePath, ''),
+        serialBridge.getFullPath(destPath, relativePath, ''),
         (progress) => {
           dataConsumer(progress, relativePath)
         }
@@ -1677,8 +1671,8 @@ async function uploadFolder(srcPath, destPath, dataConsumer) {
 async function downloadFolder(srcPath, destPath, dataConsumer) {
   dataConsumer = dataConsumer || function() {}
   await disk.createFolder(destPath)
-  let output = await serial.execFile(await getHelperFullPath())
-  output = await serial.run(`ilist_all('${srcPath}')`)
+  let output = await serialBridge.execFile(await getHelperFullPath())
+  output = await serialBridge.run(`ilist_all('${srcPath}')`)
   let files = []
   try {
     // Extracting the json output from serial response
@@ -1698,9 +1692,9 @@ async function downloadFolder(srcPath, destPath, dataConsumer) {
         disk.getFullPath( destPath, relativePath, '')
       )
     } else {
-      await serial.downloadFile(
-        serial.getFullPath(srcPath, relativePath, ''),
-        serial.getFullPath(destPath, relativePath, '')
+      await serialBridge.downloadFile(
+        serialBridge.getFullPath(srcPath, relativePath, ''),
+        serialBridge.getFullPath(destPath, relativePath, '')
       )
     }
   }

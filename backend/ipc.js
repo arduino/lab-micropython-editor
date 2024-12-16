@@ -1,5 +1,6 @@
 const fs = require('fs')
 const registerMenu = require('./menu.js')
+const serial = require('./serial/serial.js').sharedInstance
 
 const {
   openFolderDialog,
@@ -9,6 +10,8 @@ const {
 } = require('./helpers.js')
 
 module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
+  serial.win = win // Required to send callback messages to renderer
+  
   ipcMain.handle('open-folder', async (event) => {
     console.log('ipcMain', 'open-folder')
     const folder = await openFolderDialog(win)
@@ -141,8 +144,8 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     win.webContents.send('check-before-close')
   })
 
-  // handle disconnection before reload
-  ipcMain.handle('prepare-reload', async (event) => {
-    return win.webContents.send('before-reload')
+  ipcMain.handle('serial', (event, command, ...args) => {
+    console.debug('Handling IPC serial command:', command, ...args)
+    return serial[command](...args)
   })
 }

@@ -32,9 +32,13 @@ const SerialBridge = {
     return ipcRenderer.invoke('serial', 'eval', d)
   },
   onData: (callback) => {
-      ipcRenderer.on('serial-on-data', (event, data) => {
-          callback(data)
-      })
+    // Remove all previous listeners
+    if (ipcRenderer.listeners("serial-on-data").length > 0) {
+      ipcRenderer.removeAllListeners("serial-on-data")
+    }
+    ipcRenderer.on('serial-on-data', (event, data) => {
+      callback(data)
+    })
   },
   listFiles: async (folder) => {
     return await ipcRenderer.invoke('serial', 'listFiles', folder)
@@ -62,9 +66,13 @@ const SerialBridge = {
     return await ipcRenderer.invoke('serial', 'renameFile', oldName, newName)
   },
   onConnectionClosed: async (callback) => {
-      ipcRenderer.on('serial-on-connection-closed', (event) => {
-          callback()
-      })
+    // Remove all previous listeners  
+    if (ipcRenderer.listeners("serial-on-connection-closed").length > 0) {
+      ipcRenderer.removeAllListeners("serial-on-connection-closed")
+    }
+    ipcRenderer.on('serial-on-connection-closed', (event) => {
+      callback()
+    })
   },
   createFolder: async (folder) => {
     return await ipcRenderer.invoke('serial', 'createFolder', folder)

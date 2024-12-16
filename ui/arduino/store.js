@@ -175,7 +175,7 @@ async function store(state, emitter) {
         serialBridge.eval(data)
         term.scrollToBottom()
       })
-      serialBridge.eval('\x02')
+      serialBridge.eval('\x02') // Send Ctrl+B to enter normal repl mode
     }
     serialBridge.onData((data) => {
       term.write(data)

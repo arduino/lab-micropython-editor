@@ -13,6 +13,10 @@ function ReplPanel(state, emit) {
   return html`
     <div id="panel" style="height: ${state.panelHeight}px">
       <div class="panel-bar">
+        <div id="connection-status" style="visibility:${state.isConnected ? 'visible' : 'hidden'};">
+          <img src="media/connect.svg" />
+          <div>${state.isConnected ? 'Connected to ' + state.connectedPort : ''}</div>
+        </div>
         <div id="drag-handle"
           onmousedown=${() => emit('start-resizing-panel')}
           onmouseup=${() => emit('stop-resizing-panel')}

@@ -9,6 +9,7 @@
     "rebuild": "electron-rebuild",
     "dev": "electron  --inspect ./",
     "build": "npm run post-set-shell && electron-builder",
+    "postbuild": "find dist -name '*.blockmap' -delete",
     "postinstall": "npm run post-set-shell && npm run rebuild"
   },
   "devDependencies": {
@@ -19,21 +20,26 @@
     "is-ci": "^3.0.1"
   },
   "build": {
+    "publish": null,
     "appId": "cc.arduino.micropython-lab",
     "artifactName": "${productName}-${os}_${arch}.${ext}",
     "extraResources": "./ui/arduino/helpers.py",
+    "generateUpdatesFilesForAllChannels": false,
     "mac": {
       "target": "zip",
-      "icon": "build_resources/icon.icns"
+      "icon": "build_resources/icon.icns",
+      "electronUpdaterCompatibility": false
     },
     "win": {
       "target": "zip",
       "sign": "./build_resources/windowsCustomSign.js",
-      "icon": "build_resources/icon.png"
+      "icon": "build_resources/icon.png",
+      "electronUpdaterCompatibility": false
     },
     "linux": {
       "target": "zip",
-      "icon": "build_resources/icon.icns"
+      "icon": "build_resources/icon.icns",
+      "electronUpdaterCompatibility": false
     },
     "afterSign": "build_resources/notarize.js"
   },

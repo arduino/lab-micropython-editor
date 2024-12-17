@@ -31,7 +31,7 @@
       "electronUpdaterCompatibility": false
     },
     "win": {
-      "target": "zip",
+      "target": "dir",
       "sign": "./build_resources/windowsCustomSign.js",
       "icon": "build_resources/icon.png",
       "electronUpdaterCompatibility": false

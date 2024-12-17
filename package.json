@@ -31,14 +31,14 @@
       "electronUpdaterCompatibility": false
     },
     "win": {
-      "target": "dir",
+      "target": "zip",
       "sign": "./build_resources/windowsCustomSign.js",
       "icon": "build_resources/icon.png",
       "electronUpdaterCompatibility": false
     },
     "linux": {
       "target": "zip",
-      "icon": "build_resources/icon.icns",
+      "icon": "build_resources/icon.png",
       "electronUpdaterCompatibility": false
     },
     "afterSign": "build_resources/notarize.js"

@@ -381,7 +381,7 @@ button.small .icon {
 }
 
 .dialog .dialog-content > * {
-  width: 100%;
+  /* width: 100%; */
 }
 
 .dialog .dialog-content .item {

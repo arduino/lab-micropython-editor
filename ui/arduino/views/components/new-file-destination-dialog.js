@@ -14,6 +14,7 @@ function NewFileDestinationDialog(state, emit) {
   return html`
     <div id="dialog-new-file" class="dialog ${stateClass}" onclick=${onClick}>
       <div class="dialog-content">
+        <input type="text" id="file-name" placeholder="File name" />
         ${boardOption}
         <div class="item" onclick=${() => {emit('create-file', 'disk', 'disk_capocchia.py')}}>Computer</div>
       </div>

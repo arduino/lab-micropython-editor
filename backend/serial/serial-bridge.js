@@ -53,10 +53,23 @@ const SerialBridge = {
     return await ipcRenderer.invoke('serial', 'removeFile', file)
   },
   saveFileContent: async (filename, content, dataConsumer) => {
-    return await ipcRenderer.invoke('serial', 'saveFileContent', filename, content, dataConsumer)
+    if (ipcRenderer.listeners("serial-on-file-save-progress").length > 0) {
+      ipcRenderer.removeAllListeners("serial-on-file-save-progress")
+    }
+    ipcRenderer.on('serial-on-file-save-progress', (event, progress) => {
+      dataConsumer(progress)
+    })
+    return await ipcRenderer.invoke('serial', 'saveFileContent', filename, content)
   },
   uploadFile: async (src, dest, dataConsumer) => {
-    return await ipcRenderer.invoke('serial', 'uploadFile', src, dest, dataConsumer)
+    if (ipcRenderer.listeners("serial-on-upload-progress").length > 0) {
+      ipcRenderer.removeAllListeners("serial-on-upload-progress")
+    }
+
+    ipcRenderer.on('serial-on-upload-progress', (event, progress) => {
+      dataConsumer(progress)
+    })
+    return await ipcRenderer.invoke('serial', 'uploadFile', src, dest)
   },
   downloadFile: async (src, dest) => {
     let contents = await ipcRenderer.invoke('serial', 'loadFile', src)

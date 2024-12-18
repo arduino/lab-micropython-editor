@@ -1,6 +1,7 @@
 const fs = require('fs')
 const registerMenu = require('./menu.js')
 const serial = require('./serial/serial.js').sharedInstance
+const { shell } = require('electron');
 
 const {
   openFolderDialog,
@@ -137,6 +138,25 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   ipcMain.handle('update-menu-state', (event, state) => {
     registerMenu(win, state)
   })
+
+  ipcMain.handle('launch-app', async (event, urlScheme) => {
+    // Launch an external app with a custom protocol
+    return new Promise((resolve, reject) => {
+      try {
+        shell.openExternal(urlScheme).then(() => {
+          resolve(true);  // App opened successfully
+        }).catch(() => {
+          resolve(false);  // App not installed
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+  
+  ipcMain.handle('open-url', async (event, url) => {
+    shell.openExternal(url);
+  });
 
   win.on('close', (event) => {
     console.log('BrowserWindow', 'close')

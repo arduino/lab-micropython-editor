@@ -145,7 +145,7 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   })
 
   ipcMain.handle('serial', (event, command, ...args) => {
-    console.debug('Handling IPC serial command:', command, ...args)
+    // console.debug('Handling IPC serial command:', command, ...args)
     return serial[command](...args)
   })
 }

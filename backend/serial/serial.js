@@ -1,4 +1,5 @@
 const MicroPython = require('micropython.js')
+const path = require('path')
 
 class Serial {
     constructor(win = null) {
@@ -79,12 +80,16 @@ class Serial {
         return await this.board.fs_rm(file)
     }
 
-    async saveFileContent(filename, content, dataConsumer) {
-        return await this.board.fs_save(content || ' ', filename, dataConsumer)
+    async saveFileContent(filename, content) {
+        return await this.board.fs_save(content || ' ', filename, (progress) => {
+            this.win.webContents.send('serial-on-file-save-progress', progress)
+        })
     }
 
-    async uploadFile(src, dest, dataConsumer) {
-        return await this.board.fs_put(src, dest.replaceAll(path.win32.sep, path.posix.sep), dataConsumer)
+    async uploadFile(src, dest) {
+        return await this.board.fs_put(src, dest.replaceAll(path.win32.sep, path.posix.sep), (progress) => {
+            this.win.webContents.send('serial-on-upload-progress', progress)
+        })
     }
 
     async renameFile(oldName, newName) {

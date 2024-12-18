@@ -330,7 +330,7 @@ button.small .icon {
   opacity: 0.5;
 }
 
-#dialog {
+.dialog {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -350,13 +350,16 @@ button.small .icon {
   line-height: normal;
   background: rgba(236, 241, 241, 0.50);
 }
-#dialog.open {
+
+.dialog.open {
   opacity: 1;
   pointer-events: inherit;
   transition: opacity 0.15s;
 }
 
-#dialog .dialog-content {
+
+
+.dialog .dialog-content {
   display: flex;
   width: 576px;
   padding: 36px;
@@ -372,16 +375,16 @@ button.small .icon {
   transition: transform 0.15s;
 }
 
-#dialog.open .dialog-content {
+.dialog.open .dialog-content {
   transform: translateY(0px);
   transition: transform 0.15s;
 }
 
-#dialog .dialog-content > * {
+.dialog .dialog-content > * {
   width: 100%;
 }
 
-#dialog .dialog-content .item {
+.dialog .dialog-content .item {
   border-radius: 4.5px;
   display: flex;
   padding: 10px;
@@ -391,7 +394,7 @@ button.small .icon {
   cursor: pointer;
 }
 
-#dialog .dialog-content .item:hover {
+.dialog .dialog-content .item:hover {
   background: #008184;
   color: #ffffff;
 }

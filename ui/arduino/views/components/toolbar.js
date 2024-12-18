@@ -50,6 +50,13 @@ function Toolbar(state, emit) {
       <div class="separator"></div>
 
       ${Button({
+        icon: 'new-file.svg',
+        tooltip: `New (${metaKeyString}+N)`,
+        disabled: state.view != 'editor',
+        onClick: () => emit('create-new-file')
+      })}
+
+      ${Button({
         icon: 'save.svg',
         tooltip: `Save (${metaKeyString}+S)`,
         disabled: !_canSave,

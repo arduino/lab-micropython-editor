@@ -49,6 +49,8 @@ async function store(state, emitter) {
   state.isConnected = false
   state.connectedPort = null
 
+  state.isNewFileDialogOpen = false
+
   state.isSaving = false
   state.savingProgress = 0
   state.isTransferring = false
@@ -295,7 +297,17 @@ async function store(state, emitter) {
     window.removeEventListener('mousemove', state.resizePanel)
   })
 
-  // SAVING
+  // NEW FILE AND SAVING
+  emitter.on('create-new-file', () => {
+    log('create-new-file')
+    state.isNewFileDialogOpen = true
+    emitter.emit('render')
+  })
+  emitter.on('close-new-file-dialog', () => {
+    state.isNewFileDialogOpen = false
+    emitter.emit('render')
+  })
+
   emitter.on('save', async () => {
     log('save')
     let response = canSave({
@@ -514,18 +526,22 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('create-file', (device) => {
+  emitter.on('create-file', (device, fileName = null) => {
     log('create-file', device)
     if (state.creatingFile !== null) return
     state.creatingFile = device
     state.creatingFolder = null
+    if (fileName != null) {
+      emitter.emit('finish-creating-file', fileName)
+    }
     emitter.emit('render')
   })
-  emitter.on('finish-creating-file', async (value) => {
-    log('finish-creating', value)
+  
+  emitter.on('finish-creating-file', async (fileNameParameter) => {
+    log('finish-creating', fileNameParameter)
     if (!state.creatingFile) return
 
-    if (!value) {
+    if (!fileNameParameter) {
       state.creatingFile = null
       emitter.emit('render')
       return
@@ -535,10 +551,10 @@ async function store(state, emitter) {
       let willOverwrite = await checkBoardFile({
         root: state.boardNavigationRoot,
         parentFolder: state.boardNavigationPath,
-        fileName: value
+        fileName: fileNameParameter
       })
       if (willOverwrite) {
-        const confirmAction = await confirm(`You are about to overwrite the file ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirm(`You are about to overwrite the file ${fileNameParameter} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -550,7 +566,7 @@ async function store(state, emitter) {
         serialBridge.getFullPath(
           '/',
           state.boardNavigationPath,
-          value
+          fileNameParameter
         ),
         newFileContent
       )
@@ -558,10 +574,10 @@ async function store(state, emitter) {
       let willOverwrite = await checkDiskFile({
         root: state.diskNavigationRoot,
         parentFolder: state.diskNavigationPath,
-        fileName: value
+        fileName: fileNameParameter
       })
       if (willOverwrite) {
-        const confirmAction = await confirm(`You are about to overwrite the file ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirm(`You are about to overwrite the file ${fileNameParameter} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -573,7 +589,7 @@ async function store(state, emitter) {
         disk.getFullPath(
           state.diskNavigationRoot,
           state.diskNavigationPath,
-          value
+          fileNameParameter
         ),
         newFileContent
       )

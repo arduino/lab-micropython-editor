@@ -1,13 +1,13 @@
 function ConnectionDialog(state, emit) {
   const stateClass = state.isConnectionDialogOpen ? 'open' : 'closed'
   function onClick(e) {
-    if (e.target.id == 'dialog') {
+    if (e.target.id == 'dialog-connection') {
       emit('close-connection-dialog')
     }
   }
 
   return html`
-    <div id="dialog" class="${stateClass}" onclick=${onClick}>
+    <div id="dialog-connection" class="dialog ${stateClass}" onclick=${onClick}>
       <div class="dialog-content">
         ${state.availablePorts.map(
           (port) => html`

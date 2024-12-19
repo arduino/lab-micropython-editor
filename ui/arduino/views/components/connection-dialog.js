@@ -6,6 +6,19 @@ function ConnectionDialog(state, emit) {
     }
   }
 
+  function onKeyDown(e) {
+    if (e.key.toLowerCase() === 'escape') {
+      emit('close-connection-dialog')
+    }
+  }
+
+  // Add/remove event listener based on dialog state
+  if (state.isConnectionDialogOpen) {
+    document.addEventListener('keydown', onKeyDown)
+  } else {
+    document.removeEventListener('keydown', onKeyDown)
+  }
+
   return html`
     <div id="dialog-connection" class="dialog ${stateClass}" onclick=${onClick}>
       <div class="dialog-content">

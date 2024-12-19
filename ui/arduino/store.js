@@ -1467,6 +1467,9 @@ async function store(state, emitter) {
       if (state.isConnectionDialogOpen) {
         emitter.emit('close-connection-dialog')
       }
+      if (state.isNewFileDialogOpen) {
+        emitter.emit('close-new-file-dialog')
+      }
     }
 
   })

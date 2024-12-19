@@ -272,6 +272,10 @@ button.small .icon {
   min-height: 45px;
 }
 
+#panel.dialog-open {
+  pointer-events: none;
+}
+
 #panel #drag-handle {
   width: 100%;
   height: 100%;
@@ -384,6 +388,10 @@ button.small .icon {
   /* width: 100%; */
 }
 
+.dialog .dialog-content input {
+  font-size: 1.4em;
+  width:100%;
+}
 .dialog .dialog-content .item {
   border-radius: 4.5px;
   display: flex;
@@ -399,6 +407,18 @@ button.small .icon {
   color: #ffffff;
 }
 
+.dialog .buttons-horizontal {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  gap: 20px;
+}
+.dialog .buttons-horizontal .item {
+  flex-basis: 40%;
+  align-items: center;
+  background-color: #eee;;
+}
 #file-manager {
   display: flex;
   padding: 12px 32px 24px 32px;

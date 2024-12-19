@@ -11,7 +11,6 @@ module.exports = {
     CLEAR_TERMINAL: 'CommandOrControl+L',
     EDITOR_VIEW: 'CommandOrControl+Alt+1',
     FILES_VIEW: 'CommandOrControl+Alt+2',
-    ESC: 'Escape'
   },
   menu: {
     CONNECT: 'CmdOrCtrl+Shift+C',

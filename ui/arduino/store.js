@@ -1447,11 +1447,11 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       emitter.emit('change-view', 'file-manager')
     }
-    if (key === shortcuts.ESC) {
-      if (state.isConnectionDialogOpen) {
-        emitter.emit('close-connection-dialog')
-      }
-    }
+    // if (key === shortcuts.ESC) {
+    //   if (state.isConnectionDialogOpen) {
+    //     emitter.emit('close-connection-dialog')
+    //   }
+    // }
 
   })
 

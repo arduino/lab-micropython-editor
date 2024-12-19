@@ -70,6 +70,16 @@ function Toolbar(state, emit) {
         active: state.view === 'file-manager',
         onClick: () => emit('change-view', 'file-manager')
       })}
+
+      ${!window.BridgeWindow.isLinux() ? Button({
+        icon: 'install-package.svg',
+        tooltip: `Install Package`,
+        active: true,
+        onClick: () => {
+          if(state.isConnected) emit('disconnect') // Package installer requires exclusive access to the serial port
+          emit('launch-app', 'micropython-package-installer://', 'https://github.com/arduino/lab-micropython-package-installer/releases/latest')          
+        }
+      }) : '' }
     </div>
   `
 }

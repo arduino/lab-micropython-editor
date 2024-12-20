@@ -7,7 +7,8 @@ function Button(args) {
     active = false,
     label,
     tooltip,
-    background
+    background,
+    first
   } = args
   let tooltipEl = html``
   if (tooltip) {
@@ -16,8 +17,9 @@ function Button(args) {
   let activeClass = active ? 'active' : ''
   let backgroundClass = background ? 'inverted' : ''
   let labelActiveClass = disabled ? '' : 'active'
+  let buttonFirstClass = first ? 'first' : ''
   return html`
-    <div class="button">
+    <div class="button ${buttonFirstClass}">
       <button class="${size} ${activeClass} ${backgroundClass}" onclick=${onClick} disabled=${disabled}>
         <img class="icon" src="media/${icon}" />
       </button>

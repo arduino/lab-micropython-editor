@@ -1567,7 +1567,10 @@ async function store(state, emitter) {
       const confirmation = confirmDialog(`File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
       return false
     }
+    // LEAK > listeners keep getting added and not removed when tabs are closed
+    // additionally I found that closing a tab has actually added an extra listener
     newFile.editor.onChange = function() {
+      console.log('editor has changes')
       newFile.hasChanges = true
       emitter.emit('render')
     }

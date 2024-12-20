@@ -18,7 +18,8 @@ function Toolbar(state, emit) {
         label: state.isConnected ? 'Disconnect' : 'Connect',
         tooltip: state.isConnected ? `Disconnect (${metaKeyString}+Shift+D)` : `Connect (${metaKeyString}+Shift+C)`,
         onClick: () => state.isConnected ? emit('disconnect') : emit('open-connection-dialog'),
-        active: state.isConnected
+        active: state.isConnected,
+        first: true
       })}
 
       <div class="separator"></div>

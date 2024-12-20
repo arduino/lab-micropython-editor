@@ -7,11 +7,18 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: "OpenSans";
+  src: url("media/open-sans_5.0.29_latin-wght-normal.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
 * {
   -moz-user-select: none;
   -webkit-user-select: none;
   user-select: none;
-  font-family: "RobotoMono", monospace;
+  font-family: "OpenSans", sans-serif;
 }
 
 body, html {
@@ -78,14 +85,19 @@ button.small .icon {
   align-content: space-between;
   align-items: center;
   gap: 10px;
+  width: 50px
+}
+.button.first{
+  width:80px;
 }
 .button .label {
   text-align: center;
   color: #eee;
-  opacity: 50%;
+  opacity: 0.5;
+  font-family: "OpenSans", sans-serif;
 }
 .button .label.active {
-  opacity: 100%;
+  opacity: 1;
 }
 .button .tooltip {
   opacity: 0;
@@ -147,6 +159,7 @@ button.small .icon {
   min-width: 1px;
   flex-basis: fit-content;
   background: #fff;
+  opacity: 0.7;
   position: relative;
   margin-left: 0.5em;
   margin-right: 0.5em;
@@ -236,8 +249,12 @@ button.small .icon {
   font-size: 16px;
   height: 100%;
   overflow: hidden;
+  
 }
 
+#code-editor * {
+  font-family: "RobotoMono", monospace;
+}
 #code-editor .cm-editor {
   width: 100%;
   height: 100%;
@@ -411,9 +428,10 @@ button.small .icon {
   /* width: 100%; */
 }
 
-.dialog .dialog-content input {
-  font-size: 1.4em;
+.dialog .dialog-content #file-name {
+  font-size: 1.1em;
   width:100%;
+  font-family: "RobotoMono", monospace;
 }
 
 .dialog .dialog-content input:focus {
@@ -439,10 +457,10 @@ button.small .icon {
   flex-direction: row;
   justify-content: center;
   width: 100%;
-  gap: 20px;
+  gap: 12px;
 }
 .dialog .buttons-horizontal .item {
-  flex-basis: 40%;
+  flex-basis: 50%;
   align-items: center;
   background-color: #eee;;
 }
@@ -450,7 +468,7 @@ button.small .icon {
 .dialog-title{
   width: 100%;
   font-size: 0.8em;
-  padding: 0.7em;
+  padding: 0;
   margin: 0;
   flex-basis: max-content;
 }

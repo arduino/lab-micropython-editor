@@ -44,6 +44,6 @@ function FileManagerView(state, emit) {
       </div>
     </div>
     ${ConnectionDialog(state, emit)}
-    ${NewFileDestinationDialog(state, emit)}
+    ${NewFileDialog(state, emit)}
   `
 }

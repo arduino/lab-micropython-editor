@@ -392,6 +392,10 @@ button.small .icon {
   font-size: 1.4em;
   width:100%;
 }
+
+.dialog .dialog-content input:focus {
+  outline-color: #008184;
+}
 .dialog .dialog-content .item {
   border-radius: 4.5px;
   display: flex;
@@ -419,6 +423,21 @@ button.small .icon {
   align-items: center;
   background-color: #eee;;
 }
+
+.dialog-title{
+  width: 100%;
+  font-size: 0.8em;
+  padding: 0.7em;
+  margin: 0;
+  flex-basis: max-content;
+}
+.dialog-feedback {
+  font-size: 0.6em;
+  align-self: stretch;
+  padding: 0.5em;
+  background: #eee;
+}
+
 #file-manager {
   display: flex;
   padding: 12px 32px 24px 32px;

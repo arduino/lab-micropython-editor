@@ -1,36 +1,31 @@
 function ConnectionDialog(state, emit) {
   const stateClass = state.isConnectionDialogOpen ? 'open' : 'closed'
-  function onClick(e) {
+  function clickDismiss(e) {
     if (e.target.id == 'dialog-connection') {
       emit('close-connection-dialog')
     }
   }
 
-  function onKeyDown(e) {
-    if (e.key.toLowerCase() === 'escape') {
-      emit('close-connection-dialog')
-    }
-  }
-
-  // Add/remove event listener based on dialog state
-  if (state.isConnectionDialogOpen) {
-    document.addEventListener('keydown', onKeyDown)
-  } else {
-    document.removeEventListener('keydown', onKeyDown)
-  }
-
-  return html`
-    <div id="dialog-connection" class="dialog ${stateClass}" onclick=${onClick}>
-      <div class="dialog-content">
-        ${state.availablePorts.map(
-          (port) => html`
-            <div class="item" onclick=${() => emit('select-port', port)}>
-              ${port.path}
-            </div>
-          `
-        )}
-        <div class="item" onclick=${() => emit('update-ports')}>Refresh</div>
-      </div>
+  const connectionDialog = html`
+  <div id="dialog-connection" class="dialog ${stateClass}" onclick=${clickDismiss}>
+    
+    <div class="dialog-content">
+    <div class="dialog-title">Connect to...</div>
+      ${state.availablePorts.map(
+        (port) => html`
+          <div class="item" onclick=${() => emit('select-port', port)}>
+            ${port.path}
+          </div>
+        `
+      )}
+      <div class="item" onclick=${() => emit('update-ports')}>Refresh</div>
+      <!--div class="dialog-feedback">Select a board to connect to.</div-->
     </div>
+    
+  </div>
   `
+  if (state.isConnectionDialogOpen) {
+    return connectionDialog
+  }
+  
 }

@@ -10,9 +10,12 @@ const newFileContent = `# This program was created in Arduino Lab for MicroPytho
 print('Hello, MicroPython!')
 `
 
-async function confirm(msg, cancelMsg, confirmMsg) {
-  cancelMsg = cancelMsg || 'Cancel'
-  confirmMsg = confirmMsg || 'Yes'
+async function confirmDialog(msg, cancelMsg, confirmMsg) {
+  // cancelMsg = cancelMsg || 'Cancel'
+  // confirmMsg = confirmMsg || 'Yes'
+  let buttons = []
+  if (cancelMsg) buttons.push(cancelMsg)
+  if (confirmMsg) buttons.push(confirmMsg)
   let response = await win.openDialog({
     type: 'question',
     buttons: [cancelMsg, confirmMsg],
@@ -36,6 +39,8 @@ async function store(state, emitter) {
   state.boardFiles = []
   state.openFiles = []
   state.selectedFiles = []
+
+  state.newTabFileName = null
   state.editingFile = null
   state.creatingFile = null
   state.renamingFile = null
@@ -62,17 +67,7 @@ async function store(state, emitter) {
 
   state.isTerminalBound = false
 
-  const newFile = createEmptyFile({
-    parentFolder: null, // Null parent folder means not saved?
-    source: 'disk'
-  })
-  newFile.editor.onChange = function() {
-    newFile.hasChanges = true
-    emitter.emit('render')
-  }
-  state.openFiles.push(newFile)
-  state.editingFile = newFile.id
-
+  await createNewTab('disk')
   state.savedPanelHeight = PANEL_DEFAULT
   state.panelHeight = PANEL_CLOSED
   state.resizePanel = function(e) {
@@ -117,15 +112,19 @@ async function store(state, emitter) {
   emitter.on('open-connection-dialog', async () => {
     log('open-connection-dialog')
     // UI should be in disconnected state, no need to update
+    dismissOpenDialogs()
     await serialBridge.disconnect()
     state.availablePorts = await getAvailablePorts()
     state.isConnectionDialogOpen = true
     emitter.emit('render')
+    document.addEventListener('keydown', dismissOpenDialogs)
   })
   emitter.on('close-connection-dialog', () => {
     state.isConnectionDialogOpen = false
+    dismissOpenDialogs()
     emitter.emit('render')
   })
+  
   emitter.on('update-ports', async () => {
     state.availablePorts = await getAvailablePorts()
     emitter.emit('render')
@@ -300,14 +299,17 @@ async function store(state, emitter) {
   // NEW FILE AND SAVING
   emitter.on('create-new-file', () => {
     log('create-new-file')
+    dismissOpenDialogs()
     state.isNewFileDialogOpen = true
     emitter.emit('render')
+    document.addEventListener('keydown', dismissOpenDialogs)
   })
   emitter.on('close-new-file-dialog', () => {
     state.isNewFileDialogOpen = false
+    
+    dismissOpenDialogs()
     emitter.emit('render')
   })
-
   emitter.on('save', async () => {
     log('save')
     let response = canSave({
@@ -389,7 +391,7 @@ async function store(state, emitter) {
     }
 
     if (willOverwrite) {
-      const confirmation = await confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      const confirmation = await confirmDialog(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmation) {
         state.isSaving = false
         openFile.parentFolder = oldParentFolder
@@ -446,7 +448,7 @@ async function store(state, emitter) {
     log('close-tab', id)
     const currentTab = state.openFiles.find(f => f.id === id)
     if (currentTab.hasChanges) {
-      let response = await confirm("Your file has unsaved changes. Are you sure you want to proceed?")
+      let response = await confirmDialog("Your file has unsaved changes. Are you sure you want to proceed?", "Cancel", "Yes")
       if (!response) return false
     }
     state.openFiles = state.openFiles.filter(f => f.id !== id)
@@ -455,16 +457,7 @@ async function store(state, emitter) {
     if(state.openFiles.length > 0) {
       state.editingFile = state.openFiles[0].id
     } else {
-      const newFile = createEmptyFile({
-        source: 'disk',
-        parentFolder: null
-      })
-      newFile.editor.onChange = function() {
-        newFile.hasChanges = true
-        emitter.emit('render')
-      }
-      state.openFiles.push(newFile)
-      state.editingFile = newFile.id
+      await createNewTab('disk')
     }
 
     emitter.emit('render')
@@ -525,10 +518,19 @@ async function store(state, emitter) {
     })
     emitter.emit('render')
   })
-
+  emitter.on('create-new-tab', async (device, fileName = null) => {
+    const parentFolder = device == 'board' ? state.boardNavigationPath : state.diskNavigationPath
+    log('create-new-tab', device, fileName, parentFolder)
+    const success = await createNewTab(device, fileName, parentFolder)
+    if (success) {
+      emitter.emit('close-new-file-dialog')
+      emitter.emit('render')
+    }  
+  })
   emitter.on('create-file', (device, fileName = null) => {
     log('create-file', device)
     if (state.creatingFile !== null) return
+    
     state.creatingFile = device
     state.creatingFolder = null
     if (fileName != null) {
@@ -554,7 +556,7 @@ async function store(state, emitter) {
         fileName: fileNameParameter
       })
       if (willOverwrite) {
-        const confirmAction = await confirm(`You are about to overwrite the file ${fileNameParameter} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirmDialog(`You are about to overwrite the file ${fileNameParameter} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -577,7 +579,7 @@ async function store(state, emitter) {
         fileName: fileNameParameter
       })
       if (willOverwrite) {
-        const confirmAction = await confirm(`You are about to overwrite the file ${fileNameParameter} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirmDialog(`You are about to overwrite the file ${fileNameParameter} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -597,6 +599,7 @@ async function store(state, emitter) {
 
     setTimeout(() => {
       state.creatingFile = null
+      dismissOpenDialogs()
       emitter.emit('refresh-files')
       emitter.emit('render')
     }, 200)
@@ -625,7 +628,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = await confirm(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirmDialog(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFolder = null
           emitter.emit('render')
@@ -654,7 +657,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = await confirm(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await confirmDialog(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFolder = null
           emitter.emit('render')
@@ -711,7 +714,7 @@ async function store(state, emitter) {
     }
 
     message += `Are you sure you want to proceed?`
-    const confirmAction = await confirm(message, 'Cancel', 'Yes')
+    const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
     if (!confirmAction) {
       state.isRemoving = false
       emitter.emit('render')
@@ -799,7 +802,7 @@ async function store(state, emitter) {
         let message = `You are about to overwrite the following file/folder on your board:\n\n`
         message += `${value}\n\n`
         message += `Are you sure you want to proceed?`
-        const confirmAction = await confirm(message, 'Cancel', 'Yes')
+        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.isSaving = false
           state.renamingFile = null
@@ -838,7 +841,7 @@ async function store(state, emitter) {
         let message = `You are about to overwrite the following file/folder on your disk:\n\n`
         message += `${value}\n\n`
         message += `Are you sure you want to proceed?`
-        const confirmAction = await confirm(message, 'Cancel', 'Yes')
+        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.isSaving = false
           state.renamingFile = null
@@ -993,7 +996,7 @@ async function store(state, emitter) {
     }
 
     if (willOverwrite) {
-      const confirmation = await confirm(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+      const confirmation = await confirmDialog(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
       if (!confirmation) {
         state.renamingTab = null
         state.isSaving = false
@@ -1256,7 +1259,7 @@ async function store(state, emitter) {
       willOverwrite.forEach(f => message += `${f.fileName}\n`)
       message += `\n`
       message += `Are you sure you want to proceed?`
-      const confirmAction = await confirm(message, 'Cancel', 'Yes')
+      const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
       if (!confirmAction) {
         state.isTransferring = false
         emitter.emit('render')
@@ -1321,7 +1324,7 @@ async function store(state, emitter) {
       willOverwrite.forEach(f => message += `${f.fileName}\n`)
       message += `\n`
       message += `Are you sure you want to proceed?`
-      const confirmAction = await confirm(message, 'Cancel', 'Yes')
+      const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
       if (!confirmAction) {
         state.isTransferring = false
         emitter.emit('render')
@@ -1408,7 +1411,7 @@ async function store(state, emitter) {
   win.beforeClose(async () => {
     const hasChanges = !!state.openFiles.find(f => f.hasChanges)
     if (hasChanges) {
-      const response = await confirm('You may have unsaved changes. Are you sure you want to proceed?', 'Cancel', 'Yes')
+      const response = await confirmDialog('You may have unsaved changes. Are you sure you want to proceed?', 'Cancel', 'Yes')
       if (!response) return false
     }
     await win.confirmClose()
@@ -1451,6 +1454,10 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       stopCode()
     }
+    if (key === shortcuts.NEW) {
+      if (state.view != 'editor') return
+      emitter.emit('create-new-file')
+    }
     if (key === shortcuts.SAVE) {
       if (state.view != 'editor') return
       emitter.emit('save')
@@ -1470,6 +1477,14 @@ async function store(state, emitter) {
     // }
 
   })
+
+  function dismissOpenDialogs(keyEvent = null) {
+    if (keyEvent && keyEvent.key != 'Escape') return
+    document.removeEventListener('keydown', dismissOpenDialogs)
+    state.isConnectionDialogOpen = false
+    state.isNewFileDialogOpen = false
+    emitter.emit('render')
+  }
 
   function runCode() {
     if (canExecute({ view: state.view, isConnected: state.isConnected })) {
@@ -1507,14 +1522,60 @@ async function store(state, emitter) {
     }
   }
 
-  function createEmptyFile({ source, parentFolder }) {
-    return createFile({
-      fileName: generateFileName(),
-      parentFolder,
-      source,
+  // function createEmptyFile({ source, parentFolder }) {
+  //   return createFile({
+  //     fileName: generateFileName(),
+  //     parentFolder,
+  //     source,
+  //     hasChanges: true
+  //   })
+  // }
+
+  async function createNewTab(source, fileName = null, parentFolder = null) {
+    const navigationPath = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
+    const newFile = createFile({
+      fileName: fileName === null ? generateFileName() : fileName,
+      parentFolder: parentFolder,
+      source: source,
       hasChanges: true
     })
+    
+    let fullPathExists = false
+    
+    if (parentFolder != null) {
+      if (source == 'board') {
+        await serialBridge.getPrompt()
+        fullPathExists = await serialBridge.fileExists(
+          serialBridge.getFullPath(
+            state.boardNavigationRoot,
+            newFile.parentFolder,
+            newFile.fileName
+          )
+        )
+      } else if (source == 'disk') {
+        fullPathExists = await disk.fileExists(
+          disk.getFullPath(
+            state.diskNavigationRoot,
+            newFile.parentFolder,
+            newFile.fileName
+          )
+        )
+      }
+    }
+    const tabExists = state.openFiles.find(f => f.parentFolder === newFile.parentFolder && f.fileName === newFile.fileName && f.source === newFile.source)
+    if (tabExists || fullPathExists) {
+      const confirmation = confirmDialog(`File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
+      return false
+    }
+    newFile.editor.onChange = function() {
+      newFile.hasChanges = true
+      emitter.emit('render')
+    }
+    state.openFiles.push(newFile)
+    state.editingFile = newFile.id
+    return true
   }
+
 }
 
 

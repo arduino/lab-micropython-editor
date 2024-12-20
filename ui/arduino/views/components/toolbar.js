@@ -15,6 +15,7 @@ function Toolbar(state, emit) {
     <div id="toolbar">
       ${Button({
         icon: state.isConnected ? 'connect.svg' : 'disconnect.svg',
+        label: state.isConnected ? 'Disconnect' : 'Connect',
         tooltip: state.isConnected ? `Disconnect (${metaKeyString}+Shift+D)` : `Connect (${metaKeyString}+Shift+C)`,
         onClick: () => state.isConnected ? emit('disconnect') : emit('open-connection-dialog'),
         active: state.isConnected
@@ -24,6 +25,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'run.svg',
+        label: 'Run',
         tooltip: `Run (${metaKeyString}+R)`,
         disabled: !_canExecute,
         onClick: (e) => {
@@ -36,12 +38,14 @@ function Toolbar(state, emit) {
       })}
       ${Button({
         icon: 'stop.svg',
+        label: 'Stop',
         tooltip: `Stop (${metaKeyString}+H)`,
         disabled: !_canExecute,
         onClick: () => emit('stop')
       })}
       ${Button({
         icon: 'reboot.svg',
+        label: 'Reset',
         tooltip: `Reset (${metaKeyString}+Shift+R)`,
         disabled: !_canExecute,
         onClick: () => emit('reset')
@@ -51,6 +55,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'new-file.svg',
+        label: 'New',
         tooltip: `New (${metaKeyString}+N)`,
         disabled: state.view != 'editor',
         onClick: () => emit('create-new-file')
@@ -58,6 +63,7 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'save.svg',
+        label: 'Save',
         tooltip: `Save (${metaKeyString}+S)`,
         disabled: !_canSave,
         onClick: () => emit('save')
@@ -67,12 +73,14 @@ function Toolbar(state, emit) {
 
       ${Button({
         icon: 'code.svg',
+        label: 'Editor',
         tooltip: `Editor (${metaKeyString}+Alt+1)`,
         active: state.view === 'editor',
         onClick: () => emit('change-view', 'editor')
       })}
       ${Button({
         icon: 'files.svg',
+        label: 'Files',
         tooltip: `Files (${metaKeyString}+Alt+2)`,
         active: state.view === 'file-manager',
         onClick: () => emit('change-view', 'file-manager')

@@ -1,8 +1,8 @@
 @font-face {
-  font-family: "RobotoMono", monospace;
+  font-family: "RobotoMono";
   src:
-    url("media/roboto-mono-latin-ext-400-normal.woff"),
-    url("media/roboto-mono-latin-ext-400-normal.woff2");
+    url("media/roboto-mono-latin-ext-400-normal.woff2") format("woff2"),
+    url("media/roboto-mono-latin-ext-400-normal.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
@@ -73,6 +73,19 @@ button.small .icon {
 
 .button {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.button .label {
+  text-align: center;
+  color: #eee;
+  opacity: 50%;
+}
+.button .label.active {
+  opacity: 100%;
 }
 .button .tooltip {
   opacity: 0;
@@ -124,9 +137,19 @@ button.small .icon {
   display: flex;
   padding: 20px;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   align-self: stretch;
   background: #008184;
+}
+
+.separator {
+  height: 100%;
+  min-width: 1px;
+  flex-basis: fit-content;
+  background: #fff;
+  position: relative;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
 }
 
 #tabs {

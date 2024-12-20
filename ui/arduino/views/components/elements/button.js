@@ -5,6 +5,7 @@ function Button(args) {
     onClick = (e) => false,
     disabled = false,
     active = false,
+    label,
     tooltip,
     background
   } = args
@@ -14,11 +15,13 @@ function Button(args) {
   }
   let activeClass = active ? 'active' : ''
   let backgroundClass = background ? 'inverted' : ''
+  let labelActiveClass = disabled ? '' : 'active'
   return html`
     <div class="button">
       <button class="${size} ${activeClass} ${backgroundClass}" onclick=${onClick} disabled=${disabled}>
         <img class="icon" src="media/${icon}" />
       </button>
+      <div class="label ${labelActiveClass}">${label}</div>
       ${tooltipEl}
     </div>
   `

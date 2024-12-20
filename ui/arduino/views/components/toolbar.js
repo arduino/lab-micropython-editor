@@ -21,7 +21,13 @@ function Toolbar(state, emit) {
         active: state.isConnected,
         first: true
       })}
-
+      ${Button({
+        icon: 'reboot.svg',
+        label: 'Reset',
+        tooltip: `Reset (${metaKeyString}+Shift+R)`,
+        disabled: !_canExecute,
+        onClick: () => emit('reset')
+      })}
       <div class="separator"></div>
 
       ${Button({
@@ -43,13 +49,6 @@ function Toolbar(state, emit) {
         tooltip: `Stop (${metaKeyString}+H)`,
         disabled: !_canExecute,
         onClick: () => emit('stop')
-      })}
-      ${Button({
-        icon: 'reboot.svg',
-        label: 'Reset',
-        tooltip: `Reset (${metaKeyString}+Shift+R)`,
-        disabled: !_canExecute,
-        onClick: () => emit('reset')
       })}
 
       <div class="separator"></div>
@@ -77,6 +76,7 @@ function Toolbar(state, emit) {
         label: 'Editor',
         tooltip: `Editor (${metaKeyString}+Alt+1)`,
         active: state.view === 'editor',
+        square: true,
         onClick: () => emit('change-view', 'editor')
       })}
       ${Button({
@@ -84,6 +84,7 @@ function Toolbar(state, emit) {
         label: 'Files',
         tooltip: `Files (${metaKeyString}+Alt+2)`,
         active: state.view === 'file-manager',
+        square: true,
         onClick: () => emit('change-view', 'file-manager')
       })}
     </div>

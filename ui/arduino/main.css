@@ -43,7 +43,7 @@ button {
   align-items: center;
   border: none;
   border-radius: 45px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.1s;
 }
@@ -51,6 +51,9 @@ button.small {
   width: 28px;
   height: 28px;
   border-radius: 28px;
+}
+button.square {
+  border-radius: 8px;
 }
 button.inverted:hover,
 button.inverted.active {
@@ -61,12 +64,18 @@ button.inverted {
 }
 
 button[disabled] {
-  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.2);
   cursor: not-allowed;
+}
+button[disabled]:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 button:hover, button.active {
   background: rgba(255, 255, 255, 1);
 }
+/* button.inactive:hover {
+  background: rgba(255, 255, 255, 0.2);
+} */
 
 button .icon {
   width: 63%;
@@ -85,19 +94,19 @@ button.small .icon {
   align-content: space-between;
   align-items: center;
   gap: 10px;
-  width: 50px
+  width: auto
 }
 .button.first{
   width:80px;
 }
 .button .label {
   text-align: center;
-  color: #eee;
-  opacity: 0.5;
+  /* color: #eee; */
+  color: rgba(255, 255, 255, 0.2);
   font-family: "OpenSans", sans-serif;
 }
 .button .label.active {
-  opacity: 1;
+  color: rgba(255, 255, 255, 1);
 }
 .button .tooltip {
   opacity: 0;
@@ -147,7 +156,7 @@ button.small .icon {
 
 #toolbar {
   display: flex;
-  padding: 20px;
+  padding: 16px 10px 10px 10px;
   align-items: center;
   gap: 16px;
   align-self: stretch;

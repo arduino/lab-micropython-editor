@@ -2,6 +2,7 @@ const { globalShortcut } = require('electron')
 let shortcutsActive = false
 const shortcuts = {
   global: {
+    CLOSE: 'CommandOrControl+W',
     CONNECT: 'CommandOrControl+Shift+C',
     DISCONNECT: 'CommandOrControl+Shift+D',
     RUN: 'CommandOrControl+R',
@@ -16,6 +17,7 @@ const shortcuts = {
     FILES_VIEW: 'CommandOrControl+Alt+2',
   },
   menu: {
+    CLOSE: 'CmdOrCtrl+W',
     CONNECT: 'CmdOrCtrl+Shift+C',
     DISCONNECT: 'CmdOrCtrl+Shift+D',
     RUN: 'CmdOrCtrl+R',

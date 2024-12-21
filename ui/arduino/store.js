@@ -1440,7 +1440,9 @@ async function store(state, emitter) {
   
   win.onKeyboardShortcut((key) => {
     if (state.shortcutsDisabled) return
-
+    if (key === shortcuts.CLOSE) {
+      emitter.emit('close-tab', state.editingFile)
+    }
     if (key === shortcuts.CONNECT) {
       emitter.emit('connect')
     }

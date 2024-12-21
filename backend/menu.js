@@ -65,7 +65,12 @@ module.exports = function registerMenu(win, state = {}) {
           enabled: state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.SAVE)
         },
-        isMac ? { role: 'close' } : { role: 'quit' }
+        { label: 'Close tab',
+          accelerator: 'CmdOrCtrl+W',
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLOSE)
+         },
+        { role: 'quit' }
       ]
     },
     {

@@ -11,6 +11,8 @@ function Button(args) {
     label,
     background
   } = args
+
+  
   let tooltipEl = html``
   if (tooltip) {
     tooltipEl = html`<div class="tooltip">${tooltip}</div>`

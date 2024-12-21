@@ -38,9 +38,9 @@ function Toolbar(state, emit) {
           disabled: !_canExecute,
           onClick: (e) => {
             if (e.altKey) {
-              emit('run', true)
+              emit('run-from-button', true)
             }else{
-              emit('run')
+              emit('run-from-button')
             }
           }
         })}

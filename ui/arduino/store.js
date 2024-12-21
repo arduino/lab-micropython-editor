@@ -228,6 +228,15 @@ async function store(state, emitter) {
   })
 
   // CODE EXECUTION
+  emitter.on('run-from-button', (onlySelected = false) => {
+    if (onlySelected) {
+      runCodeSelection()
+    } else {
+      runCode()
+    }
+  })
+
+
   emitter.on('run', async (onlySelected = false) => {
     log('run')
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
@@ -1506,14 +1515,35 @@ async function store(state, emitter) {
     emitter.emit('render')
   }
 
+  // Ensures that even if the RUN button is clicked multiple times
+  // there's a 100ms delay between each execution to prevent double runs
+  // and entering an unstable state because of getPrompt() calls
+  let preventDoubleRun = false
+  function timedReset() {
+    preventDoubleRun = true
+    setTimeout(() => {
+      preventDoubleRun = false
+    }, 500);
+    
+  }
+
+  function filterDoubleRun(onlySelected = false) {
+    if (preventDoubleRun) return
+    console.log('>>> RUN CODE ACTUAL <<<')
+    emitter.emit('run', onlySelected)
+    timedReset()
+  }
+
   function runCode() {
+    console.log('>>> RUN CODE REQUEST <<<')
     if (canExecute({ view: state.view, isConnected: state.isConnected })) {
-      emitter.emit('run')
+      filterDoubleRun()
     }
   }
   function runCodeSelection() {
+    console.log('>>> RUN CODE REQUEST <<<')
     if (canExecute({ view: state.view, isConnected: state.isConnected })) {
-      emitter.emit('run', true)
+      filterDoubleRun(true)
     }
   }
   function stopCode() {

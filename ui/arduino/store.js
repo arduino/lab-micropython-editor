@@ -1443,7 +1443,7 @@ async function store(state, emitter) {
     if (state.shortcutsDisabled) return
 
     if (key === shortcuts.CONNECT) {
-      emitter.emit('open-connection-dialog')
+      emitter.emit('connect')
     }
     if (key === shortcuts.DISCONNECT) {
       emitter.emit('disconnect')

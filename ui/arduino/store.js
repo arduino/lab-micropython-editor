@@ -213,6 +213,20 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
+  emitter.on('connect', async () => {
+    try {
+      state.availablePorts = await getAvailablePorts()
+    } catch(e) {
+      console.error('Could not get available ports. ', e)
+    }
+
+    if(state.availablePorts.length == 1) {
+      emitter.emit('select-port', state.availablePorts[0])
+    } else {
+      emitter.emit('open-connection-dialog')
+    }
+  })
+
   // CODE EXECUTION
   emitter.on('run', async (onlySelected = false) => {
     log('run')

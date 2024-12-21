@@ -339,7 +339,7 @@ button.small .icon {
 }
 
 #panel #drag-handle {
-  width: 100%;
+  flex-grow: 2;
   height: 100%;
   cursor: grab;
 }
@@ -357,6 +357,19 @@ button.small .icon {
   gap: 10px;
   align-self: stretch;
   background: #008184;
+}
+
+.panel-bar #connection-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+}
+
+.panel-bar #connection-status img {
+  width: 1.25em;
+  height: 1.25em;
+  filter: invert(1);
 }
 
 .panel-bar .term-operations {

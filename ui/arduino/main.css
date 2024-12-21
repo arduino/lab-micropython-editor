@@ -225,7 +225,7 @@ button.small .icon {
   color: #000;
   font-style: normal;
   font-weight: 400;
-  line-height: 1.1em;
+  line-height: 1.3em;
   flex: 1 0 0;
   max-width: calc(100% - 46px);
   overflow: hidden;
@@ -459,12 +459,9 @@ button.small .icon {
   transition: transform 0.15s;
 }
 
-.dialog .dialog-content > * {
-  /* width: 100%; */
-}
 
 .dialog .dialog-content #file-name {
-  font-size: 1.1em;
+  font-size: 1.3em;
   width:100%;
   font-family: "RobotoMono", monospace;
 }
@@ -678,7 +675,7 @@ button.small .icon {
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.1em;
+  line-height: 1.3em;
 }
 
 .file-list .item .checkbox .icon.off,

@@ -59,7 +59,7 @@ async function store(state, emitter) {
   state.isSaving = false
   state.savingProgress = 0
   state.isTransferring = false
-  state.transferringProgress = 0
+  state.transferringProgress = ''
   state.isRemoving = false
 
   state.isLoadingFiles = false
@@ -1312,7 +1312,9 @@ async function store(state, emitter) {
             state.transferringProgress = `${fileName}: ${progress}`
             emitter.emit('render')
           }
+          
         )
+        state.transferringProgress = ''
       } else {
         await serialBridge.uploadFile(
           srcPath, destPath,
@@ -1321,6 +1323,7 @@ async function store(state, emitter) {
             emitter.emit('render')
           }
         )
+        state.transferringProgress = ''
       }
     }
 
@@ -1448,6 +1451,7 @@ async function store(state, emitter) {
   }),
   
   win.onKeyboardShortcut((key) => {
+    if (state.isTransferring || state.isRemoving || state.isSaving || state.isConnectionDialogOpen || state.isNewFileDialogOpen) return
     if (state.shortcutsDisabled) return
     if (key === shortcuts.CLOSE) {
       emitter.emit('close-tab', state.editingFile)

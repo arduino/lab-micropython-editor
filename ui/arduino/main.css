@@ -93,7 +93,7 @@ button.small .icon {
   flex-direction: column;
   align-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: .5em;
   width: auto
 }
 .button.first{
@@ -106,7 +106,7 @@ button.small .icon {
   font-family: "OpenSans", sans-serif;
 }
 .button .label.active {
-  color: rgba(255, 255, 255, 1);
+  color: rgba(255, 255, 255, .9);
 }
 .button .tooltip {
   opacity: 0;

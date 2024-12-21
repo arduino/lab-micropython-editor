@@ -15,6 +15,7 @@ function Button(args) {
   if (tooltip) {
     tooltipEl = html`<div class="tooltip">${tooltip}</div>`
   }
+  tooltipEl = html``
   let activeClass = active ? 'active' : ''
   let backgroundClass = background ? 'inverted' : ''
   let buttonFirstClass = first ? 'first' : ''

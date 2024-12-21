@@ -57,15 +57,15 @@ button.square {
 }
 button.inverted:hover,
 button.inverted.active {
-  background: rgba(0, 129, 132, 0.8);
+  background: rgba(0, 129, 132, 0.8) !important;
 }
 button.inverted {
-  background: rgba(0, 129, 132, 1);
+  background: rgba(0, 129, 132, 1) !important;
 }
 
 button[disabled] {
   background: rgba(255, 255, 255, 0.2);
-  cursor: not-allowed;
+  cursor: default;
 }
 button[disabled]:hover {
   background: rgba(255, 255, 255, 0.2);
@@ -531,13 +531,17 @@ button.small .icon {
   align-self: stretch;
 }
 
+#file-actions button[disabled], #file-actions button[disabled]:hover {
+  opacity: 0.4;
+}
+
 #file-actions button .icon {
   width: 100%;
   height: 100%;
 }
 
 #file-actions button:hover {
-  opacity: 0.2;
+  opacity: 0.5; */
 }
 
 .device-header {

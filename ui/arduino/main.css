@@ -184,6 +184,7 @@ button.small .icon {
   position: relative;
   margin-left: 0.5em;
   margin-right: 0.5em;
+  height: 65%;
 }
 
 #tabs {

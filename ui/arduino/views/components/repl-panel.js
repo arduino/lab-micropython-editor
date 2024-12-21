@@ -22,6 +22,7 @@ function ReplPanel(state, emit) {
           <img src="media/connect.svg" />
           <div>${state.isConnected ? 'Connected to ' + state.connectedPort : ''}</div>
         </div>
+        <div class="spacer"></div>
         <div id="drag-handle"
           onmousedown=${() => emit('start-resizing-panel')}
           onmouseup=${() => emit('stop-resizing-panel')}
@@ -34,6 +35,7 @@ function ReplPanel(state, emit) {
           size: 'small',
           onClick: onToggle
         })}
+        
       </div>
       <div class=${terminalDisabledClass}>
         ${state.cache(XTerm, 'terminal').render()}

@@ -342,6 +342,8 @@ button.small .icon {
   flex-grow: 2;
   height: 100%;
   cursor: grab;
+  position: absolute;
+  width: 100%;
 }
 
 #panel #drag-handle:active {
@@ -357,6 +359,7 @@ button.small .icon {
   gap: 10px;
   align-self: stretch;
   background: #008184;
+  position: relative;
 }
 
 .panel-bar #connection-status {
@@ -372,6 +375,9 @@ button.small .icon {
   filter: invert(1);
 }
 
+.panel-bar .spacer {
+  flex-grow: 1;
+}
 .panel-bar .term-operations {
   transition: opacity 0.15s;
   display: flex;

@@ -11,8 +11,6 @@ module.exports = function registerMenu(win, state = {}) {
     ...(isMac ? [{
       label: app.name,
       submenu: [
-        { role: 'about'},
-        { type: 'separator' },
         { type: 'separator' },
         { role: 'hide', accelerator: 'CmdOrCtrl+Shift+H' },
         { role: 'hideOthers' },
@@ -167,7 +165,7 @@ module.exports = function registerMenu(win, state = {}) {
           }
         },
         {
-          label:'Info about this app',
+          label:'About Arduino Lab for MicroPython',
           click: () => {
               openAboutWindow({
                   icon_path: path.resolve(__dirname, '../ui/arduino/media/about_image.png'),

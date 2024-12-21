@@ -1,7 +1,7 @@
 console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
-const shortcuts = require('./backend/shortcuts.js').global
+const shortcuts = require('./backend/shortcuts.js').shortcuts.global
 const { emit, platform } = require('process')
 const SerialBridge = require('./backend/serial/serial-bridge.js')
 
@@ -61,6 +61,12 @@ const Window = {
   onKeyboardShortcut: (callback, key) => {
     ipcRenderer.on('shortcut-cmd', (event, k) => {
       callback(k);
+    })
+  },
+  onDisableShortcuts: (callback, value) => {
+    ipcRenderer.on('ignore-shortcuts', (e, value) => {
+      console.log("ipcRenderer ignore-shortcuts", value)
+      callback(value);
     })
   },
 

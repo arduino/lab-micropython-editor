@@ -1,4 +1,6 @@
-module.exports = {
+const { globalShortcut } = require('electron')
+let shortcutsActive = false
+const shortcuts = {
   global: {
     CONNECT: 'CommandOrControl+Shift+C',
     DISCONNECT: 'CommandOrControl+Shift+D',
@@ -26,5 +28,32 @@ module.exports = {
     CLEAR_TERMINAL: 'CmdOrCtrl+L',
     EDITOR_VIEW: 'CmdOrCtrl+Alt+1',
     FILES_VIEW: 'CmdOrCtrl+Alt+2'
-  }
+  },
+  // Shortcuts
 }
+
+function shortcutAction(key, win) {
+  console.log("key:", key)
+  win.send('shortcut-cmd', key);
+}
+
+function registerShortcuts (win) {
+  console.log("registering shortcuts")
+  win.send('ignore-shortcuts', false)
+}
+function unregisterShortcuts(win) {
+  console.log("unregistering shortcuts")
+  // globalShortcut.unregisterAll()
+  win.send('ignore-shortcuts', true)
+}
+
+function disableShortcuts (win, value) {
+  console.log("registering shortcuts")
+  win.send('ignore-shortcuts', value)
+}
+
+module.exports = {
+  shortcuts,
+  disableShortcuts
+}
+

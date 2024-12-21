@@ -67,6 +67,8 @@ async function store(state, emitter) {
 
   state.isTerminalBound = false
 
+  state.shortcutsDisabled = false
+
   await createNewTab('disk')
   state.savedPanelHeight = PANEL_DEFAULT
   state.panelHeight = PANEL_CLOSED
@@ -1418,12 +1420,14 @@ async function store(state, emitter) {
     await win.confirmClose()
   })
 
-  // win.shortcutCmdR(() => {
-  //   // Only run if we can execute
-    
-  // })
-
+  win.onDisableShortcuts((disable) => {
+    console.log('state.shortcutsDisabled', disable)
+    state.shortcutsDisabled = disable
+  }),
+  
   win.onKeyboardShortcut((key) => {
+    if (state.shortcutsDisabled) return
+
     if (key === shortcuts.CONNECT) {
       emitter.emit('open-connection-dialog')
     }

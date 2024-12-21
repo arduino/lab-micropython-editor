@@ -32,23 +32,8 @@ const shortcuts = {
   // Shortcuts
 }
 
-function shortcutAction(key, win) {
-  console.log("key:", key)
-  win.send('shortcut-cmd', key);
-}
-
-function registerShortcuts (win) {
-  console.log("registering shortcuts")
-  win.send('ignore-shortcuts', false)
-}
-function unregisterShortcuts(win) {
-  console.log("unregistering shortcuts")
-  // globalShortcut.unregisterAll()
-  win.send('ignore-shortcuts', true)
-}
-
 function disableShortcuts (win, value) {
-  console.log("registering shortcuts")
+  console.log(value ? 'disabling' : 'enabling', 'shortcuts')
   win.send('ignore-shortcuts', value)
 }
 

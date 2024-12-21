@@ -4,7 +4,7 @@ function Button(args) {
     size = '',
     square = false,
     icon = 'connect.svg',
-    onClick = (e) => {console.log(e); false},
+    onClick = (e) => {},
     disabled = false,
     active = false,
     tooltip,

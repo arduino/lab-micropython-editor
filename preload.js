@@ -65,7 +65,6 @@ const Window = {
   },
   onDisableShortcuts: (callback, value) => {
     ipcRenderer.on('ignore-shortcuts', (e, value) => {
-      console.log("ipcRenderer ignore-shortcuts", value)
       callback(value);
     })
   },

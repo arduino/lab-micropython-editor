@@ -1435,7 +1435,6 @@ async function store(state, emitter) {
   })
 
   win.onDisableShortcuts((disable) => {
-    console.log('state.shortcutsDisabled', disable)
     state.shortcutsDisabled = disable
   }),
   

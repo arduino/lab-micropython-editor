@@ -55,8 +55,14 @@ module.exports = function registerMenu(win, state = {}) {
     {
       label: 'File',
       submenu: [
+        { label: 'New', 
+          accelerator: shortcuts.menu.NEW,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.NEW)
+        },
         { label: 'Save', 
           accelerator: shortcuts.menu.SAVE,
+          enabled: state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.SAVE)
         },
         isMac ? { role: 'close' } : { role: 'quit' }

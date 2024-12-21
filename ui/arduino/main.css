@@ -154,6 +154,13 @@ button.small .icon {
   flex-shrink: 0;
 }
 
+#navigation-bar {
+  display: flex;
+  width: 100%;
+  background: #008184;
+  justify-content: space-between;
+}
+
 #toolbar {
   display: flex;
   padding: 16px 10px 10px 10px;
@@ -163,6 +170,11 @@ button.small .icon {
   background: #008184;
 }
 
+#app-views {
+  display: flex;
+  padding: 16px 10px 10px 10px;
+  gap: 16px;
+}
 .separator {
   height: 100%;
   min-width: 1px;

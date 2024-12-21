@@ -1209,6 +1209,7 @@ async function store(state, emitter) {
         // append it to the list of files that are already open
         filesAlreadyOpen.push(alreadyOpen)
       }
+      
     }
 
     // If opening an already open file, switch to its tab
@@ -1221,7 +1222,7 @@ async function store(state, emitter) {
     }
 
     state.openFiles = state.openFiles.concat(filesToOpen)
-
+    state.selectedFiles = []
     state.view = 'editor'
     updateMenu()
     emitter.emit('render')

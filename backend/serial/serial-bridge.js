@@ -97,7 +97,7 @@ const SerialBridge = {
     return path.posix.join(navigation, target)
   },
   getFullPath: (root, navigation, file) => {
-    return path.posix.join(root, navigation, file)
+    return path.posix.join(root, navigation.replaceAll(path.win32.sep, path.posix.sep), file.replaceAll(path.win32.sep, path.posix.sep))
   },
   getParentPath: (navigation) => {
     return path.posix.dirname(navigation)

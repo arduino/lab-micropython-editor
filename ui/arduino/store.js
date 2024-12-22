@@ -927,6 +927,12 @@ async function store(state, emitter) {
           )
         )
       }
+      // Update tab is renaming successful
+      const tabToRenameIndex = state.openFiles.findIndex(f => f.fileName === file.fileName && f.source === file.source && f.parentFolder === file.parentFolder)
+      if (tabToRenameIndex > -1) {
+        state.openFiles[tabToRenameIndex].fileName = value
+        emitter.emit('render')
+      }
     } catch (e) {
       alert(`The file ${file.fileName} could not be renamed to ${value}`)
     }
@@ -952,17 +958,6 @@ async function store(state, emitter) {
       state.renamingTab = null
       state.isSaving = false
       emitter.emit('render')
-      return
-    }
-
-    let response = canSave({
-      view: state.view,
-      isConnected: state.isConnected,
-      openFiles: state.openFiles,
-      editingFile: state.editingFile
-    })
-    if (response == false) {
-      log("can't save")
       return
     }
 
@@ -1037,34 +1032,36 @@ async function store(state, emitter) {
 
     if (fullPathExists) {
       // SAVE FILE CONTENTS
-      const contents = openFile.editor.editor.state.doc.toString()
-      try {
-        if (openFile.source == 'board') {
-          await serialBridge.getPrompt()
-          await serialBridge.saveFileContent(
-            serialBridge.getFullPath(
-              state.boardNavigationRoot,
-              openFile.parentFolder,
-              oldName
-            ),
-            contents,
-            (e) => {
-              state.savingProgress = e
-              emitter.emit('render')
-            }
-          )
-        } else if (openFile.source == 'disk') {
-          await disk.saveFileContent(
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              openFile.parentFolder,
-              oldName
-            ),
-            contents
-          )
+      if (openFile.hasChanges) {
+        const contents = openFile.editor.editor.state.doc.toString()
+        try {
+          if (openFile.source == 'board') {
+            await serialBridge.getPrompt()
+            await serialBridge.saveFileContent(
+              serialBridge.getFullPath(
+                state.boardNavigationRoot,
+                openFile.parentFolder,
+                oldName
+              ),
+              contents,
+              (e) => {
+                state.savingProgress = e
+                emitter.emit('render')
+              }
+            )
+          } else if (openFile.source == 'disk') {
+            await disk.saveFileContent(
+              disk.getFullPath(
+                state.diskNavigationRoot,
+                openFile.parentFolder,
+                oldName
+              ),
+              contents
+            )
+          }
+        } catch (e) {
+          log('error', e)
         }
-      } catch (e) {
-        log('error', e)
       }
       // RENAME FILE
       try {

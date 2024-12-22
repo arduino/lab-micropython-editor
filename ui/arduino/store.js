@@ -39,6 +39,7 @@ async function store(state, emitter) {
   state.boardFiles = []
   state.openFiles = []
   state.selectedFiles = []
+  state.fileContextMenu = null
 
   state.newTabFileName = null
   state.editingFile = null
@@ -1133,6 +1134,29 @@ async function store(state, emitter) {
     state.isSaving = false
     state.savingProgress = 0
     emitter.emit('refresh-files')
+    emitter.emit('render')
+  })
+
+  emitter.on('file-context-menu', (file, source, event) => {
+    state.selectedFiles = []
+    let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
+    log('file-contextual-menu', file, source, event)
+    const isSelected = state.selectedFiles.find((f) => {
+      return f.fileName === file.fileName && f.source === source
+    })
+    if (isSelected) {
+      state.selectedFiles = state.selectedFiles.filter((f) => {
+        return !(f.fileName === file.fileName && f.source === source)
+      })
+    } else {
+      state.selectedFiles.push({
+        fileName: file.fileName,
+        type: file.type,
+        source: source,
+        parentFolder: parentFolder
+      })
+    }
+    state.fileContextMenu = state.selectedFiles[state.selectedFiles.length - 1]
     emitter.emit('render')
   })
 

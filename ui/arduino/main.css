@@ -73,9 +73,6 @@ button[disabled]:hover {
 button:hover, button.active {
   background: rgba(255, 255, 255, 1);
 }
-/* button.inactive:hover {
-  background: rgba(255, 255, 255, 0.2);
-} */
 
 button .icon {
   width: 63%;
@@ -101,7 +98,6 @@ button.small .icon {
 }
 .button .label {
   text-align: center;
-  /* color: #eee; */
   color: rgba(255, 255, 255, 0.2);
   font-family: "OpenSans", sans-serif;
 }
@@ -624,6 +620,7 @@ button.small .icon {
   background: #ECF1F1;
   height: 100%;
   overflow-y: scroll;
+  position: relative;
 }
 
 .file-list .list {
@@ -646,6 +643,7 @@ button.small .icon {
   gap: 10px;
   align-self: stretch;
   transition: all 0.1s;
+  position: relative;
 }
 
 .file-list .item.selected,
@@ -659,6 +657,7 @@ button.small .icon {
   align-items: center;
   align-self: stretch;
   cursor: pointer;
+  width: 22px;
   transition: all 0.1s;
 }
 
@@ -713,6 +712,71 @@ button.small .icon {
   font-family: inherit;
   font-size: inherit;
   outline-color: #F4BA00;
+}
+
+.popup-menu {
+  position: absolute;
+  top: auto;
+  bottom: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  z-index: 1000;
+  gap: 4px;
+  align-items: stretch;
+  height: 28px;
+  padding: 4px 4px;
+  margin: 0;
+  flex-direction: row;
+  right: 0px;
+}
+
+.popup-menu-item {
+  cursor: pointer;
+  background: #ddd;
+  border-radius: 6px;
+  flex: auto;
+  display: flex;
+  width: 32px;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.popup-menu-item img {
+  width: 24px;
+  height: 24px;
+  max-width: 24px;
+  max-height: 24px;
+}
+
+.popup-menu-item:last-child {
+  flex: 0 0 18px;
+}
+.popup-menu-item:last-child:hover {
+  background-color: #bbb;
+}
+.popup-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.popup-menu-item.disabled {
+  color: #ccc;
+  cursor: default;
+  background: #eee;
+  opacity: 0.5;
+}
+
+.options {
+  cursor: pointer;
+}
+
+.options img{
+  width: 28px;
+  height: 28px;
+  max-width: 28px;
+  max-height: 28px;
 }
 
 #code-editor .cm-panels {

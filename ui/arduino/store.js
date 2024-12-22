@@ -102,10 +102,14 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('change-view', (view) => {
-    state.view = view
+    
     if (state.view === 'file-manager') {
+      if (view != state.view) {
+        state.selectedFiles = []
+      }
       emitter.emit('refresh-files')
     }
+    state.view = view
     emitter.emit('render')
     updateMenu()
   })

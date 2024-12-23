@@ -55,6 +55,12 @@ function generateFileList(source) {
       state.selectedFiles = []
       emit('render')
     }
+
+    function triggerEdit() {
+      emit('open-selected-files')
+      state.itemActionMenu = null
+      emit('render')
+    }
     function triggerRemove() {
       emit('remove-files')
       state.itemActionMenu = null
@@ -82,10 +88,12 @@ function generateFileList(source) {
     //   return canDownload(isConnected, selectedFiles)
     // }
     const allowTransfer = source === 'disk' ? canUpload({isConnected, selectedFiles}) : canDownload({isConnected, selectedFiles})
+    const allowEdit = canEdit({selectedFiles})
     const allowRename = selectedFiles.length === 1
     function ItemActions(item, i){
       const popupMenu = html`
         <div class="popup-menu">
+          <div class="popup-menu-item ${allowEdit ? '' : 'disabled'}" onclick=${triggerEdit}><img src="media/pen.svg" /></div>
           <div class="popup-menu-item ${allowTransfer ? '' : 'disabled'}" onclick=${triggerTransfer}><img src="media/${source === 'disk' ? 'upload' : 'download'}.svg" /></div>
           <div class="popup-menu-item ${allowRename ? '' : 'disabled'}"" onclick=${() => triggerRename(item)}><img src="media/cursor.svg" /></div>
           <div class="popup-menu-item" onclick=${triggerRemove}><img src="media/delete.svg" /></div>

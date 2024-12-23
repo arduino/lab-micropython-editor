@@ -81,12 +81,7 @@ function generateFileList(source) {
       state.itemActionMenu = null
       emit('render')
     }
-    // let allowTransfer = false
-    // if (source === 'disk') {
-    //   return canUpload(isConnected, selectedFiles)
-    // else {
-    //   return canDownload(isConnected, selectedFiles)
-    // }
+
     const allowTransfer = source === 'disk' ? canUpload({isConnected, selectedFiles}) : canDownload({isConnected, selectedFiles})
     const allowEdit = canEdit({selectedFiles})
     const allowRename = selectedFiles.length === 1
@@ -192,7 +187,6 @@ function generateFileList(source) {
       }
     }
 
-    // XXX: Use `source` to filter an array of files with a `source` as proprety
     const files = state[`${source}Files`].sort((a, b) => {
       const nameA = a.fileName.toUpperCase()
       const nameB = b.fileName.toUpperCase()

@@ -1,7 +1,8 @@
 const DiskFileList = generateFileList('disk')
 const BoardFileList = generateFileList('board')
 
-function generateFileList(source) {
+function generateFileList(source, selectedFiles) {
+  
   return function FileList(state, emit) {
     function onKeyEvent(e) {
       if(e.key.toLowerCase() === 'enter') {
@@ -13,6 +14,8 @@ function generateFileList(source) {
       }
     }
 
+    /*  template for new file item, with focussed input
+        ESC to cancel, ENTER to finish */
     const newFileItem = html`
       <div class="item">
         <img class="icon" src="media/file.svg" />
@@ -26,6 +29,8 @@ function generateFileList(source) {
         </div>
       </div>
     `
+    /*  template for new folder item, with focussed input
+        ESC to cancel, ENTER to finish */
     const newFolderItem = html`
       <div class="item">
         <img class="icon" src="media/folder.svg" />
@@ -39,22 +44,23 @@ function generateFileList(source) {
         </div>
       </div>
     `
+
     function dismissContextMenu(e, item) {
       console.log("click action", e, item)
       e.stopPropagation()
-      state.fileContextMenu = null
+      state.itemActionMenu = null
       state.selectedFiles = []
       emit('render')
     }
     function triggerRemove() {
       emit('remove-files')
-      state.fileContextMenu = null
+      state.itemActionMenu = null
       emit('render')
     }
     function triggerRename(item) {
       emit('rename-file', source, item)
 
-      state.fileContextMenu = null
+      state.itemActionMenu = null
       emit('render')
     }
     function triggerTransfer() {
@@ -63,10 +69,11 @@ function generateFileList(source) {
       }else{
         emit('download-files')
       }
-      state.fileContextMenu = null
+      state.itemActionMenu = null
       emit('render')
     }
-    function FileOptions(item, i){
+
+    function ItemActions(item, i){
       const popupMenu = html`
         <div class="popup-menu">
           <div class="popup-menu-item ${state.isConnected ? '' : 'disabled'}" onclick=${triggerTransfer}><img src="media/${source === 'disk' ? 'upload' : 'download'}.svg" /></div>
@@ -91,7 +98,6 @@ function generateFileList(source) {
         f => f.fileName === item.fileName && f.source === source
       )
 
-      const hasContextMenu = state.fileContextMenu && state.fileContextMenu.fileName === item.fileName && state.fileContextMenu.source === source
       function renameItem(e) {
         e.preventDefault()
         emit('rename-file', source, item)
@@ -104,13 +110,19 @@ function generateFileList(source) {
         if (!state.renamingFile) emit(`open-file`, source, item)
       }
 
-      function toggleContextMenu(item, source, e) {
+      function toggleActionsMenu(item, source, e) {
         e.stopPropagation()
         console.log("show file options", item, source, e)
         // const popupMenu = e.currentTarget.parentElement.querySelector('.popup-menu')
         // popupMenu.classList.add('visible')
         emit('file-context-menu', item, source, e)
       }
+
+      function checkboxToggle(item, source, e) {
+        e.stopPropagation()
+        emit('toggle-file-selection', item, source, e)
+      }
+
       let fileName = item.fileName
       const isSelected = state.selectedFiles.find(f => f.fileName === fileName)
 
@@ -118,40 +130,52 @@ function generateFileList(source) {
         fileName = renamingFileItem
       }
 
-      contextMenuHtml = html``
-      if (hasContextMenu) {
-        contextMenuHtml = html`${FileOptions(item, i)}` 
-      }
+      // a context menu has been triggered
+      const contextMenuOpen = state.itemActionMenu != null
+      
+      // only show the action menu on current item
+      const showActionMenu = state.itemActionMenu && state.itemActionMenu.fileName === item.fileName && state.itemActionMenu.source === source
+      
+      // let actionMenuHtml = html``
+      // if (showActionMenu) {
+      const actionMenuHtml = showActionMenu ? html`${ItemActions(item, i)}` : html``
+      // }
 
       if (item.type === 'folder') {
         return html`
           <div
-            class="item ${isChecked ? 'selected' : ''}"
+            class="item ${isChecked ? 'selected' : ''} ${showActionMenu ? 'actionable' : ''}"
             onclick=${(e) => emit('toggle-file-selection', item, source, e)}
             ondblclick=${navigateToFolder}
             >
             <img class="icon" src="media/folder.svg" />
             <div class="text">${fileName}</div>
-            <div class="options" onclick=${(e) => toggleContextMenu(item, source, e)}>}>
+            <div class="options" onclick=${(e) => toggleActionsMenu(item, source, e)}>}>
               <img src="media/more.svg" />
             </div>
-            ${contextMenuHtml}
+            <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
+              <img src="media/unchecked.svg" />
+            </div>
+            ${actionMenuHtml}
           </div>
         `
       } else {
         //<div class="options" onclick=${(e) => {contextualMenu(e, item)}}>
         return html`
           <div
-            class="item ${isChecked ? 'selected' : ''}"
+            class="item ${isChecked ? 'selected' : ''} ${showActionMenu ? 'actionable' : ''}"
             onclick=${(e) => emit('toggle-file-selection', item, source, e)}
             ondblclick=${openFile}
             >
             <img class="icon" src="media/file.svg"  />
             <div class="text">${fileName}</div>
-            <div class="options" onclick=${(e) => toggleContextMenu(item, source, e)}>
+            <div class="options" onclick=${(e) => toggleActionsMenu(item, source, e)}>
               <img src="media/more.svg" />
             </div>
-            ${contextMenuHtml}
+            <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
+              <img src="media/unchecked.svg" />
+            </div>
+            ${actionMenuHtml}
           </div>
         `
       }

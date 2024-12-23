@@ -30,7 +30,7 @@ async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
   state.platform = window.BridgeWindow.getOS()
-  state.view = 'editor'
+  state.view = 'file-manager'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
   state.diskFiles = []
@@ -39,7 +39,7 @@ async function store(state, emitter) {
   state.boardFiles = []
   state.openFiles = []
   state.selectedFiles = []
-  state.fileContextMenu = null
+  state.itemActionMenu = null
 
   state.newTabFileName = null
   state.editingFile = null
@@ -1138,7 +1138,7 @@ async function store(state, emitter) {
   })
 
   emitter.on('file-context-menu', (file, source, event) => {
-    state.selectedFiles = []
+    // state.selectedFiles = []
     let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
     log('file-contextual-menu', file, source, event)
     const isSelected = state.selectedFiles.find((f) => {
@@ -1156,13 +1156,14 @@ async function store(state, emitter) {
         parentFolder: parentFolder
       })
     }
-    state.fileContextMenu = state.selectedFiles[state.selectedFiles.length - 1]
+    state.itemActionMenu = state.selectedFiles[state.selectedFiles.length - 1]
     emitter.emit('render')
   })
 
   emitter.on('toggle-file-selection', (file, source, event) => {
     log('toggle-file-selection', file, source, event)
     let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
+    
     // Single file selection unless holding keyboard key
     if (event && !event.ctrlKey && !event.metaKey) {
       state.selectedFiles = [{
@@ -1171,7 +1172,9 @@ async function store(state, emitter) {
         source: source,
         parentFolder: parentFolder
       }]
+      state.itemActionMenu = null
       emitter.emit('render')
+      console.log(state.selectedFiles)
       return
     }
 
@@ -1190,6 +1193,7 @@ async function store(state, emitter) {
         parentFolder: parentFolder
       })
     }
+    console.log(state.selectedFiles)
     emitter.emit('render')
   })
   emitter.on('open-selected-files', async () => {

@@ -638,7 +638,7 @@ button.small .icon {
   height: 28px;
   min-height: 28px;
   max-height: 28px;;
-  padding: 5px 10px;
+  padding: 5px 0;
   align-items: center;
   gap: 10px;
   align-self: stretch;
@@ -657,12 +657,25 @@ button.small .icon {
   align-items: center;
   align-self: stretch;
   cursor: pointer;
-  width: 22px;
   transition: all 0.1s;
 }
 
 .file-list .item:hover .options {
   opacity: 1;
+}
+
+.file-list .item.selected.actionable .options {
+  opacity: 0;
+}
+
+.file-list .item .checkbox {
+  display: none;
+}
+.file-list .item.actionable .checkbox {
+  display: flex;
+}
+.file-list .item.selected.actionable .checkbox {
+  display: none;
 }
 
 .file-list .item .icon {
@@ -715,18 +728,18 @@ button.small .icon {
 }
 
 .popup-menu {
-  position: absolute;
+  /* position: absolute;
   top: auto;
-  bottom: auto;
-  background: white;
-  border: 1px solid #ddd;
+  bottom: auto; */
+  /* background: white;
+  border: 1px solid #ddd; */
   border-radius: 8px;
   display: flex;
   z-index: 1000;
   gap: 4px;
   align-items: stretch;
   height: 28px;
-  padding: 4px 4px;
+  padding: 0px 4px;
   margin: 0;
   flex-direction: row;
   right: 0px;

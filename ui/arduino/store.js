@@ -30,7 +30,7 @@ async function store(state, emitter) {
   win.setWindowSize(720, 640)
 
   state.platform = window.BridgeWindow.getOS()
-  state.view = 'file-manager'
+  state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
   state.diskFiles = []
@@ -1138,25 +1138,21 @@ async function store(state, emitter) {
   })
 
   emitter.on('file-context-menu', (file, source, event) => {
-    // state.selectedFiles = []
     let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
     log('file-contextual-menu', file, source, event)
-    const isSelected = state.selectedFiles.find((f) => {
+    let itemIndex = state.selectedFiles.findIndex((f) => {
       return f.fileName === file.fileName && f.source === source
     })
-    if (isSelected) {
-      state.selectedFiles = state.selectedFiles.filter((f) => {
-        return !(f.fileName === file.fileName && f.source === source)
-      })
-    } else {
+    if (itemIndex == -1) {
       state.selectedFiles.push({
         fileName: file.fileName,
         type: file.type,
         source: source,
         parentFolder: parentFolder
       })
+      itemIndex = state.selectedFiles.length - 1
     }
-    state.itemActionMenu = state.selectedFiles[state.selectedFiles.length - 1]
+    state.itemActionMenu = state.selectedFiles[itemIndex]
     emitter.emit('render')
   })
 
@@ -1178,10 +1174,10 @@ async function store(state, emitter) {
       return
     }
 
-    const isSelected = state.selectedFiles.find((f) => {
+    const selectedItemIndex = state.selectedFiles.findIndex((f) => {
       return f.fileName === file.fileName && f.source === source
     })
-    if (isSelected) {
+    if (selectedItemIndex > -1) {
       state.selectedFiles = state.selectedFiles.filter((f) => {
         return !(f.fileName === file.fileName && f.source === source)
       })
@@ -1193,6 +1189,8 @@ async function store(state, emitter) {
         parentFolder: parentFolder
       })
     }
+    
+    state.itemActionMenu = state.itemActionMenu === null ? null : state.selectedFiles[state.selectedFiles.length - 1]
     console.log(state.selectedFiles)
     emitter.emit('render')
   })
@@ -1203,10 +1201,9 @@ async function store(state, emitter) {
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
       if (selectedFile.type == 'folder') {
-        // Don't open folders
+        // skip folders
         continue
       }
-      // ALl good until here
 
       const alreadyOpen = state.openFiles.find((f) => {
         return f.fileName == selectedFile.fileName

@@ -1,7 +1,7 @@
 const DiskFileList = generateFileList('disk')
 const BoardFileList = generateFileList('board')
 
-function generateFileList(source, selectedFiles) {
+function generateFileList(source) {
   
   return function FileList(state, emit) {
     function onKeyEvent(e) {
@@ -13,7 +13,10 @@ function generateFileList(source, selectedFiles) {
         e.target.blur()
       }
     }
+    selectedFiles = state.selectedFiles
+    isConnected = state.isConnected
 
+    console.log('generating', source, '| selectedFiles', selectedFiles)
     /*  template for new file item, with focussed input
         ESC to cancel, ENTER to finish */
     const newFileItem = html`
@@ -72,12 +75,19 @@ function generateFileList(source, selectedFiles) {
       state.itemActionMenu = null
       emit('render')
     }
-
+    // let allowTransfer = false
+    // if (source === 'disk') {
+    //   return canUpload(isConnected, selectedFiles)
+    // else {
+    //   return canDownload(isConnected, selectedFiles)
+    // }
+    const allowTransfer = source === 'disk' ? canUpload({isConnected, selectedFiles}) : canDownload({isConnected, selectedFiles})
+    const allowRename = selectedFiles.length === 1
     function ItemActions(item, i){
       const popupMenu = html`
         <div class="popup-menu">
-          <div class="popup-menu-item ${state.isConnected ? '' : 'disabled'}" onclick=${triggerTransfer}><img src="media/${source === 'disk' ? 'upload' : 'download'}.svg" /></div>
-          <div class="popup-menu-item" onclick=${() => triggerRename(item)}><img src="media/cursor.svg" /></div>
+          <div class="popup-menu-item ${allowTransfer ? '' : 'disabled'}" onclick=${triggerTransfer}><img src="media/${source === 'disk' ? 'upload' : 'download'}.svg" /></div>
+          <div class="popup-menu-item ${allowRename ? '' : 'disabled'}"" onclick=${() => triggerRename(item)}><img src="media/cursor.svg" /></div>
           <div class="popup-menu-item" onclick=${triggerRemove}><img src="media/delete.svg" /></div>
           <div class="popup-menu-item" onclick=${(e) => {dismissContextMenu(e, item)}}><img src="media/arrow-right-white.svg" /></div>
         </div>`
@@ -113,8 +123,6 @@ function generateFileList(source, selectedFiles) {
       function toggleActionsMenu(item, source, e) {
         e.stopPropagation()
         console.log("show file options", item, source, e)
-        // const popupMenu = e.currentTarget.parentElement.querySelector('.popup-menu')
-        // popupMenu.classList.add('visible')
         emit('file-context-menu', item, source, e)
       }
 
@@ -130,17 +138,13 @@ function generateFileList(source, selectedFiles) {
         fileName = renamingFileItem
       }
 
-      // a context menu has been triggered
-      const contextMenuOpen = state.itemActionMenu != null
-      
       // only show the action menu on current item
-      const showActionMenu = state.itemActionMenu && state.itemActionMenu.fileName === item.fileName && state.itemActionMenu.source === source
+      const showActionMenu = state.itemActionMenu 
+                          && state.itemActionMenu.fileName === item.fileName
+                          && state.itemActionMenu.source === source
       
-      // let actionMenuHtml = html``
-      // if (showActionMenu) {
       const actionMenuHtml = showActionMenu ? html`${ItemActions(item, i)}` : html``
-      // }
-
+      
       if (item.type === 'folder') {
         return html`
           <div
@@ -160,7 +164,6 @@ function generateFileList(source, selectedFiles) {
           </div>
         `
       } else {
-        //<div class="options" onclick=${(e) => {contextualMenu(e, item)}}>
         return html`
           <div
             class="item ${isChecked ? 'selected' : ''} ${showActionMenu ? 'actionable' : ''}"
@@ -180,7 +183,7 @@ function generateFileList(source, selectedFiles) {
         `
       }
     }
-//
+
     // XXX: Use `source` to filter an array of files with a `source` as proprety
     const files = state[`${source}Files`].sort((a, b) => {
       const nameA = a.fileName.toUpperCase()

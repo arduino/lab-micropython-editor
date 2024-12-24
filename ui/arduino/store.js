@@ -105,10 +105,14 @@ async function store(state, emitter) {
   emitter.on('change-view', (view) => {
     
     if (state.view === 'file-manager') {
+      // Clicking the file manager button has the useful side effect
+      // of refreshing the files, so we don't want to clear the selection
       if (view != state.view) {
         state.selectedFiles = []
       }
       emitter.emit('refresh-files')
+    } else {
+      state.itemActionMenu = null
     }
     state.view = view
     emitter.emit('render')
@@ -1138,6 +1142,7 @@ async function store(state, emitter) {
   })
 
   emitter.on('file-context-menu', (file, source, event) => {
+    state.selectedFiles = []
     let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
     log('file-contextual-menu', file, source, event)
     let itemIndex = state.selectedFiles.findIndex((f) => {
@@ -1431,6 +1436,7 @@ async function store(state, emitter) {
       state.boardNavigationPath,
       folder
     )
+    state.itemActionMenu = null
     emitter.emit('refresh-files')
     emitter.emit('render')
   })
@@ -1440,6 +1446,7 @@ async function store(state, emitter) {
       state.boardNavigationPath,
       '..'
     )
+    state.itemActionMenu = null
     emitter.emit('refresh-files')
     emitter.emit('render')
   })

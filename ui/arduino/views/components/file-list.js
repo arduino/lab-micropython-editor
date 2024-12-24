@@ -146,7 +146,15 @@ function generateFileList(source) {
                           && state.itemActionMenu.fileName === item.fileName
                           && state.itemActionMenu.source === source
       
+      
       const actionMenuHtml = showActionMenu ? html`${ItemActions(item, i)}` : html``
+
+      const optionsButtonHtml = html`
+      <div class="options" onclick=${(e) => toggleActionsMenu(item, source, e)}>}>
+        <img src="media/more.svg" />
+      </div>
+      `
+      const optionsButton = showActionMenu ? html`` : optionsButtonHtml
       
       if (item.type === 'folder') {
         return html`
@@ -157,9 +165,7 @@ function generateFileList(source) {
             >
             <img class="icon" src="media/folder.svg" />
             <div class="text">${fileName}</div>
-            <div class="options" onclick=${(e) => toggleActionsMenu(item, source, e)}>}>
-              <img src="media/more.svg" />
-            </div>
+            ${showActionMenu ? '' : optionsButton}
             <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
               <img src="media/unchecked.svg" />
             </div>
@@ -175,9 +181,7 @@ function generateFileList(source) {
             >
             <img class="icon" src="media/file.svg"  />
             <div class="text">${fileName}</div>
-            <div class="options" onclick=${(e) => toggleActionsMenu(item, source, e)}>
-              <img src="media/more.svg" />
-            </div>
+            ${showActionMenu ? '' : optionsButton}
             <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
               <img src="media/unchecked.svg" />
             </div>

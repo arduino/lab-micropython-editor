@@ -12,7 +12,11 @@ let splashTimestamp = null
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
+<<<<<<< HEAD
     width: 760,
+=======
+    width: 820,
+>>>>>>> design/window-css-adjustments
     height: 700,
     webPreferences: {
       nodeIntegration: false,

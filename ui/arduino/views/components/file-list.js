@@ -97,6 +97,14 @@ function generateFileList(source) {
         return popupMenu
     }
 
+    // function ItemMore(item, i){
+    //   const popupMenu = html`
+    //     <div class="popup-menu">
+    //       <div class="popup-menu-item" onclick=${(e) => toggleActionsMenu(item, source, e)}><img src="media/arrow-right-white.svg" /></div>
+    //     </div>`
+    //     return popupMenu
+    // }
+
     function FileItem(item, i) {
       const renamingFileItem = html`
         <input type="text"
@@ -111,11 +119,11 @@ function generateFileList(source) {
         f => f.fileName === item.fileName && f.source === source
       )
 
-      function renameItem(e) {
-        e.preventDefault()
-        emit('rename-file', source, item)
-        return false
-      }
+      // function renameItem(e) {
+      //   e.preventDefault()
+      //   emit('rename-file', source, item)
+      //   return false
+      // }
       function navigateToFolder() {
         if (!state.renamingFile) emit(`navigate-${source}-folder`, item.fileName)
       }
@@ -129,10 +137,10 @@ function generateFileList(source) {
         emit('file-context-menu', item, source, e)
       }
 
-      function checkboxToggle(item, source, e) {
-        e.stopPropagation()
-        emit('toggle-file-selection', item, source, e)
-      }
+      // function checkboxToggle(item, source, e) {
+      //   e.stopPropagation()
+      //   emit('toggle-file-selection', item, source, e)
+      // }
 
       let fileName = item.fileName
       const isSelected = state.selectedFiles.find(f => f.fileName === fileName)
@@ -150,11 +158,20 @@ function generateFileList(source) {
       const actionMenuHtml = showActionMenu ? html`${ItemActions(item, i)}` : html``
 
       const optionsButtonHtml = html`
-      <div class="options" onclick=${(e) => toggleActionsMenu(item, source, e)}>}>
-        <img src="media/more.svg" />
+      <div class="popup-menu options" onclick=${(e) => toggleActionsMenu(item, source, e)}>}>
+        <div class="popup-menu-item">
+          <img src="media/more.svg" />
+        </div>
       </div>
       `
       const optionsButton = showActionMenu ? html`` : optionsButtonHtml
+      
+      // const checkboxHtml = html`
+      // <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
+      //   <img src="media/unchecked.svg" />
+      // </div>
+      // `
+
       
       if (item.type === 'folder') {
         return html`
@@ -166,9 +183,6 @@ function generateFileList(source) {
             <img class="icon" src="media/folder.svg" />
             <div class="text">${fileName}</div>
             ${showActionMenu ? '' : optionsButton}
-            <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
-              <img src="media/unchecked.svg" />
-            </div>
             ${actionMenuHtml}
           </div>
         `
@@ -182,9 +196,6 @@ function generateFileList(source) {
             <img class="icon" src="media/file.svg"  />
             <div class="text">${fileName}</div>
             ${showActionMenu ? '' : optionsButton}
-            <div class="checkbox" onclick=${(e) => checkboxToggle(item, source, e)}>}>
-              <img src="media/unchecked.svg" />
-            </div>
             ${actionMenuHtml}
           </div>
         `
@@ -204,11 +215,9 @@ function generateFileList(source) {
       return 0
     })
     const parentNavigationDots = html`<div class="item"
-  onclick=${() => emit(`navigate-${source}-parent`)}
-  style="cursor: pointer"
-  >
-  ..
-</div>`
+        onclick=${() => emit(`navigate-${source}-parent`)} style="cursor: pointer">
+        <img class="icon" src="media/arrow-up.svg" />
+      </div>`
 
     const list = html`
       <div class="file-list">
@@ -223,6 +232,7 @@ function generateFileList(source) {
     `
 
     // Mutation observer
+    // monitors for the appearance of the new file/folder input field to give it focus
     const observer = new MutationObserver((mutations) => {
       const el = list.querySelector('input')
       if (el) {

@@ -652,12 +652,7 @@ button.small .icon {
 }
 
 .file-list .item .options {
-  display: flex;
   opacity: 0;
-  align-items: center;
-  align-self: stretch;
-  cursor: pointer;
-  transition: all 0.1s;
 }
 
 .file-list .item:hover .options {
@@ -728,21 +723,18 @@ button.small .icon {
 }
 
 .popup-menu {
-  /* position: absolute;
-  top: auto;
-  bottom: auto; */
-  /* background: white;
-  border: 1px solid #ddd; */
   border-radius: 8px;
   display: flex;
   z-index: 1000;
-  gap: 4px;
+  gap: 6px;
   align-items: stretch;
   height: 28px;
-  padding: 0px 4px;
   margin: 0;
   flex-direction: row;
-  right: 0px;
+  right: 4px;
+  position: absolute;
+  justify-content: flex-end;
+  background: #fff;
 }
 
 .popup-menu-item {
@@ -764,8 +756,13 @@ button.small .icon {
   max-height: 24px;
 }
 
+.popup-menu-item.disabled img {
+  opacity: 0.5;
+}
+
 .popup-menu-item:last-child {
   flex: 0 0 18px;
+  width: auto;
 }
 .popup-menu-item:last-child:hover {
   background-color: #bbb;
@@ -777,19 +774,11 @@ button.small .icon {
 .popup-menu-item.disabled {
   color: #ccc;
   cursor: default;
-  background: #eee;
-  opacity: 0.5;
+  background: #f7f7f7;
 }
 
 .options {
   cursor: pointer;
-}
-
-.options img{
-  width: 28px;
-  height: 28px;
-  max-width: 28px;
-  max-height: 28px;
 }
 
 #code-editor .cm-panels {

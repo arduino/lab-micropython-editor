@@ -1,15 +1,22 @@
 @font-face {
   font-family: "RobotoMono";
   src:
-    url("media/roboto-mono-latin-ext-400-normal.woff2") format("woff2"),
-    url("media/roboto-mono-latin-ext-400-normal.woff") format("woff");
+    url("./media/roboto-mono-latin-ext-400-normal.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Hack";
+  src:
+    url("./media/hack-regular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "OpenSans";
-  src: url("media/open-sans_5.0.29_latin-wght-normal.woff2") format("woff2");
+  src: url("./media/open-sans_5.0.29_latin-wght-normal.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
 }
@@ -137,7 +144,7 @@ button.small .icon {
   height: 100%;
   justify-content: center;
   align-items: center;
-  font-family: "RobotoMono", monospace;
+  font-family: "OpenSans", sans-serif;
   overflow: hidden;
 }
 
@@ -271,7 +278,7 @@ button.small .icon {
 }
 
 #code-editor * {
-  font-family: "RobotoMono", monospace;
+  font-family: "Hack", monospace;
 }
 #code-editor .cm-editor {
   width: 100%;
@@ -465,7 +472,7 @@ button.small .icon {
 .dialog .dialog-content #file-name {
   font-size: 1.3em;
   width:100%;
-  font-family: "RobotoMono", monospace;
+  font-family: "Hack", monospace;
 }
 
 .dialog .dialog-content input:focus {
@@ -582,7 +589,7 @@ button.small .icon {
   position: relative;
   cursor: pointer;
   color: #000;
-  font-family: "RobotoMono", monospace;
+  font-family: "Hack", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -679,7 +686,7 @@ button.small .icon {
 }
 .file-list .item .text {
   color: #000;
-  font-family: "RobotoMono", monospace;
+  font-family: "Hack", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;

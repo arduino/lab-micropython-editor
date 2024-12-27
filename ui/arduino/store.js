@@ -564,7 +564,8 @@ async function store(state, emitter) {
   emitter.on('create-file', (device, fileName = null) => {
     log('create-file', device)
     if (state.creatingFile !== null) return
-    
+    state.selectedFiles = []
+    state.itemActionMenu = null
     state.creatingFile = device
     state.creatingFolder = null
     if (fileName != null) {
@@ -576,7 +577,6 @@ async function store(state, emitter) {
   emitter.on('finish-creating-file', async (fileNameParameter) => {
     log('finish-creating', fileNameParameter)
     if (!state.creatingFile) return
-
     if (!fileNameParameter) {
       state.creatingFile = null
       emitter.emit('render')
@@ -641,6 +641,8 @@ async function store(state, emitter) {
   emitter.on('create-folder', (device) => {
     log('create-folder', device)
     if (state.creatingFolder !== null) return
+    state.selectedFiles = []
+    state.itemActionMenu = null
     state.creatingFolder = device
     state.creatingFile = null
     emitter.emit('render')

@@ -25,11 +25,6 @@ function generateFileList(source) {
         <div class="text">
           <input type="text" onkeydown=${onKeyEvent} onblur=${(e) => emit('finish-creating-file', e.target.value)}/>
         </div>
-        <div class="popup-menu">
-          <div class="popup-menu-item">rename</div>
-          <div class="popup-menu-item">delete</div>
-          <div class="popup-menu-item">upload</div>
-        </div>
       </div>
     `
     /*  template for new folder item, with focussed input
@@ -39,11 +34,6 @@ function generateFileList(source) {
         <img class="icon" src="media/folder.svg" />
         <div class="text">
           <input type="text" onkeydown=${onKeyEvent} onblur=${(e) => emit('finish-creating-folder', e.target.value)}/>
-        </div>
-        <div class="popup-menu">
-          <div class="popup-menu-item">rename</div>
-          <div class="popup-menu-item">delete</div>
-          <div class="popup-menu-item">upload</div>
         </div>
       </div>
     `

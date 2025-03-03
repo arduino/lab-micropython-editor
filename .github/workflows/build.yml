@@ -129,7 +129,7 @@ jobs:
       - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact.name }}
+          name: ${{ matrix.artifact.name }}-${{ github.run_id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
 
   release:

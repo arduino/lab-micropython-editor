@@ -63,19 +63,14 @@ button.inverted {
   background: rgba(0, 129, 132, 1) !important;
 }
 
-button[disabled] {
-  background: rgba(255, 255, 255, 0.2);
+button[disabled], button[disabled]:hover {
   cursor: default;
+  opacity: 0.5;
 }
-button[disabled]:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-button:hover, button.active {
+
+button:not([disabled]):hover {
   background: rgba(255, 255, 255, 1);
 }
-/* button.inactive:hover {
-  background: rgba(255, 255, 255, 0.2);
-} */
 
 button .icon {
   width: 63%;
@@ -101,7 +96,6 @@ button.small .icon {
 }
 .button .label {
   text-align: center;
-  /* color: #eee; */
   color: rgba(255, 255, 255, 0.2);
   font-family: "OpenSans", sans-serif;
 }

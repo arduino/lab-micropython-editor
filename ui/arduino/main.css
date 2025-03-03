@@ -1,16 +1,28 @@
+/*
+  On 20250303, due to font files inconsistencies, we sourced the updated fonts from here:
+  https://github.com/alsacreations/webfonts
+  
+*/
 @font-face {
   font-family: "RobotoMono";
   src:
-    url("media/roboto-mono-latin-ext-400-normal.woff2") format("woff2"),
-    url("media/roboto-mono-latin-ext-400-normal.woff") format("woff");
+    url("media/roboto-regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: "OpenSans";
+  src: url("media/opensans-regular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "OpenSans";
-  src: url("media/open-sans_5.0.29_latin-wght-normal.woff2") format("woff2");
-  font-weight: normal;
+  src: url("media/opensans-bold.woff2") format("woff2");
+  font-weight: bold;
   font-style: normal;
 }
 
@@ -182,6 +194,13 @@ button.small .icon {
 
 #app-views .button button{
   width: 100%
+}
+
+#app-views .button .label{
+  
+}
+#app-views .button .label.selected{
+  font-weight: bold;
 }
 
 #app-views div:first-child button{

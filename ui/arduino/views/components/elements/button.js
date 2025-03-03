@@ -19,11 +19,12 @@ function Button(args) {
   }
   tooltipEl = html``
   let activeClass = active ? 'active' : ''
+  let labelSelectedClass = active ? 'selected' : ''
   let backgroundClass = background ? 'inverted' : ''
   let buttonFirstClass = first ? 'first' : ''
   let squareClass = square ? 'square' : ''
   let labelActiveClass = disabled ? 'inactive' : 'active'
-  let labelItem = size === 'small' ? '' : html`<div class="label ${labelActiveClass}">${label}</div>`
+  let labelItem = size === 'small' ? '' : html`<div class="label ${labelActiveClass} ${labelSelectedClass}">${label}</div>`
 
   return html`
      <div class="button ${buttonFirstClass}">

@@ -63,13 +63,17 @@ button.inverted {
   background: rgba(0, 129, 132, 1) !important;
 }
 
-button[disabled], button[disabled]:hover {
+button[disabled], button[disabled]:hover{
   cursor: default;
   opacity: 0.5;
 }
 
 button:not([disabled]):hover {
   background: rgba(255, 255, 255, 1);
+}
+
+button.active {
+  background: rgba(255, 255, 255);
 }
 
 button .icon {
@@ -167,8 +171,28 @@ button.small .icon {
 #app-views {
   display: flex;
   padding: 16px 10px 10px 10px;
-  gap: 16px;
+  width: 120px;
+  /* gap: 16px; */
 }
+
+#app-views .button{
+  flex-grow: 1;
+  width: 100%;
+}
+
+#app-views .button button{
+  width: 100%
+}
+
+#app-views div:first-child button{
+  border-radius: 8px 0px 0px 8px;
+  
+}
+#app-views div:last-child button{
+  border-radius: 0px 8px 8px 0px;
+  
+}
+
 .separator {
   height: 100%;
   min-width: 1px;

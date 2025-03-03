@@ -81,7 +81,7 @@ function Toolbar(state, emit) {
           onClick: () => emit('change-view', 'editor')
         })}
         ${Button({
-          icon: 'files.svg',
+          icon: 'folder.svg',
           label: 'Files',
           tooltip: `Files (${metaKeyString}+Alt+2)`,
           active: state.view === 'file-manager',

@@ -1,5 +1,5 @@
 function FileManagerView(state, emit) {
-  let boardFullPath = 'Select a board...'
+  let boardFullPath = 'Connect to board'
   let diskFullPath = `${state.diskNavigationRoot}${state.diskNavigationPath}`
 
   if (state.isConnected) {
@@ -13,7 +13,7 @@ function FileManagerView(state, emit) {
         <div id="board-files">
           <div class="device-header">
             <img class="icon" src="media/${state.isConnected?'board':'disconnect'}.svg" />
-            <div onclick=${() => emit('open-connection-dialog')} class="text">
+            <div onclick=${() => emit('connect')} class="text">
               <span>${boardFullPath}</span>
             </div>
             <button disabled=${!state.isConnected} onclick=${() => emit('create-folder', 'board')}>

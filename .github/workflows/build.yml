@@ -92,7 +92,7 @@ jobs:
             npm run build
 
       - name: Upload [GitHub Actions]
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}
           path: dist
@@ -121,13 +121,13 @@ jobs:
 
     steps:
       - name: Download job transfer artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
 
       - name: Upload tester build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact.name }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download [GitHub Actions]
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}

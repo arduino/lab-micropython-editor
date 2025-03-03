@@ -23,7 +23,10 @@
     "artifactName": "${productName}-${os}_${arch}.${ext}",
     "extraResources": "./ui/arduino/helpers.py",
     "mac": {
-      "target": "zip",
+      "target": [{
+        "target": "zip",
+        "arch": ["universal"]
+      }],
       "icon": "build_resources/icon.icns"
     },
     "win": {

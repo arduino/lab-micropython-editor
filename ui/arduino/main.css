@@ -4,13 +4,20 @@
   
 */
 @font-face {
-  font-family: "RobotoMono";
+  font-family: "CodeFont";
   src:
-    url("media/roboto-regular.woff2") format("woff2");
+    url("media/Roboto-Mono-Regular-webfont.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
+@font-face {
+  font-family: "CodeFont";
+  src:
+    url("media/Roboto-Mono-Bold-webfont.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
 
 @font-face {
   font-family: "OpenSans";
@@ -151,7 +158,7 @@ button.small .icon {
   height: 100%;
   justify-content: center;
   align-items: center;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
   overflow: hidden;
 }
 
@@ -312,7 +319,7 @@ button.small .icon {
 }
 
 #code-editor * {
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
 }
 #code-editor .cm-editor {
   width: 100%;
@@ -506,7 +513,7 @@ button.small .icon {
 .dialog .dialog-content #file-name {
   font-size: 1.3em;
   width:100%;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
 }
 
 .dialog .dialog-content input:focus {
@@ -623,7 +630,7 @@ button.small .icon {
   position: relative;
   cursor: pointer;
   color: #000;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -709,7 +716,7 @@ button.small .icon {
 }
 .file-list .item .text {
   color: #000;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;

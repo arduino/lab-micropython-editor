@@ -14,12 +14,14 @@ async function confirmDialog(msg, cancelMsg, confirmMsg) {
   // cancelMsg = cancelMsg || 'Cancel'
   // confirmMsg = confirmMsg || 'Yes'
   let buttons = []
-  if (cancelMsg) buttons.push(cancelMsg)
   if (confirmMsg) buttons.push(confirmMsg)
+  if (cancelMsg) buttons.push(cancelMsg)
+  
   let response = await win.openDialog({
     type: 'question',
-    buttons: [cancelMsg, confirmMsg],
-    cancelId: 0,
+    buttons: buttons,
+    defaultId: 0,
+    cancelId: 1,
     message: msg
   })
   console.log('confirm', response)
@@ -1172,6 +1174,9 @@ async function store(state, emitter) {
     log('open-selected-files')
     let filesToOpen = []
     let filesAlreadyOpen = []
+    if (state.isLoadingFiles) return
+    state.isLoadingFiles = true
+    emitter.emit('render')
     for (let i in state.selectedFiles) {
       let selectedFile = state.selectedFiles[i]
       if (selectedFile.type == 'folder') {
@@ -1251,6 +1256,7 @@ async function store(state, emitter) {
     state.selectedFiles = []
     state.view = 'editor'
     updateMenu()
+    state.isLoadingFiles = false
     emitter.emit('render')
   })
   emitter.on('open-file', (source, file) => {

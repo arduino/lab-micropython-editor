@@ -90,6 +90,18 @@ function Toolbar(state, emit) {
         })}
       
       </div>
+
+      <div>
+        ${!window.BridgeWindow.isLinux() ? Button({
+          icon: 'install-package.svg',
+          tooltip: `Install Package`,
+          active: true,
+          onClick: () => {
+            if(state.isConnected) emit('disconnect') // Package installer requires exclusive access to the serial port
+            emit('launch-app', 'micropython-package-installer://', 'https://github.com/arduino/lab-micropython-package-installer/releases/latest')          
+          }
+        }) : '' }
+      </div>
     </div>
   `
 }

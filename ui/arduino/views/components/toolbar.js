@@ -94,7 +94,7 @@ function Toolbar(state, emit) {
       <div>
         ${!window.BridgeWindow.isLinux() ? Button({
           icon: 'install-package.svg',
-          tooltip: `Install Package`,
+          label: `Install Package`,
           active: true,
           onClick: () => {
             if(state.isConnected) emit('disconnect') // Package installer requires exclusive access to the serial port

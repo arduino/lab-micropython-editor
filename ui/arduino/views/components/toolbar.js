@@ -70,7 +70,7 @@ function Toolbar(state, emit) {
           onClick: () => emit('save')
         })}
 
-        <div class="separator"></div>
+        ${!window.BridgeWindow.isLinux() ? html`<div class="separator"></div>` : ''}
 
         ${!window.BridgeWindow.isLinux() ? Button({
           icon: 'install-package.svg',

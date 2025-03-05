@@ -69,6 +69,17 @@ function Toolbar(state, emit) {
           disabled: !_canSave,
           onClick: () => emit('save')
         })}
+
+        ${!window.BridgeWindow.isLinux() ? html`<div class="separator"></div>` : ''}
+
+        ${!window.BridgeWindow.isLinux() ? Button({
+          icon: 'install-package.svg',
+          label: `Add Package`,          
+          onClick: () => {
+            if(state.isConnected) emit('disconnect') // Package installer requires exclusive access to the serial port
+            emit('launch-app', 'micropython-package-installer://', 'https://github.com/arduino/lab-micropython-package-installer/releases/latest')          
+          }
+        }) : '' }
       </div>
         
       <div id="app-views">
@@ -88,7 +99,6 @@ function Toolbar(state, emit) {
           square: true,
           onClick: () => emit('change-view', 'file-manager')
         })}
-      
       </div>
     </div>
   `

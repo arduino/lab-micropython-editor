@@ -116,6 +116,10 @@ async function store(state, emitter) {
     updateMenu()
   })
 
+  emitter.on('launch-app', async (url, fallbackUrl) => {
+    window.launchApp(url, fallbackUrl)
+  })
+
   // CONNECTION DIALOG
   emitter.on('open-connection-dialog', async () => {
     log('open-connection-dialog')

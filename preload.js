@@ -2,7 +2,7 @@ console.log('preload')
 const { contextBridge, ipcRenderer } = require('electron')
 const path = require('path')
 const shortcuts = require('./backend/shortcuts.js').shortcuts.global
-const { emit, platform } = require('process')
+const { platform } = require('process')
 const SerialBridge = require('./backend/serial/serial-bridge.js')
 
 const Disk = {
@@ -85,6 +85,21 @@ const Window = {
   getShortcuts: () => shortcuts
 }
 
+/**
+ * Launches an app using the provided URL scheme (e.g. myapp://). If the app is not installed, it will
+ * fallback to open the provided fallback URL.
+ * @param {string} url The URL scheme to use to launch the app
+ * @param {string} fallbackUrl The URL to open if the app is not installed
+ */
+async function launchApp(url, fallbackUrl) {
+  const success = await ipcRenderer.invoke('launch-app', url);
+
+  if (!success) {      
+    await ipcRenderer.invoke('open-url', fallbackUrl); // Fallback to open a URL in the default browser
+  }
+}
+
+contextBridge.exposeInMainWorld('launchApp', launchApp)
 contextBridge.exposeInMainWorld('BridgeSerial', SerialBridge)
 contextBridge.exposeInMainWorld('BridgeDisk', Disk)
 contextBridge.exposeInMainWorld('BridgeWindow', Window)

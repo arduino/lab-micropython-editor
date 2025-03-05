@@ -15,6 +15,7 @@ function FileActions(state, emit) {
       icon: 'arrow-left-white.svg',
       size: 'small',
       background: 'inverted',
+      active: true,
       disabled: !canUpload({ isConnected, selectedFiles }),
       onClick: () => emit('upload-files')
     })}
@@ -22,6 +23,7 @@ function FileActions(state, emit) {
       icon: 'arrow-right-white.svg',
       size: 'small',
       background: 'inverted',
+      active: true,
       disabled: !canDownload({ isConnected, selectedFiles }),
       onClick: () => emit('download-files')
     })}

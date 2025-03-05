@@ -1,9 +1,42 @@
 const { app, Menu } = require('electron')
+const { shortcuts, disableShortcuts } = require('./shortcuts.js')
 const path = require('path')
 const serial = require('./serial/serial.js').sharedInstance
 const openAboutWindow = require('about-window').default
-const shortcuts  = require('./shortcuts.js')
+
 const { type } = require('os')
+
+let appInfoWindow = null
+
+function closeAppInfo(win) {
+  disableShortcuts(win, false)
+  appInfoWindow.off('close', () => closeAppInfo(win))
+  appInfoWindow = null
+  
+}
+function openAppInfo(win) {
+  if (appInfoWindow != null) {
+    appInfoWindow.show()
+  } else {
+    appInfoWindow = openAboutWindow({
+      icon_path: path.resolve(__dirname, '../ui/arduino/media/about_image.png'),
+      css_path: path.resolve(__dirname, '../ui/arduino/views/about.css'),
+      copyright: '© Arduino SA 2022',
+      package_json_dir: path.resolve(__dirname, '..'),
+      bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",
+      bug_link_text: "report an issue",
+      homepage: "https://labs.arduino.cc",
+      use_version_info: false,
+      win_options: {
+          parent: win,
+          modal: true,
+      },
+      show_close_button: 'Close',
+    })
+    appInfoWindow.on('close', () => closeAppInfo(win));
+    disableShortcuts(win, true)
+  }
+}
 
 module.exports = function registerMenu(win, state = {}) {
   const isMac = process.platform === 'darwin'
@@ -22,7 +55,22 @@ module.exports = function registerMenu(win, state = {}) {
     {
       label: 'File',
       submenu: [
-        isMac ? { role: 'close' } : { role: 'quit' }
+        { label: 'New', 
+          accelerator: shortcuts.menu.NEW,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.NEW)
+        },
+        { label: 'Save', 
+          accelerator: shortcuts.menu.SAVE,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.SAVE)
+        },
+        { label: 'Close tab',
+          accelerator: 'CmdOrCtrl+W',
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLOSE)
+         },
+        { role: 'quit' }
       ]
     },
     {
@@ -166,39 +214,13 @@ module.exports = function registerMenu(win, state = {}) {
         },
         {
           label:'About Arduino Lab for MicroPython',
-          click: () => {
-              openAboutWindow({
-                  icon_path: path.resolve(__dirname, '../ui/arduino/media/about_image.png'),
-                  css_path: path.resolve(__dirname, '../ui/arduino/views/about.css'),
-                  copyright: '© Arduino SA 2022',
-                  package_json_dir: path.resolve(__dirname, '..'),
-                  bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",
-                  bug_link_text: "report an issue",
-                  homepage: "https://labs.arduino.cc",
-                  use_version_info: false,
-                  win_options: {
-                      parent: win,
-                      modal: true,
-                  },
-                  show_close_button: 'Close',
-              })
-            }
+          click: () => { openAppInfo(win) }
         },
       ]
     }
   ]
 
   const menu = Menu.buildFromTemplate(template)
-
-  app.setAboutPanelOptions({
-    applicationName: app.name,
-    applicationVersion: app.getVersion(),
-    copyright: app.copyright,
-    credits: '(See "Info about this app" in the Help menu)',
-    authors: ['Arduino'],
-    website: 'https://arduino.cc',
-    iconPath: path.join(__dirname, '../assets/image.png'),
-  })
 
   Menu.setApplicationMenu(menu)
 

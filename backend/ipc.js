@@ -142,6 +142,11 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   ipcMain.handle('launch-app', async (event, urlScheme) => {
     // Launch an external app with a custom protocol
     return new Promise((resolve, reject) => {
+      if(app.getApplicationNameForProtocol(urlScheme) === '') {        
+        resolve(false); // App not installed
+        return;
+      }
+
       try {
         shell.openExternal(urlScheme).then(() => {
           resolve(true);  // App opened successfully

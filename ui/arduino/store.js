@@ -1627,9 +1627,7 @@ async function store(state, emitter) {
     const tabExists = state.openFiles.find(f => f.parentFolder === newFile.parentFolder && f.fileName === newFile.fileName && f.source === newFile.source)
     if (tabExists || fullPathExists) {
       const confirmation = await confirmDialog(`File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
-      if (!confirmation) {
-        return false
-      }
+      return false
     }
     // LEAK > listeners keep getting added and not removed when tabs are closed
     // additionally I found that closing a tab has actually added an extra listener

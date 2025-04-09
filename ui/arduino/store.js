@@ -160,7 +160,6 @@ async function store(state, emitter) {
         cancelId: 0,
         message: "Could not connect to the board. Reset it and try again."
       })
-      // console.log('Reset request acknowledged', response)
       emitter.emit('connection-timeout')
     }, 3500)
     try {
@@ -1196,7 +1195,6 @@ async function store(state, emitter) {
               && f.source == selectedFile.source
               && f.parentFolder == selectedFile.parentFolder
       })
-      // console.log('already open', alreadyOpen)
 
       if (!alreadyOpen) {
         // This file is not open yet,
@@ -1628,8 +1626,10 @@ async function store(state, emitter) {
     }
     const tabExists = state.openFiles.find(f => f.parentFolder === newFile.parentFolder && f.fileName === newFile.fileName && f.source === newFile.source)
     if (tabExists || fullPathExists) {
-      const confirmation = confirmDialog(`File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
-      return false
+      const confirmation = await confirmDialog(`File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
+      if (!confirmation) {
+        return false
+      }
     }
     // LEAK > listeners keep getting added and not removed when tabs are closed
     // additionally I found that closing a tab has actually added an extra listener

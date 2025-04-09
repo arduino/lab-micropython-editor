@@ -24,7 +24,6 @@ async function confirmDialog(msg, cancelMsg, confirmMsg) {
     cancelId: 1,
     message: msg
   })
-  console.log('confirm', response)
   return Promise.resolve(response)
 }
 
@@ -103,8 +102,8 @@ async function store(state, emitter) {
     }
     emitter.emit('render')
   })
+
   emitter.on('change-view', (view) => {
-    
     if (state.view === 'file-manager') {
       if (view != state.view) {
         state.selectedFiles = []
@@ -161,7 +160,7 @@ async function store(state, emitter) {
         cancelId: 0,
         message: "Could not connect to the board. Reset it and try again."
       })
-      console.log('Reset request acknowledged', response)
+      // console.log('Reset request acknowledged', response)
       emitter.emit('connection-timeout')
     }, 3500)
     try {
@@ -1197,7 +1196,7 @@ async function store(state, emitter) {
               && f.source == selectedFile.source
               && f.parentFolder == selectedFile.parentFolder
       })
-      console.log('already open', alreadyOpen)
+      // console.log('already open', alreadyOpen)
 
       if (!alreadyOpen) {
         // This file is not open yet,
@@ -1547,19 +1546,16 @@ async function store(state, emitter) {
 
   function filterDoubleRun(onlySelected = false) {
     if (preventDoubleRun) return
-    console.log('>>> RUN CODE ACTUAL <<<')
     emitter.emit('run', onlySelected)
     timedReset()
   }
 
   function runCode() {
-    console.log('>>> RUN CODE REQUEST <<<')
     if (canExecute({ view: state.view, isConnected: state.isConnected })) {
       filterDoubleRun()
     }
   }
   function runCodeSelection() {
-    console.log('>>> RUN CODE REQUEST <<<')
     if (canExecute({ view: state.view, isConnected: state.isConnected })) {
       filterDoubleRun(true)
     }
@@ -1638,7 +1634,6 @@ async function store(state, emitter) {
     // LEAK > listeners keep getting added and not removed when tabs are closed
     // additionally I found that closing a tab has actually added an extra listener
     newFile.editor.onChange = function() {
-      console.log('editor has changes')
       newFile.hasChanges = true
       emitter.emit('render')
     }

@@ -111,6 +111,9 @@ async function store(state, emitter) {
       }
       emitter.emit('refresh-files')
     }
+    if(view === 'file-manager') {
+      emitter.emit('stop')
+    }
     state.view = view
     emitter.emit('render')
     updateMenu()

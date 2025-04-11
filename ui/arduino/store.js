@@ -9,6 +9,9 @@ const newFileContent = `# This program was created in Arduino Lab for MicroPytho
 
 print('Hello, MicroPython!')
 `
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function confirmDialog(msg, cancelMsg, confirmMsg) {
   // cancelMsg = cancelMsg || 'Cancel'
@@ -103,15 +106,16 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('change-view', (view) => {
-    if (state.view === 'file-manager') {
-      if (view != state.view) {
-        state.selectedFiles = []
-      }
-      emitter.emit('refresh-files')
+  emitter.on('change-view', async (view) => {
+    if (state.view === view) {
+      return
+    } else {
+      state.selectedFiles = []
     }
     if(view === 'file-manager') {
       emitter.emit('stop')
+      await sleep(500)
+      emitter.emit('refresh-files')
     }
     state.view = view
     emitter.emit('render')

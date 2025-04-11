@@ -65,11 +65,9 @@ app.on('ready', () => {
   createWindow()
 
   win.on('focus', () => {
-    console.log("win focus")
   })
 
   win.on('blur', () => {
-    console.log("win blur")
   })
   
 })

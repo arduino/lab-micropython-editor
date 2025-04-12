@@ -175,6 +175,7 @@ async function store(state, emitter) {
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
+    state.boardNavigationRoot = await getBoardRoot()
     updateMenu()
     if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
@@ -1689,6 +1690,23 @@ function generateHash() {
 
 async function getAvailablePorts() {
   return await serialBridge.loadPorts()
+}
+
+async function getBoardRoot() {
+  let output = await serialBridge.execFile(await getHelperFullPath())
+  output = await serialBridge.run(`get_root()`)
+  let boardRoot = ''
+  try {
+    // Extracting the json output from serial response
+    output = output.substring(
+      output.indexOf('OK')+2,
+      output.indexOf('\x04')
+    )
+    boardRoot = output
+  } catch (e) {
+    log('error', output)
+  }
+  return boardRoot
 }
 
 async function getBoardFiles(path) {

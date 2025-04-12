@@ -1,6 +1,14 @@
 import os
 import json
+import sys
 os.chdir('/')
+
+def get_root(has_flash_mount = True):
+  if '/flash' in sys.path:
+    print('/flash', end = '')
+  else:
+    print('/', end = '')
+
 def is_directory(path):
   return True if os.stat(path)[0] == 0x4000 else False
 

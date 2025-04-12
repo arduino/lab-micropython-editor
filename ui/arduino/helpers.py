@@ -1,13 +1,12 @@
 import os
 import json
 import sys
-os.chdir('/')
 
 def get_root(has_flash_mount = True):
   if '/flash' in sys.path:
-    print('/flash', end = '')
+    return '/flash'
   else:
-    print('/', end = '')
+    return '/'
 
 def is_directory(path):
   return True if os.stat(path)[0] == 0x4000 else False
@@ -26,6 +25,9 @@ def get_all_files(path, array_of_files = []):
     return array_of_files
 
 
+def iget_root():
+  print(get_root(), end='')
+
 def ilist_all(path):
     print(json.dumps(get_all_files(path)))
 
@@ -38,3 +40,5 @@ def delete_folder(path):
         if file['type'] == 'folder':
             os.rmdir(file['path'])
     os.rmdir(path)
+
+os.chdir(get_root())

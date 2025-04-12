@@ -1694,7 +1694,7 @@ async function getAvailablePorts() {
 
 async function getBoardRoot() {
   let output = await serialBridge.execFile(await getHelperFullPath())
-  output = await serialBridge.run(`get_root()`)
+  output = await serialBridge.run(`iget_root()`)
   let boardRoot = ''
   try {
     // Extracting the json output from serial response

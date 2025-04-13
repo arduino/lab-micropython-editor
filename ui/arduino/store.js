@@ -285,7 +285,10 @@ async function store(state, emitter) {
     }
     emitter.emit('open-panel')
     emitter.emit('render')
-    await serialBridge.getPrompt()
+    if (state.isConnected) {
+      await serialBridge.getPrompt()
+    }
+
   })
   emitter.on('reset', async () => {
     log('reset')
@@ -603,7 +606,7 @@ async function store(state, emitter) {
       }
       await serialBridge.saveFileContent(
         serialBridge.getFullPath(
-          '/',
+          state.boardNavigationRoot,
           state.boardNavigationPath,
           fileNameParameter
         ),
@@ -782,7 +785,7 @@ async function store(state, emitter) {
         if (file.source === 'board') {
           await serialBridge.removeFile(
             serialBridge.getFullPath(
-              '/',
+              state.boardNavigationRoot,
               state.boardNavigationPath,
               file.fileName
             )

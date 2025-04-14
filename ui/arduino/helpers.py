@@ -2,7 +2,7 @@ import os
 import json
 import sys
 
-def get_root(has_flash_mount = True):
+def get_root():
   if '/flash' in sys.path:
     return '/flash'
   else:

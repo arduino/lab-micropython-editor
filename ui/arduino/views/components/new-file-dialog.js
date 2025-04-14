@@ -65,7 +65,7 @@ function NewFileDialog(state, emit) {
 ` 
   
   if (state.isNewFileDialogOpen) {
-    const el = newFileDialog.querySelector('#dialog-new-file .dialog-contents > input')
+    const el = newFileDialog.querySelector('#dialog-new-file .dialog-content > input')
     if (el) {
       el.focus()
     }

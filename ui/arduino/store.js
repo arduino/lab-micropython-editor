@@ -114,7 +114,7 @@ async function store(state, emitter) {
     }
     if(view === 'file-manager') {
       emitter.emit('stop')
-      await sleep(500)
+      await sleep(250) // Give the board time to stop the program and return to the prompt
       emitter.emit('refresh-files')
     }
     state.view = view

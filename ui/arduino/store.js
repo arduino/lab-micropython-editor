@@ -179,6 +179,7 @@ async function store(state, emitter) {
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true
+    state.boardNavigationPath = await getBoardNavigationPath()
     updateMenu()
     if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
@@ -288,7 +289,10 @@ async function store(state, emitter) {
     }
     emitter.emit('open-panel')
     emitter.emit('render')
-    await serialBridge.getPrompt()
+    if (state.isConnected) {
+      await serialBridge.getPrompt()
+    }
+
   })
   emitter.on('reset', async () => {
     log('reset')
@@ -606,7 +610,7 @@ async function store(state, emitter) {
       }
       await serialBridge.saveFileContent(
         serialBridge.getFullPath(
-          '/',
+          state.boardNavigationRoot,
           state.boardNavigationPath,
           fileNameParameter
         ),
@@ -785,7 +789,7 @@ async function store(state, emitter) {
         if (file.source === 'board') {
           await serialBridge.removeFile(
             serialBridge.getFullPath(
-              '/',
+              state.boardNavigationRoot,
               state.boardNavigationPath,
               file.fileName
             )
@@ -1693,6 +1697,23 @@ function generateHash() {
 
 async function getAvailablePorts() {
   return await serialBridge.loadPorts()
+}
+
+async function getBoardNavigationPath() {
+  let output = await serialBridge.execFile(await getHelperFullPath())
+  output = await serialBridge.run(`iget_root()`)
+  let boardRoot = ''
+  try {
+    // Extracting the json output from serial response
+    output = output.substring(
+      output.indexOf('OK')+2,
+      output.indexOf('\x04')
+    )
+    boardRoot = output
+  } catch (e) {
+    log('error', output)
+  }
+  return boardRoot
 }
 
 async function getBoardFiles(path) {

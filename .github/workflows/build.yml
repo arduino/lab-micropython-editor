@@ -98,6 +98,7 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
           path: dist
+          compression-level: 0
 
   artifacts:
     name: ${{ matrix.artifact.name }} artifact
@@ -136,6 +137,7 @@ jobs:
         with:
           name: ${{ matrix.artifact.name }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
+          compression-level: 0
 
   release:
     needs: build
@@ -180,5 +182,4 @@ jobs:
           name: |
             ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
             ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-x64
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-arm64
+            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-universal

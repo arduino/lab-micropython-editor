@@ -1,43 +1,41 @@
 # Arduino Lab for MicroPython
 
-<p align="center">
-
-<img src="https://github.com/arduino/lab-micropython-editor/blob/development/ui/arduino/documents/Screenshot%20from%202024-04-15%2009-48-25.png?raw=true" width="50%" />
-
-</p>
+![Editor screenshot](./assets/Arduino-Lab4MPy-screenshot.png)
 
 Arduino Lab for MicroPython is a lightweight editor for MicroPython programs, supporting connection with a board, code upload, file transfer and interactive REPL shell.
 This project is sponsored by Arduino, based on original work by [Murilo Polese](http://www.murilopolese.com). This is an experimental pre-release software, please direct any questions only to Github issues.
 
 ## Features
+
 - MicroPython's Read Eval Print Loop (REPL)
-	- Enter paste mode
-	- Enter raw repl
-	- Software reset
-	- Tab to autocomplete
+  - Enter paste mode
+  - Enter raw repl
+  - Software reset
+  - Tab to autocomplete
 - File system management (Disk and MicroPython File System)
-	- Create
-	- Rename
-	- Multiple file and folder selection
-	- Remove
-	- Upload
-	- Download
+  - Create
+  - Rename
+  - Multiple file and folder selection
+  - Remove
+  - Upload
+  - Download
 - Text editor
-	- Python syntax highlight and autocomplete
-	- Multiple tabs
-	- Rename tabs
+  - Python syntax highlight and autocomplete
+  - Multiple tabs
+  - Rename tabs
 - Code execution
-	- Run what's on text editor
-	- Stop (keyboard interrupt)
-	- Soft reset
+  - Run what's on text editor
+  - Stop (keyboard interrupt)
+  - Soft reset
 
 ## Technical overview
 
-Arduino Lab for MicroPython is an [Electron](https://www.electronjs.org/) app that has its main purpose to communicate over serial with a microprocessor running [MicroPython](https://micropython.org/). The Electron code is at `/index.js` and inside the folder `/backend`.
+Arduino Lab for MicroPython is an [Electron](https://www.electronjs.org/) app whose main purpose is to communicate over serial with a microcontroller running [MicroPython](https://micropython.org/). The Electron code is at `/index.js` and inside the folder `/backend`.
 
-All operations over serial are abstracted and packaged on `micropython.js` which is an attempt of porting `pyboard.py`. The module has its [own repository](https://github.com/arduino/micropython.js) with documentation and examples of usage.
+All operations over serial are abstracted and packaged in `micropython.js` which is a JavaScript implementation of the functionalities provided by `mpremote` (namely `pyboard.py`) from the [MicroPython project](https://github.com/micropython/micropython/tree/master/tools/mpremote/mpremote).
+The module has its [own repository](https://github.com/arduino/micropython.js) with documentation and usage examples.
 
-The User Interface (UI) source code stays inside `/ui` folder and is completely independent of the Electron code.
+The User Interface (UI) source code stays inside `/ui` folder and is completely independent from the Electron code.
 
 The communication between interface and Electron app is accomplished by using the methods and events specified by `/preload.js`.
 

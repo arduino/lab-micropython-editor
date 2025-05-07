@@ -1,9 +1,35 @@
+/*
+  On 20250303, due to font files inconsistencies, we sourced the updated fonts from here:
+  https://github.com/alsacreations/webfonts
+  
+*/
 @font-face {
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont";
   src:
-    url("media/roboto-mono-latin-ext-400-normal.woff"),
-    url("media/roboto-mono-latin-ext-400-normal.woff2");
+    url("media/Roboto-Mono-Regular-webfont.woff") format("woff");
   font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "CodeFont";
+  src:
+    url("media/Roboto-Mono-Bold-webfont.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "OpenSans";
+  src: url("media/opensans-regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "OpenSans";
+  src: url("media/opensans-bold.woff2") format("woff2");
+  font-weight: bold;
   font-style: normal;
 }
 
@@ -11,7 +37,7 @@
   -moz-user-select: none;
   -webkit-user-select: none;
   user-select: none;
-  font-family: "RobotoMono", monospace;
+  font-family: "OpenSans", sans-serif;
 }
 
 body, html {
@@ -36,7 +62,7 @@ button {
   align-items: center;
   border: none;
   border-radius: 45px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.1s;
 }
@@ -45,20 +71,28 @@ button.small {
   height: 28px;
   border-radius: 28px;
 }
+button.square {
+  border-radius: 8px;
+}
 button.inverted:hover,
 button.inverted.active {
-  background: rgba(0, 129, 132, 0.8);
+  background: rgba(0, 129, 132, 0.8) !important;
 }
 button.inverted {
-  background: rgba(0, 129, 132, 1);
+  background: rgba(0, 129, 132, 1) !important;
 }
 
-button[disabled] {
+button[disabled], button[disabled]:hover{
+  cursor: default;
   opacity: 0.5;
-  cursor: not-allowed;
 }
-button:hover, button.active {
+
+button:not([disabled]):hover {
   background: rgba(255, 255, 255, 1);
+}
+
+button.active {
+  background: rgba(255, 255, 255);
 }
 
 button .icon {
@@ -73,6 +107,23 @@ button.small .icon {
 
 .button {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-content: space-between;
+  align-items: center;
+  gap: .5em;
+  width: auto
+}
+.button.first{
+  width:80px;
+}
+.button .label {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: "OpenSans", sans-serif;
+}
+.button .label.active {
+  color: rgba(255, 255, 255, .9);
 }
 .button .tooltip {
   opacity: 0;
@@ -107,7 +158,7 @@ button.small .icon {
   height: 100%;
   justify-content: center;
   align-items: center;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
   overflow: hidden;
 }
 
@@ -120,13 +171,64 @@ button.small .icon {
   flex-shrink: 0;
 }
 
+#navigation-bar {
+  display: flex;
+  width: 100%;
+  background: #008184;
+  justify-content: space-between;
+}
+
 #toolbar {
   display: flex;
-  padding: 20px;
+  padding: 16px 10px 10px 10px;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   align-self: stretch;
   background: #008184;
+}
+
+#app-views {
+  display: flex;
+  padding: 16px 10px 10px 10px;
+  width: 120px;
+  /* gap: 16px; */
+}
+
+#app-views .button{
+  flex-grow: 1;
+  width: 100%;
+}
+
+#app-views .button button{
+  width: 100%
+}
+
+#app-views .button .label{
+  
+}
+#app-views .button .label.selected{
+  font-weight: bold;
+}
+
+#app-views div:first-child button{
+  border-radius: 8px 0px 0px 8px;
+  
+}
+#app-views div:last-child button{
+  border-radius: 0px 8px 8px 0px;
+  
+}
+
+.separator {
+  height: 100%;
+  min-width: 1px;
+  flex-basis: fit-content;
+  background: #fff;
+  opacity: 0.7;
+  position: relative;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  height: 65%;
 }
 
 #tabs {
@@ -167,7 +269,7 @@ button.small .icon {
   color: #000;
   font-style: normal;
   font-weight: 400;
-  line-height: 1.1em;
+  line-height: 1.3em;
   flex: 1 0 0;
   max-width: calc(100% - 46px);
   overflow: hidden;
@@ -213,8 +315,12 @@ button.small .icon {
   font-size: 16px;
   height: 100%;
   overflow: hidden;
+  
 }
 
+#code-editor * {
+  font-family: "CodeFont", monospace;
+}
 #code-editor .cm-editor {
   width: 100%;
   height: 100%;
@@ -272,10 +378,16 @@ button.small .icon {
   min-height: 45px;
 }
 
+#panel.dialog-open {
+  pointer-events: none;
+}
+
 #panel #drag-handle {
-  width: 100%;
+  flex-grow: 2;
   height: 100%;
   cursor: grab;
+  position: absolute;
+  width: 100%;
 }
 
 #panel #drag-handle:active {
@@ -291,8 +403,25 @@ button.small .icon {
   gap: 10px;
   align-self: stretch;
   background: #008184;
+  position: relative;
 }
 
+.panel-bar #connection-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+}
+
+.panel-bar #connection-status img {
+  width: 1.25em;
+  height: 1.25em;
+  filter: invert(1);
+}
+
+.panel-bar .spacer {
+  flex-grow: 1;
+}
 .panel-bar .term-operations {
   transition: opacity 0.15s;
   display: flex;
@@ -330,7 +459,7 @@ button.small .icon {
   opacity: 0.5;
 }
 
-#dialog {
+.dialog {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -350,13 +479,16 @@ button.small .icon {
   line-height: normal;
   background: rgba(236, 241, 241, 0.50);
 }
-#dialog.open {
+
+.dialog.open {
   opacity: 1;
   pointer-events: inherit;
   transition: opacity 0.15s;
 }
 
-#dialog .dialog-content {
+
+
+.dialog .dialog-content {
   display: flex;
   width: 576px;
   padding: 36px;
@@ -372,16 +504,22 @@ button.small .icon {
   transition: transform 0.15s;
 }
 
-#dialog.open .dialog-content {
+.dialog.open .dialog-content {
   transform: translateY(0px);
   transition: transform 0.15s;
 }
 
-#dialog .dialog-content > * {
-  width: 100%;
+
+.dialog .dialog-content #file-name {
+  font-size: 1.3em;
+  width:100%;
+  font-family: "CodeFont", monospace;
 }
 
-#dialog .dialog-content .item {
+.dialog .dialog-content input:focus {
+  outline-color: #008184;
+}
+.dialog .dialog-content .item {
   border-radius: 4.5px;
   display: flex;
   padding: 10px;
@@ -391,9 +529,36 @@ button.small .icon {
   cursor: pointer;
 }
 
-#dialog .dialog-content .item:hover {
+.dialog .dialog-content .item:hover {
   background: #008184;
   color: #ffffff;
+}
+
+.dialog .buttons-horizontal {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  gap: 12px;
+}
+.dialog .buttons-horizontal .item {
+  flex-basis: 50%;
+  align-items: center;
+  background-color: #eee;;
+}
+
+.dialog-title{
+  width: 100%;
+  font-size: 0.8em;
+  padding: 0;
+  margin: 0;
+  flex-basis: max-content;
+}
+.dialog-feedback {
+  font-size: 0.6em;
+  align-self: stretch;
+  padding: 0.5em;
+  background: #eee;
 }
 
 #file-manager {
@@ -427,13 +592,17 @@ button.small .icon {
   align-self: stretch;
 }
 
+#file-actions button[disabled], #file-actions button[disabled]:hover {
+  opacity: 0.4;
+}
+
 #file-actions button .icon {
   width: 100%;
   height: 100%;
 }
 
 #file-actions button:hover {
-  opacity: 0.2;
+  opacity: 0.5;
 }
 
 .device-header {
@@ -461,7 +630,7 @@ button.small .icon {
   position: relative;
   cursor: pointer;
   color: #000;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -503,7 +672,7 @@ button.small .icon {
 
 .file-list .list {
   display: flex;
-  padding: 10px 20px;
+  padding: 6px 8px;
   flex-direction: column;
   align-items: flex-start;
   flex: 1 0 0;
@@ -547,7 +716,7 @@ button.small .icon {
 }
 .file-list .item .text {
   color: #000;
-  font-family: "RobotoMono", monospace;
+  font-family: "CodeFont", monospace;
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
@@ -556,7 +725,7 @@ button.small .icon {
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.1em;
+  line-height: 1.3em;
 }
 
 .file-list .item .checkbox .icon.off,

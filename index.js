@@ -1,8 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const shortcuts = require('./backend/shortcuts.js').global
-
 const registerIPCHandlers = require('./backend/ipc.js')
 const registerMenu = require('./backend/menu.js')
 
@@ -14,8 +12,8 @@ let splashTimestamp = null
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 720,
-    height: 640,
+    width: 820,
+    height: 700,
     webPreferences: {
       nodeIntegration: false,
       webSecurity: true,
@@ -63,28 +61,13 @@ function createWindow () {
   })
 }
 
-function shortcutAction(key) {
-  win.webContents.send('shortcut-cmd', key);
-}
-
-// Shortcuts
-function registerShortcuts() {
-  Object.entries(shortcuts).forEach(([command, shortcut]) => {
-    globalShortcut.register(shortcut, () => {
-      shortcutAction(shortcut)
-    });
-  })
-}
-
 app.on('ready', () => {
   createWindow()
-  registerShortcuts()
 
   win.on('focus', () => {
-    registerShortcuts()
   })
+
   win.on('blur', () => {
-    globalShortcut.unregisterAll()
   })
   
 })

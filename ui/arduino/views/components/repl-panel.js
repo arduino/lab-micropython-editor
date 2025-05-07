@@ -7,12 +7,22 @@ function ReplPanel(state, emit) {
     }
   }
   const panelOpenClass = state.isPanelOpen ? 'open' : 'closed'
+  // const pointerEventsClass = state.isNewFileDialogOpen || state.isDialogOpen ? 'open' : 'closed'
   const termOperationsVisibility = state.panelHeight > PANEL_TOO_SMALL ? 'visible' : 'hidden'
-  const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'
+  let terminalDisabledClass = 'terminal-enabled'
+  if (!state.isConnected || state.isNewFileDialogOpen) {
+    terminalDisabledClass = 'terminal-disabled'
+  }
+  // const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'
 
   return html`
     <div id="panel" style="height: ${state.panelHeight}px">
       <div class="panel-bar">
+        <div id="connection-status" style="visibility:${state.isConnected ? 'visible' : 'hidden'};">
+          <img src="media/connect.svg" />
+          <div>${state.isConnected ? 'Connected to ' + state.connectedPort : ''}</div>
+        </div>
+        <div class="spacer"></div>
         <div id="drag-handle"
           onmousedown=${() => emit('start-resizing-panel')}
           onmouseup=${() => emit('stop-resizing-panel')}
@@ -25,6 +35,7 @@ function ReplPanel(state, emit) {
           size: 'small',
           onClick: onToggle
         })}
+        
       </div>
       <div class=${terminalDisabledClass}>
         ${state.cache(XTerm, 'terminal').render()}

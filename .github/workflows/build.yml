@@ -24,9 +24,11 @@ jobs:
       matrix:
         config:
           - os: [self-hosted, windows-sign-pc]
+            id: windows
           - os: ubuntu-latest
-          - os: macos-13
-          - os: macos-14
+            id: linux
+          - os: macos-latest
+            id: macos-universal
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 
@@ -92,9 +94,9 @@ jobs:
             npm run build
 
       - name: Upload [GitHub Actions]
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.JOB_TRANSFER_ARTIFACT }}
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
           path: dist
 
   artifacts:
@@ -108,26 +110,29 @@ jobs:
         artifact:
           - path: "*-linux_x64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_X86-64
-          - path: "*-mac_x64.zip"
-            name: Arduino-Lab-for-MicroPython_macOS_X86-64
-          - path: "*-mac_arm64.zip"
-            name: Arduino-Lab-for-MicroPython_macOS_arm-64
+            id: linux
+          - path: "*-mac_universal.zip"
+            name: Arduino-Lab-for-MicroPython_macOS_Universal
+            id: macos-universal
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
+          #   id: windows
           # - path: "*Windows_64bit.msi"
           #   name: Windows_X86-64_MSI
+          #   id: windows
           - path: "*-win_x64.zip"
             name: Arduino-Lab-for-MicroPython_Windows_X86-64
+            id: windows
 
     steps:
       - name: Download job transfer artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.JOB_TRANSFER_ARTIFACT }}
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
 
       - name: Upload tester build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact.name }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
@@ -137,23 +142,25 @@ jobs:
     if: github.repository == 'arduino/lab-micropython-editor' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - name: Download [GitHub Actions]
-        uses: actions/download-artifact@v3
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.JOB_TRANSFER_ARTIFACT }}
-          path: ${{ env.JOB_TRANSFER_ARTIFACT }}
+          path: artifacts
+          
+      - name: List artifacts
+        run: ls -R artifacts
 
       - name: Get Tag
         id: tag_name
         run: |
-          echo ::set-output name=TAG_NAME::${GITHUB_REF#refs/tags/}
+          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Publish Release [GitHub]
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           release_name: ${{ steps.tag_name.outputs.TAG_NAME }}
-          file: ${{ env.JOB_TRANSFER_ARTIFACT }}/*
+          file: artifacts/**/*
           tag: ${{ github.ref }}
           file_glob: true
 
@@ -167,7 +174,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Remove unneeded job transfer artifact
+      - name: Remove unneeded job transfer artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
-          name: ${{ env.JOB_TRANSFER_ARTIFACT }}
+          name: |
+            ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
+            ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
+            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-x64
+            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-arm64

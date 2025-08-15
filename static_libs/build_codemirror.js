@@ -19,17 +19,6 @@ function unescapeUnicode(str) {
   });
 }
 
-// window.createEditor = (doc, el, onChange) => new EditorView({
-//   doc: doc || '',
-//   extensions: [
-//     basicSetup,
-//     keymap.of([indentWithTab]),
-//     keymap.of([defaultKeymap]),
-//     python(),
-//     updateListenerExtension(onChange)
-//   ],
-//   parent: el
-// })
 window.createEditor = (doc, el, onChange) => {
   // Custom Tab keymap - Tab always indents, unless completing active suggestions
   const customTabKeymap = keymap.of([

@@ -274,13 +274,24 @@ async function store(state, emitter) {
     }
     
     emitter.emit('open-panel')
+    el = document.querySelector('.xterm-helper-textarea')
+    if (el) {
+      el.focus()
+    }
     emitter.emit('render')
+
     try {
       await serialBridge.getPrompt()
       await serialBridge.run(code)
     } catch(e) {
       log('error', e)
     }
+    
+    el = document.querySelector('.cm-content')
+    if (el) {
+      el.focus()
+    }
+    emitter.emit('render')
   })
   emitter.on('stop', async () => {
     log('stop')

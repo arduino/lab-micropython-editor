@@ -1209,6 +1209,7 @@ async function store(state, emitter) {
         // load content and append it to the list of files to open
         let file = null
         if (selectedFile.source == 'board') {
+          // fileContent receives a raw buffer from loadFile()
           const fileContent = await serialBridge.loadFile(
             serialBridge.getFullPath(
               state.boardNavigationRoot,
@@ -1216,7 +1217,10 @@ async function store(state, emitter) {
               selectedFile.fileName
             )
           )
-          const bytesToSource = String.fromCharCode(...fileContent);
+          // we convert the buffer to a Uint8Array
+          const contentArray = new Uint8Array(fileContent);
+          // we feed the Uint8Array to the TextDecoder
+          const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
           file = createFile({
             parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,

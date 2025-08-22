@@ -10,7 +10,7 @@ const newFileContent = `# This program was created in Arduino Lab for MicroPytho
 print('Hello, MicroPython!')
 `
 async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 async function confirmDialog(msg, cancelMsg, confirmMsg) {
@@ -29,6 +29,8 @@ async function confirmDialog(msg, cancelMsg, confirmMsg) {
   })
   return Promise.resolve(response)
 }
+
+
 
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
@@ -95,6 +97,7 @@ async function store(state, emitter) {
   }
 
   // START AND BASIC ROUTING
+  let terminalRouter = null
   emitter.on('select-disk-navigation-root', async () => {
     const folder = await selectDiskFolder()
     if (folder) {
@@ -188,6 +191,8 @@ async function store(state, emitter) {
 
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
+    terminalRouter = new TerminalOutputRouter(term)
+    terminalRouter.registerHandlers()
     if (!state.isTerminalBound) {
       state.isTerminalBound = true
       term.onData((data) => {
@@ -197,10 +202,11 @@ async function store(state, emitter) {
       serialBridge.eval('\x02') // Send Ctrl+B to enter normal repl mode
     }
     serialBridge.onData((data) => {
-      term.write(data)
-      term.scrollToBottom()
+      // term.write(data)
+      // term.scrollToBottom()
+      terminalRouter.routeData(data)
     })
-
+    terminalRouter.setOperation('repl-interactive')
     // Update the UI when the conncetion is closed
     // This may happen when unplugging the board
     serialBridge.onConnectionClosed(() => emitter.emit('disconnected'))
@@ -210,6 +216,9 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('disconnected', () => {
+    if (terminalRouter) {
+      terminalRouter.terminal.write('\r\n--- Disconnected from board ---\r\n')
+    }
     state.isConnected = false
     state.panelHeight = PANEL_CLOSED
     state.boardFiles = []
@@ -276,10 +285,13 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     emitter.emit('render')
     try {
+      terminalRouter.setOperation('code-execution')
       await serialBridge.getPrompt()
       await serialBridge.run(code)
     } catch(e) {
       log('error', e)
+    } finally {
+      terminalRouter.setOperation('repl-interactive')
     }
   })
   emitter.on('stop', async () => {
@@ -312,6 +324,7 @@ async function store(state, emitter) {
     state.panelHeight = state.savedPanelHeight
     emitter.emit('render')
     setTimeout(() => {
+      console.log('resizing terminal')
       state.cache(XTerm, 'terminal').resizeTerm()
     }, 200)
   })
@@ -448,6 +461,7 @@ async function store(state, emitter) {
     const contents = openFile.editor.editor.state.doc.toString()
     try {
       if (openFile.source == 'board') {
+        terminalRouter.setOperation('file-saving')
         await serialBridge.getPrompt()
         await serialBridge.saveFileContent(
           serialBridge.getFullPath(
@@ -461,6 +475,7 @@ async function store(state, emitter) {
             emitter.emit('render')
           }
         )
+        terminalRouter.setOperation('repl-interactive')
       } else if (openFile.source == 'disk') {
         await disk.saveFileContent(
           disk.getFullPath(
@@ -473,6 +488,7 @@ async function store(state, emitter) {
       }
     } catch(e) {
       log('error', e)
+      terminalRouter.setOperation('repl-interactive')
     }
 
     openFile.hasChanges = false
@@ -516,6 +532,7 @@ async function store(state, emitter) {
 
     if (state.isConnected) {
       try {
+        terminalRouter.setOperation('file-listing')
         state.boardFiles = await getBoardFiles(
           serialBridge.getFullPath(
             state.boardNavigationRoot,
@@ -523,8 +540,10 @@ async function store(state, emitter) {
             ''
           )
         )
+        terminalRouter.setOperation('repl-interactive')
       } catch (e) {
         state.boardFiles = []
+        terminalRouter.setOperation('repl-interactive')
       }
     } else {
       state.boardFiles = []
@@ -1216,7 +1235,7 @@ async function store(state, emitter) {
               selectedFile.fileName
             )
           )
-          const bytesToSource = String.fromCharCode(...fileContent);
+          const bytesToSource = String.fromCharCode(...fileContent)
           file = createFile({
             parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,
@@ -1420,6 +1439,7 @@ async function store(state, emitter) {
   // NAVIGATION
   emitter.on('navigate-board-folder', (folder) => {
     log('navigate-board-folder', folder)
+    terminalRouter.setOperation('directory-navigation')
     state.boardNavigationPath = serialBridge.getNavigationPath(
       state.boardNavigationPath,
       folder
@@ -1546,7 +1566,7 @@ async function store(state, emitter) {
     preventDoubleRun = true
     setTimeout(() => {
       preventDoubleRun = false
-    }, 500);
+    }, 500)
     
   }
 
@@ -1688,7 +1708,7 @@ async function getDiskFiles(path) {
 }
 
 function sortFilesAlphabetically(entryA, entryB) {
-  return(entryA.fileName.localeCompare(entryB.fileName));
+  return(entryA.fileName.localeCompare(entryB.fileName))
 }
 
 function generateHash() {
@@ -1717,6 +1737,7 @@ async function getBoardNavigationPath() {
 }
 
 async function getBoardFiles(path) {
+  terminalRouter.setOperation('directory-navigation')
   await serialBridge.getPrompt()
   let files = await serialBridge.ilistFiles(path)
   files = files.map(f => ({
@@ -1724,6 +1745,7 @@ async function getBoardFiles(path) {
     type: f[1] === 0x4000 ? 'folder' : 'file'
   }))
   files = files.sort(sortFilesAlphabetically)
+  terminalRouter.setOperation('repl-interactive')
   return files
 }
 

@@ -23,10 +23,14 @@
     "artifactName": "${productName}-${os}_${arch}.${ext}",
     "extraResources": "./ui/arduino/helpers.py",
     "mac": {
-      "target": [{
-        "target": "zip",
-        "arch": ["universal"]
-      }],
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
       "icon": "build_resources/icon.icns"
     },
     "win": {
@@ -42,7 +46,12 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@codemirror/lang-python": "github:codemirror/lang-python",
     "about-window": "^1.15.2",
+    "browserify": "^17.0.1",
+    "choo": "^7.1.0",
+    "codemirror": "^6.0.2",
+    "esbuild": "^0.25.9",
     "micropython.js": "github:arduino/micropython.js#v1.5.1"
   },
   "engines": {

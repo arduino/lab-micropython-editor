@@ -283,7 +283,12 @@ async function store(state, emitter) {
     }
     
     emitter.emit('open-panel')
+    el = document.querySelector('.xterm-helper-textarea')
+    if (el) {
+      el.focus()
+    }
     emitter.emit('render')
+
     try {
       terminalRouter.setOperation('code-execution')
       await serialBridge.getPrompt()
@@ -293,6 +298,12 @@ async function store(state, emitter) {
     } finally {
       terminalRouter.setOperation('repl-interactive')
     }
+    
+    el = document.querySelector('.cm-content')
+    if (el) {
+      el.focus()
+    }
+    emitter.emit('render')
   })
   emitter.on('stop', async () => {
     log('stop')
@@ -1228,6 +1239,7 @@ async function store(state, emitter) {
         // load content and append it to the list of files to open
         let file = null
         if (selectedFile.source == 'board') {
+          // fileContent receives a raw buffer from loadFile()
           const fileContent = await serialBridge.loadFile(
             serialBridge.getFullPath(
               state.boardNavigationRoot,
@@ -1235,7 +1247,10 @@ async function store(state, emitter) {
               selectedFile.fileName
             )
           )
-          const bytesToSource = String.fromCharCode(...fileContent)
+          // we convert the buffer to a Uint8Array
+          const contentArray = new Uint8Array(fileContent);
+          // we feed the Uint8Array to the TextDecoder
+          const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
           file = createFile({
             parentFolder: state.boardNavigationPath,
             fileName: selectedFile.fileName,

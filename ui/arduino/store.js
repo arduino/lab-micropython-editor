@@ -9,6 +9,8 @@ const newFileContent = `# This program was created in Arduino Lab for MicroPytho
 
 print('Hello, MicroPython!')
 `
+
+// Utility functions
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -31,6 +33,7 @@ async function confirmDialog(msg, cancelMsg, confirmMsg) {
 }
 
 
+// Store: state wrapper
 
 async function store(state, emitter) {
   win.setWindowSize(720, 640)
@@ -87,6 +90,14 @@ async function store(state, emitter) {
     }
     emitter.emit('render')
   }
+  const resizeTerminal = async() => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        state.cache(XTerm, 'terminal').resizeTerm()
+        resolve()
+      }, 200)
+    })
+  }
 
   // Menu management
   const updateMenu = () => {
@@ -140,9 +151,10 @@ async function store(state, emitter) {
     emitter.emit('render')
     document.addEventListener('keydown', dismissOpenDialogs)
   })
-  emitter.on('close-connection-dialog', () => {
+  emitter.on('close-connection-dialog', async () => {
     state.isConnectionDialogOpen = false
     dismissOpenDialogs()
+    await resizeTerminal()
     emitter.emit('render')
   })
   
@@ -210,7 +222,7 @@ async function store(state, emitter) {
     // Update the UI when the conncetion is closed
     // This may happen when unplugging the board
     serialBridge.onConnectionClosed(() => emitter.emit('disconnected'))
-
+    // resize terminal HERE
     emitter.emit('close-connection-dialog')
     emitter.emit('refresh-files')
     emitter.emit('render')
@@ -283,10 +295,7 @@ async function store(state, emitter) {
     }
     
     emitter.emit('open-panel')
-    el = document.querySelector('.xterm-helper-textarea')
-    if (el) {
-      el.focus()
-    }
+    await resizeTerminal()
     emitter.emit('render')
 
     try {
@@ -323,6 +332,7 @@ async function store(state, emitter) {
       state.panelHeight = state.savedPanelHeight
     }
     emitter.emit('open-panel')
+    await resizeTerminal()
     emitter.emit('render')
     await serialBridge.reset()
     emitter.emit('update-files')
@@ -334,10 +344,6 @@ async function store(state, emitter) {
     emitter.emit('stop-resizing-panel')
     state.panelHeight = state.savedPanelHeight
     emitter.emit('render')
-    setTimeout(() => {
-      console.log('resizing terminal')
-      state.cache(XTerm, 'terminal').resizeTerm()
-    }, 200)
   })
   emitter.on('close-panel', () => {
     emitter.emit('stop-resizing-panel')
@@ -361,6 +367,7 @@ async function store(state, emitter) {
   })
   emitter.on('stop-resizing-panel', () => {
     log('stop-resizing-panel')
+    resizeTerminal()
     window.removeEventListener('mousemove', state.resizePanel)
   })
 

@@ -71,6 +71,16 @@ While the serial communication is mediated by [`micropython.js`](https://github.
 
 Some changes on the Electron code will require reopening the app but all UI changes will only require refreshing the window (ctrl-r/cmd-r).
 
+## Modifying CodeMirror's behaviour
+
+*CodeMirror.js* is built statically and loaded in the main page, same goes for *Choo.js*.
+While Choo won't need to possibly be changed ever, making changes to the CodeMirror configuration requires editing `ui/arduino/libs/build/build_codemirror.js and later building it again.
+In the repo root the file `build_static_libs.js` will generate static JavaScript files for both and copy them to their final paths.
+
+```shell
+node build_static_libs.js
+```
+
 ## Trademarks
 
 "Python" and the Python Logo are trademarks of the Python Software Foundation.

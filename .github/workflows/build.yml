@@ -100,6 +100,7 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
           path: dist
+          overwrite: true
 
   artifacts:
     name: ${{ matrix.artifact.name }} artifact

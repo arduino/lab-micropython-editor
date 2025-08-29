@@ -142,6 +142,7 @@ jobs:
         with:
           name: ${{ matrix.artifact.name }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
+          overwrite: true
 
   release:
     needs: build

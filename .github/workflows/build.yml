@@ -166,15 +166,12 @@ jobs:
 
   clean:
     # This job must run after all jobs that use the transfer artifact.
-    # There are instances in which artifacts are already purged and the workflow cannot find them.
-    # This job will continue and not raise an error in case
     needs:
       - build
       - release
       - artifacts
     if: always() && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
-
     steps:
       - name: Remove unneeded job transfer artifacts
         uses: geekyeggo/delete-artifact@v5

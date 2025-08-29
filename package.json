@@ -40,7 +40,11 @@
     },
     "linux": {
       "target": "zip",
-      "icon": "build_resources/icon.icns"
+      "icon": "build_resources/icon.icns",
+      "arch": [
+        "x64",
+        "arm64"
+      ]
     },
     "afterSign": "build_resources/notarize.js"
   },

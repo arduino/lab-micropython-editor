@@ -295,7 +295,6 @@ async function store(state, emitter) {
     }
     
     emitter.emit('open-panel')
-    await resizeTerminal()
     emitter.emit('render')
 
     try {

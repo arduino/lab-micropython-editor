@@ -27,6 +27,8 @@ jobs:
             id: windows
           - os: ubuntu-latest
             id: linux
+          - os: ubuntu-latest
+            id: linux-arm64
           - os: macos-latest
             id: macos-universal
     runs-on: ${{ matrix.config.os }}
@@ -111,9 +113,13 @@ jobs:
           - path: "*-linux_x64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_X86-64
             id: linux
+          - path: "*-linux_arm64.zip"
+            name: Arduino-Lab-for-MicroPython_Linux_ARM64
+            id: linux-arm64
           - path: "*-mac_universal.zip"
             name: Arduino-Lab-for-MicroPython_macOS_Universal
             id: macos-universal
+          # Windows - installers (future)
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
           #   id: windows

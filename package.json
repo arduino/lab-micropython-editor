@@ -42,7 +42,11 @@
       "target": [
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip", 
+          "arch": ["arm64"]
         }
       ],
       "icon": "build_resources/icon.icns"

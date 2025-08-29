@@ -172,13 +172,9 @@ jobs:
       - artifacts
     if: always() && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
-
     steps:
       - name: Remove unneeded job transfer artifacts
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
-          name: |
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-x64
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-arm64
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-*
+        

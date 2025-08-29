@@ -180,5 +180,4 @@ jobs:
           name: |
             ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
             ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-x64
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-arm64
+            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-universal

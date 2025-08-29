@@ -166,6 +166,8 @@ jobs:
 
   clean:
     # This job must run after all jobs that use the transfer artifact.
+    # There are instances in which artifacts are already purged and the workflow cannot find them.
+    # This job will continue and not raise an error in case
     needs:
       - build
       - release
@@ -177,7 +179,5 @@ jobs:
       - name: Remove unneeded job transfer artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
-          name: |
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-universal
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-*
+        useGlob: true

@@ -39,12 +39,13 @@
       "icon": "build_resources/icon.png"
     },
     "linux": {
-      "target": "zip",
-      "icon": "build_resources/icon.icns",
-      "arch": [
-        "x64",
-        "arm64"
-      ]
+      "target": [
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "build_resources/icon.icns"
     },
     "afterSign": "build_resources/notarize.js"
   },

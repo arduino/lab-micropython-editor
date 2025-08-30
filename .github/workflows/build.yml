@@ -14,7 +14,7 @@ on:
 
 env:
   JOB_TRANSFER_ARTIFACT: build-artifacts
-  NODE_VERSION: 18.17
+  NODE_VERSION: 20.18
 
 jobs:
   build:
@@ -69,18 +69,8 @@ jobs:
           # IS_NIGHTLY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
-          # tweaking the build for Linux arm64
-          NPM_CONFIG_TARGET_ARCH: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
-          NPM_CONFIG_DISTURL: https://electronjs.org/headers
-          NPM_CONFIG_RUNTIME: electron
-          NPM_CONFIG_BUILD_FROM_SOURCE: ${{ matrix.config.id == 'linux-arm64' && 'true' || '' }}
-          CC: ${{ matrix.config.id == 'linux-arm64' && 'gcc' || '' }}
-          CXX: ${{ matrix.config.id == 'linux-arm64' && 'g++' || '' }}
+
         run: |
-            if [ "${{ matrix.config.id }}" = "linux-arm64" ]; then
-              export PYTHON=$(which python3)
-              echo "Building for ARM64 architecture"
-            fi
             # See: https://www.electron.build/code-signing
             if [ $IS_FORK = true ]; then
               echo "Skipping the app signing: building from a fork."
@@ -121,13 +111,12 @@ jobs:
     strategy:
       matrix:
         artifact:
-
-          # - path: "*-linux_x64.zip"
-          #   name: Arduino-Lab-for-MicroPython_Linux_X86-64
-          #   id: linux
           - path: "*-linux_arm64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_ARM64
             id: linux-arm64
+          # - path: "*-linux_x64.zip"
+          #   name: Arduino-Lab-for-MicroPython_Linux_X86-64
+          #   id: linux
           # - path: "*-mac_universal.zip"
           #   name: Arduino-Lab-for-MicroPython_macOS_Universal
           #   id: macos-universal

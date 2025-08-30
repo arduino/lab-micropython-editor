@@ -140,8 +140,12 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
-
-      - name: Upload tester build artifact
+      - name: Extract and prepare artifact
+        run: |
+          cd ${{ env.JOB_TRANSFER_ARTIFACT }}
+          unzip ${{ matrix.artifact.path }}
+          rm ${{ matrix.artifact.path }}
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact.name }}

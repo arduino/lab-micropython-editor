@@ -111,16 +111,16 @@ jobs:
     strategy:
       matrix:
         artifact:
-          - path: "mac-universal"
+          - path: "*-mac-universal.zip"
             name: Arduino-Lab-for-MicroPython_macOS_Universal
             id: macos-universal
-          - path: "win-unpacked"
+          - path: "*-win_x64.zip"
             name: Arduino-Lab-for-MicroPython_Windows_X86-64
             id: windows
-          - path: "linux-unpacked"
+          - path: "*-linux_x64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_X86-64
             id: linux
-          - path: "linux-arm64-unpacked"
+          - path: "*-linux_arm64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_ARM64
             id: linux-arm64
 

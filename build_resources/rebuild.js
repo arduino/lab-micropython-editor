@@ -1,32 +1,43 @@
 const { execSync } = require('child_process');
-const { arch, platform } = process;
+const fs = require('fs');
+const os = require('os');
 
-console.log(`Building for ${platform}-${arch}`);
+console.log('System info:', {
+  arch: process.arch,
+  platform: process.platform,
+  osArch: os.arch(),
+  osType: os.type()
+});
 
-if (platform === 'linux' && arch === 'arm64') {
-  // Configure npm for ARM64 cross-compilation
-  process.env.npm_config_target_arch = 'arm64';
-  process.env.npm_config_target_platform = 'linux';
-  process.env.npm_config_arch = 'arm64';
-  process.env.npm_config_disturl = 'https://electronjs.org/headers';
-  process.env.npm_config_runtime = 'electron';
+if (process.platform === 'linux' && (process.arch === 'arm64' || os.arch() === 'arm64')) {
+  console.log('Configuring for ARM64 build...');
+  
+  const npmrcContent = `target_arch=arm64
+target_platform=linux
+disturl=https://electronjs.org/headers
+runtime=electron
+cache=/tmp/.npm
+build_from_source=true`;
+  
+  fs.writeFileSync('.npmrc', npmrcContent);
+  
+  // Clear cached builds
+  execSync('rm -rf node_modules/@serialport/bindings-cpp/build', { stdio: 'inherit' });
   
   try {
-    // Force rebuild serialport for ARM64
-    execSync('npx @electron/rebuild --arch=arm64', { stdio: 'inherit' });
+    execSync('npx @electron/rebuild --arch=arm64 --force', { 
+      stdio: 'inherit',
+      env: { 
+        ...process.env, 
+        TARGET_ARCH: 'arm64',
+        npm_config_target_arch: 'arm64',
+        ELECTRON_REBUILD_ARCH: 'arm64'
+      }
+    });
   } catch (error) {
-    console.warn('ARM64 rebuild failed, attempting alternative...');
-    try {
-      execSync('npm rebuild @serialport/bindings-cpp --build-from-source', { stdio: 'inherit' });
-    } catch (e) {
-      console.error('All rebuild attempts failed:', e.message);
-    }
+    console.error('ARM64 rebuild failed');
+    process.exit(1);
   }
 } else {
-  // Standard rebuild for other platforms
-  try {
-    execSync('npx @electron/rebuild', { stdio: 'inherit' });
-  } catch (error) {
-    console.warn('Standard rebuild failed:', error.message);
-  }
+  execSync('npx @electron/rebuild', { stdio: 'inherit' });
 }

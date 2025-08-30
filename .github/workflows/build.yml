@@ -23,14 +23,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - os: [self-hosted, windows-sign-pc]
-            id: windows
-          - os: ubuntu-latest
-            id: linux
+          # - os: [self-hosted, windows-sign-pc]
+          #   id: windows
+          # - os: ubuntu-latest
+          #   id: linux
           - os: ubuntu-22.04-arm
             id: linux-arm64
-          - os: macos-latest
-            id: macos-universal
+          # - os: macos-latest
+          #   id: macos-universal
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 
@@ -69,8 +69,18 @@ jobs:
           # IS_NIGHTLY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
-
+          # tweaking the build for Linux arm64
+          NPM_CONFIG_TARGET_ARCH: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
+          NPM_CONFIG_DISTURL: https://electronjs.org/headers
+          NPM_CONFIG_RUNTIME: electron
+          NPM_CONFIG_BUILD_FROM_SOURCE: ${{ matrix.config.id == 'linux-arm64' && 'true' || '' }}
+          CC: ${{ matrix.config.id == 'linux-arm64' && 'gcc' || '' }}
+          CXX: ${{ matrix.config.id == 'linux-arm64' && 'g++' || '' }}
         run: |
+            if [ "${{ matrix.config.id }}" = "linux-arm64" ]; then
+              export PYTHON=$(which python3)
+              echo "Building for ARM64 architecture"
+            fi
             # See: https://www.electron.build/code-signing
             if [ $IS_FORK = true ]; then
               echo "Skipping the app signing: building from a fork."
@@ -111,15 +121,21 @@ jobs:
     strategy:
       matrix:
         artifact:
-          - path: "*-linux_x64.zip"
-            name: Arduino-Lab-for-MicroPython_Linux_X86-64
-            id: linux
+
+          # - path: "*-linux_x64.zip"
+          #   name: Arduino-Lab-for-MicroPython_Linux_X86-64
+          #   id: linux
           - path: "*-linux_arm64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_ARM64
             id: linux-arm64
-          - path: "*-mac_universal.zip"
-            name: Arduino-Lab-for-MicroPython_macOS_Universal
-            id: macos-universal
+          # - path: "*-mac_universal.zip"
+          #   name: Arduino-Lab-for-MicroPython_macOS_Universal
+          #   id: macos-universal
+          # - path: "*-win_x64.zip"
+          #   name: Arduino-Lab-for-MicroPython_Windows_X86-64
+          #   id: windows
+
+          # keep for future implementation
           # Windows - installers (future)
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
@@ -127,9 +143,7 @@ jobs:
           # - path: "*Windows_64bit.msi"
           #   name: Windows_X86-64_MSI
           #   id: windows
-          - path: "*-win_x64.zip"
-            name: Arduino-Lab-for-MicroPython_Windows_X86-64
-            id: windows
+          
 
     steps:
       - name: Download job transfer artifact

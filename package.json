@@ -26,7 +26,7 @@
     "mac": {
       "target": [
         {
-          "target": "zip",
+          "target": "dir",
           "arch": [
             "universal"
           ]
@@ -35,18 +35,18 @@
       "icon": "build_resources/icon.icns"
     },
     "win": {
-      "target": "zip",
+      "target": "dir",
       "sign": "./build_resources/windowsCustomSign.js",
       "icon": "build_resources/icon.png"
     },
     "linux": {
       "target": [
         {
-          "target": "zip",
+          "target": "dir",
           "arch": ["x64"]
         },
         {
-          "target": "zip", 
+          "target": "dir", 
           "arch": ["arm64"]
         }
       ],

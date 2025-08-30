@@ -111,16 +111,16 @@ jobs:
     strategy:
       matrix:
         artifact:
-          - path: "*-mac_universal.zip"
+          - path: "mac-universal"
             name: Arduino-Lab-for-MicroPython_macOS_Universal
             id: macos-universal
-          - path: "*-win_x64.zip"
+          - path: "win-unpacked"
             name: Arduino-Lab-for-MicroPython_Windows_X86-64
             id: windows
-          - path: "*-linux_x64.zip"
+          - path: "linux-unpacked"
             name: Arduino-Lab-for-MicroPython_Linux_X86-64
             id: linux
-          - path: "*-linux_arm64.zip"
+          - path: "linux-arm64-unpacked"
             name: Arduino-Lab-for-MicroPython_Linux_ARM64
             id: linux-arm64
 
@@ -140,11 +140,6 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
-      - name: Extract and prepare artifact
-        run: |
-          cd ${{ env.JOB_TRANSFER_ARTIFACT }}
-          unzip ${{ matrix.artifact.path }}
-          rm ${{ matrix.artifact.path }}
       - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:

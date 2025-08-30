@@ -23,14 +23,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # - os: [self-hosted, windows-sign-pc]
-          #   id: windows
-          # - os: ubuntu-latest
-          #   id: linux
+          - os: macos-latest
+            id: macos-universal
+          - os: [self-hosted, windows-sign-pc]
+            id: windows
+          - os: ubuntu-latest
+            id: linux
           - os: ubuntu-22.04-arm
             id: linux-arm64
-          # - os: macos-latest
-          #   id: macos-universal
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 
@@ -111,18 +111,18 @@ jobs:
     strategy:
       matrix:
         artifact:
+          - path: "*-mac_universal.zip"
+            name: Arduino-Lab-for-MicroPython_macOS_Universal
+            id: macos-universal
+          - path: "*-win_x64.zip"
+            name: Arduino-Lab-for-MicroPython_Windows_X86-64
+            id: windows
+          - path: "*-linux_x64.zip"
+            name: Arduino-Lab-for-MicroPython_Linux_X86-64
+            id: linux
           - path: "*-linux_arm64.zip"
             name: Arduino-Lab-for-MicroPython_Linux_ARM64
             id: linux-arm64
-          # - path: "*-linux_x64.zip"
-          #   name: Arduino-Lab-for-MicroPython_Linux_X86-64
-          #   id: linux
-          # - path: "*-mac_universal.zip"
-          #   name: Arduino-Lab-for-MicroPython_macOS_Universal
-          #   id: macos-universal
-          # - path: "*-win_x64.zip"
-          #   name: Arduino-Lab-for-MicroPython_Windows_X86-64
-          #   id: windows
 
           # keep for future implementation
           # Windows - installers (future)

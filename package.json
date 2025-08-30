@@ -1,12 +1,13 @@
 {
   "name": "arduino-lab-micropython-ide",
+  "author": "Arduino" ,
   "productName": "Arduino Lab for MicroPython",
   "version": "0.21.0",
   "description": "Arduino Lab for MicroPython is a project sponsored by Arduino, based on original work by Murilo Polese.\nThis is an experimental pre-release software, please direct any questions exclusively to Github issues.",
   "main": "index.js",
   "scripts": {
     "post-set-shell": "npm config set script-shell bash",
-    "rebuild": "node build_resources/rebuild.js",
+    "rebuild": "node build_resources/electron-rebuild.js",
     "dev": "electron  --inspect ./",
     "build": "npm run post-set-shell && electron-builder",
     "postinstall": "npm run post-set-shell && npm run rebuild"

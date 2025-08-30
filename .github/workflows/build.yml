@@ -145,11 +145,11 @@ jobs:
           cd ${{ env.JOB_TRANSFER_ARTIFACT }}
           unzip ${{ matrix.artifact.path }}
           rm ${{ matrix.artifact.path }}
-      - name: Upload build artifact
+      - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact.name }}
-          path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
+          path: ${{ env.JOB_TRANSFER_ARTIFACT }}/*
           overwrite: true
 
   release:

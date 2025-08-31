@@ -102,50 +102,50 @@ jobs:
           path: dist
           overwrite: true
 
-  # artifacts:
-  #   name: ${{ matrix.artifact.name }} artifact
-  #   needs: build
-  #   if: always() && needs.build.result != 'skipped'
-  #   runs-on: ubuntu-latest
+  artifacts:
+    name: ${{ matrix.artifact.name }} artifact
+    needs: build
+    if: always() && needs.build.result != 'skipped'
+    runs-on: ubuntu-latest
 
-  #   strategy:
-  #     matrix:
-  #       artifact:
-  #         - path: "*-mac-universal.zip"
-  #           name: Arduino-Lab-for-MicroPython_macOS_Universal
-  #           id: macos-universal
-  #         - path: "*-win_x64.zip"
-  #           name: Arduino-Lab-for-MicroPython_Windows_X86-64
-  #           id: windows
-  #         - path: "*-linux_x64.zip"
-  #           name: Arduino-Lab-for-MicroPython_Linux_X86-64
-  #           id: linux
-  #         - path: "*-linux_arm64.zip"
-  #           name: Arduino-Lab-for-MicroPython_Linux_ARM64
-  #           id: linux-arm64
+    strategy:
+      matrix:
+        artifact:
+          - path: "*-mac-universal.zip"
+            name: Arduino-Lab-for-MicroPython_macOS_Universal
+            id: macos-universal
+          - path: "*-win_x64.zip"
+            name: Arduino-Lab-for-MicroPython_Windows_X86-64
+            id: windows
+          - path: "*-linux_x64.zip"
+            name: Arduino-Lab-for-MicroPython_Linux_X86-64
+            id: linux
+          - path: "*-linux_arm64.zip"
+            name: Arduino-Lab-for-MicroPython_Linux_ARM64
+            id: linux-arm64
 
-  #         # keep for future implementation
-  #         # Windows - installers (future)
-  #         # - path: "*Windows_64bit.exe"
-  #         #   name: Windows_X86-64_interactive_installer
-  #         #   id: windows
-  #         # - path: "*Windows_64bit.msi"
-  #         #   name: Windows_X86-64_MSI
-  #         #   id: windows
+          # keep for future implementation
+          # Windows - installers (future)
+          # - path: "*Windows_64bit.exe"
+          #   name: Windows_X86-64_interactive_installer
+          #   id: windows
+          # - path: "*Windows_64bit.msi"
+          #   name: Windows_X86-64_MSI
+          #   id: windows
           
 
-  #   steps:
-  #     - name: Download job transfer artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
-  #         path: ${{ env.JOB_TRANSFER_ARTIFACT }}
-  #     - name: Upload tester build artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ${{ matrix.artifact.name }}
-  #         path: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
-  #         overwrite: true
+    steps:
+      - name: Download job transfer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
+          path: ${{ env.JOB_TRANSFER_ARTIFACT }}
+      - name: Upload tester build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact.name }}
+          path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
+          overwrite: true
 
   release:
     needs: build
@@ -181,7 +181,7 @@ jobs:
     needs:
       - build
       - release
-      # - artifacts
+      - artifacts
     if: always() && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
     steps:

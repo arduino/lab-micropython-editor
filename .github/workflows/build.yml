@@ -14,7 +14,7 @@ on:
 
 env:
   JOB_TRANSFER_ARTIFACT: build-artifacts
-  NODE_VERSION: 18.17
+  NODE_VERSION: 20.18
 
 jobs:
   build:
@@ -23,12 +23,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - os: macos-latest
+            id: macos-universal
           - os: [self-hosted, windows-sign-pc]
             id: windows
           - os: ubuntu-latest
-            id: linux
-          - os: macos-latest
-            id: macos-universal
+            id: linux-x64
+          - os: ubuntu-22.04-arm
+            id: linux-arm64
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 
@@ -98,6 +100,7 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
           path: dist
+          overwrite: true
 
   artifacts:
     name: ${{ matrix.artifact.name }} artifact
@@ -108,21 +111,28 @@ jobs:
     strategy:
       matrix:
         artifact:
-          - path: "*-linux_x64.zip"
-            name: Arduino-Lab-for-MicroPython_Linux_X86-64
-            id: linux
           - path: "*-mac_universal.zip"
             name: Arduino-Lab-for-MicroPython_macOS_Universal
             id: macos-universal
+          - path: "*-win_x64.zip"
+            name: Arduino-Lab-for-MicroPython_Windows_X86-64
+            id: windows
+          - path: "*-linux_x64.zip"
+            name: Arduino-Lab-for-MicroPython_Linux_X86-64
+            id: linux-x64
+          - path: "*-linux_arm64.zip"
+            name: Arduino-Lab-for-MicroPython_Linux_ARM64
+            id: linux-arm64
+
+          # keep for future implementation
+          # Windows - installers (future)
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
           #   id: windows
           # - path: "*Windows_64bit.msi"
           #   name: Windows_X86-64_MSI
           #   id: windows
-          - path: "*-win_x64.zip"
-            name: Arduino-Lab-for-MicroPython_Windows_X86-64
-            id: windows
+          
 
     steps:
       - name: Download job transfer artifact
@@ -130,12 +140,12 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
-
       - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact.name }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
+          overwrite: true
 
   release:
     needs: build
@@ -145,7 +155,9 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: build-artifacts-*
           path: artifacts
+          merge-multiple: true
           
       - name: List artifacts
         run: ls -R artifacts
@@ -172,13 +184,9 @@ jobs:
       - artifacts
     if: always() && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
-
     steps:
       - name: Remove unneeded job transfer artifacts
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
-          name: |
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-x64
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-arm64
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-*
+        

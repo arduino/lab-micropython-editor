@@ -157,7 +157,6 @@ jobs:
         with:
           pattern: build-artifacts-*
           path: artifacts
-          merge-multiple: true
           
       - name: List artifacts
         run: ls -R artifacts
@@ -172,7 +171,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           release_name: ${{ steps.tag_name.outputs.TAG_NAME }}
-          file: artifacts/**/*
+          file: artifacts/**/*.zip
           tag: ${{ github.ref }}
           file_glob: true
           overwrite: true

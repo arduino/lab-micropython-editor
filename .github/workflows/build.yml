@@ -69,6 +69,8 @@ jobs:
           # IS_NIGHTLY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
+          npm_config_target_arch: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
+          ELECTRON_BUILDER_ARCH: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
 
         run: |
             # See: https://www.electron.build/code-signing

@@ -40,16 +40,7 @@
       "icon": "build_resources/icon.png"
     },
     "linux": {
-      "target": [
-        {
-          "target": "zip",
-          "arch": ["x64"]
-        },
-        {
-          "target": "zip", 
-          "arch": ["arm64"]
-        }
-      ],
+      "target": "zip",
       "icon": "build_resources/icon.icns"
     },
     "afterSign": "build_resources/notarize.js"

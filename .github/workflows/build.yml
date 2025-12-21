@@ -111,6 +111,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: true
       matrix:
         artifact:
           - path: "*-mac_universal.zip"

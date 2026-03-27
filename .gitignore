@@ -7,4 +7,4 @@ dist/
 .vscode
 .npmrc
 Resources
-temp
+local_only

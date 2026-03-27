@@ -21,7 +21,7 @@ function openAppInfo(win) {
     appInfoWindow = openAboutWindow({
       icon_path: path.resolve(__dirname, '../ui/arduino/media/about_image.png'),
       css_path: path.resolve(__dirname, '../ui/arduino/views/about.css'),
-      copyright: '© Arduino SA 2022',
+      copyright: '© 2026 - Arduino s.r.l. and/or its affiliated companies',
       package_json_dir: path.resolve(__dirname, '..'),
       bug_report_url: "https://github.com/arduino/lab-micropython-editor/issues",
       bug_link_text: "report an issue",

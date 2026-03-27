@@ -14,7 +14,7 @@ on:
 
 env:
   JOB_TRANSFER_ARTIFACT: build-artifacts
-  NODE_VERSION: 18.17
+  NODE_VERSION: 20.18
 
 jobs:
   build:
@@ -23,12 +23,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - os: macos-latest
+            id: macos-universal
           - os: [self-hosted, windows-sign-pc]
             id: windows
           - os: ubuntu-latest
-            id: linux
-          - os: macos-latest
-            id: macos-universal
+            id: linux-x64
+          - os: ubuntu-24.04-arm
+            id: linux-arm64
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 90
 
@@ -67,6 +69,8 @@ jobs:
           # IS_NIGHTLY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
+          npm_config_target_arch: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
+          ELECTRON_BUILDER_ARCH: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
 
         run: |
             # See: https://www.electron.build/code-signing
@@ -98,6 +102,7 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
           path: dist
+          overwrite: true
 
   artifacts:
     name: ${{ matrix.artifact.name }} artifact
@@ -106,23 +111,31 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: true
       matrix:
         artifact:
-          - path: "*-linux_x64.zip"
-            name: Arduino-Lab-for-MicroPython_Linux_X86-64
-            id: linux
           - path: "*-mac_universal.zip"
-            name: Arduino-Lab-for-MicroPython_macOS_Universal
+            name: Arduino.Lab.for.MicroPython-mac_universal
             id: macos-universal
+          - path: "*-win_x64.zip"
+            name: Arduino.Lab.for.MicroPython-win_x64
+            id: windows
+          - path: "*-linux_x64.zip"
+            name: Arduino.Lab.for.MicroPython-linux_x64
+            id: linux-x64
+          - path: "*-linux_arm64.zip"
+            name: Arduino.Lab.for.MicroPython-linux_arm64
+            id: linux-arm64
+
+          # keep for future implementation
+          # Windows - installers (future)
           # - path: "*Windows_64bit.exe"
           #   name: Windows_X86-64_interactive_installer
           #   id: windows
           # - path: "*Windows_64bit.msi"
           #   name: Windows_X86-64_MSI
           #   id: windows
-          - path: "*-win_x64.zip"
-            name: Arduino-Lab-for-MicroPython_Windows_X86-64
-            id: windows
+          
 
     steps:
       - name: Download job transfer artifact
@@ -130,12 +143,12 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
-
       - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact.name }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
+          overwrite: true
 
   release:
     needs: build
@@ -145,6 +158,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: build-artifacts-*
           path: artifacts
           
       - name: List artifacts
@@ -156,13 +170,14 @@ jobs:
           echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Publish Release [GitHub]
-        uses: svenstaro/upload-release-action@2.2.0
+        uses: svenstaro/upload-release-action@2.11.2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           release_name: ${{ steps.tag_name.outputs.TAG_NAME }}
-          file: artifacts/**/*
+          file: artifacts/**/*.zip
           tag: ${{ github.ref }}
           file_glob: true
+          overwrite: true
 
   clean:
     # This job must run after all jobs that use the transfer artifact.
@@ -172,13 +187,9 @@ jobs:
       - artifacts
     if: always() && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
-
     steps:
       - name: Remove unneeded job transfer artifacts
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
-          name: |
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-windows
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-linux
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-x64
-            ${{ env.JOB_TRANSFER_ARTIFACT }}-macos-arm64
+          name: ${{ env.JOB_TRANSFER_ARTIFACT }}-*
+        

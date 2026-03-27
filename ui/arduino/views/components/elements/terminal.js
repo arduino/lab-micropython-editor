@@ -1,7 +1,35 @@
 class XTerm extends Component {
   constructor(id, state, emit) {
     super(id)
-    this.term = new Terminal()
+    this.term = new Terminal({
+      fontSize: 16,
+      fontFamily: '"CodeFont", monospace',
+      fontWeight: 'normal',
+      lineHeight: 1.2,
+      theme: {
+        background:          '#0d1b2a',
+        foreground:          '#e0eaea',
+        cursor:              '#ffffff',
+        cursorAccent:        '#0d1b2a',
+        selectionBackground: 'rgba(0, 212, 170, 0.25)',
+        black:               '#1e2d3d',
+        red:                 '#ff6b6b',
+        green:               '#4ecdc4',
+        yellow:              '#ffd166',
+        blue:                '#5b9bd5',
+        magenta:             '#c792ea',
+        cyan:                '#00d4aa',
+        white:               '#e0eaea',
+        brightBlack:         '#4a6070',
+        brightRed:           '#ff8e8e',
+        brightGreen:         '#7be4dc',
+        brightYellow:        '#ffe599',
+        brightBlue:          '#80b8e8',
+        brightMagenta:       '#d6b0f5',
+        brightCyan:          '#33dfbb',
+        brightWhite:         '#f5fafa',
+      }
+    })
     this.resizeTerm = this.resizeTerm.bind(this)
   }
 

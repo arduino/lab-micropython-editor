@@ -370,7 +370,7 @@ button.small .icon {
   align-items: center;
   align-self: stretch;
   position: relative;
-  background: black;
+  background: #0d1b2a;
   transition: height 0.15s;
 }
 
@@ -442,7 +442,6 @@ button.small .icon {
 }
 
 .terminal-wrapper {
-  color: white;
   width: 97%;
   margin-left: 2%;
   overflow: hidden;

@@ -1,4 +1,4 @@
-// Copyright 2022 Arduino SA
+// Copyright 2026 Arduino s.r.l. and/or its affiliated companies
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 const isCI = require('is-ci');
-const { notarize } = require('electron-notarize');
+const { notarize } = require('@electron/notarize');
 
 exports.default = async function notarizing(context) {
 		if (!isCI) {

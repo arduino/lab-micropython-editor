@@ -214,13 +214,13 @@ async function store(state, emitter) {
       router.write('>>> ')
     })
     terminalRouter.setHook('stop:before', (router) => {
-      router.write('\r\n\x1b[2m--- Execution halted ---\x1b[0m\r\n')
+      router.write('\r\n' + ANSI.muted('--- Execution halted ---') + '\r\n')
     })
     terminalRouter.setHook('stop:after', (router) => {
       router.write('>>> ')
     })
     terminalRouter.setHook('reset:before', (router) => {
-      router.write('\r\n\x1b[2m--- Resetting board ---\x1b[0m\r\n')
+      router.write('\r\n' + ANSI.muted('--- Resetting board ---') + '\r\n')
     })
     if (!state.isTerminalBound) {
       state.isTerminalBound = true
@@ -238,7 +238,13 @@ async function store(state, emitter) {
     if (connectGreeting) {
       const mpyIndex = connectGreeting.indexOf('MicroPython')
       const greeting = mpyIndex !== -1 ? connectGreeting.slice(mpyIndex) : connectGreeting
-      terminalRouter.write(greeting)
+      const promptMatch = greeting.match(/([\s\S]*?)((?:\r?\n)?>>>\s*)$/)
+      if (promptMatch) {
+        terminalRouter.write(ANSI.info(promptMatch[1]))
+        terminalRouter.write(promptMatch[2])
+      } else {
+        terminalRouter.write(ANSI.info(greeting))
+      }
     }
     terminalRouter.setOperation('repl-interactive')
     // Update the UI when the conncetion is closed
@@ -251,7 +257,7 @@ async function store(state, emitter) {
   })
   emitter.on('disconnected', () => {
     if (terminalRouter) {
-      terminalRouter.terminal.write('\r\n--- Disconnected from board ---\r\n')
+      terminalRouter.write('\r\n' + ANSI.muted('--- Disconnected from board ---') + '\r\n')
     }
     state.isConnected = false
     state.panelHeight = PANEL_CLOSED

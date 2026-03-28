@@ -34,6 +34,16 @@ function stripNoise(str, ...keys) {
   return keys.reduce((s, key) => s.replace(NOISE[key], ''), str)
 }
 
+// Semantic ANSI colour levels mapped to the terminal theme palette.
+// Each function wraps text in the appropriate escape sequence and resets after.
+const ANSI = {
+  error:   (text) => `\x1b[31m${text}\x1b[0m`,  // red    #ff6b6b
+  warning: (text) => `\x1b[33m${text}\x1b[0m`,  // yellow #ffd166
+  success: (text) => `\x1b[32m${text}\x1b[0m`,  // teal   #4ecdc4
+  info:    (text) => `\x1b[36m${text}\x1b[0m`,  // cyan   #00d4aa
+  muted:   (text) => `\x1b[2m${text}\x1b[0m`,   // dim
+}
+
 class TerminalOutputRouter {
   constructor(terminalInstance) {
     this.terminal = terminalInstance
@@ -41,6 +51,9 @@ class TerminalOutputRouter {
     this.hooks = new Map()
     this._execPhase = 'wait'  // wait → stdout → stderr → done
     this._execBuffer = ''
+    this._stderrBuffer = ''
+    this._stopBuffer = ''
+    this._replErrorBuffer = null  // null = not buffering; string = buffering traceback
     this.defaultHandler = (data) => {
       this.terminal.write(data)
       this.terminal.scrollToBottom()
@@ -58,6 +71,21 @@ class TerminalOutputRouter {
   }
 
   setOperation(operationType, customHandler = null) {
+    // Flush stop buffer before firing after hook
+    if (this.currentOperation === 'stop' && this._stopBuffer.trim().length > 0) {
+      const tracebackIndex = this._stopBuffer.indexOf('Traceback')
+      if (tracebackIndex > 0) {
+        this.terminal.write(this._stopBuffer.slice(0, tracebackIndex))
+      }
+      const traceback = tracebackIndex >= 0 ? this._stopBuffer.slice(tracebackIndex) : this._stopBuffer
+      if (traceback.trim().length > 0) {
+        const level = traceback.includes('KeyboardInterrupt') ? 'warning' : 'error'
+        this.terminal.write(ANSI[level](traceback))
+      }
+      this.terminal.scrollToBottom()
+      this._stopBuffer = ''
+    }
+
     const afterHook = this.hooks.get(`${this.currentOperation}:after`)
     if (afterHook) afterHook(this)
 
@@ -65,7 +93,10 @@ class TerminalOutputRouter {
     if (operationType !== 'code-execution') {
       this._execPhase = 'wait'
       this._execBuffer = ''
+      this._stderrBuffer = ''
     }
+    this._stopBuffer = ''
+    this._replErrorBuffer = null
     if (customHandler) {
       this.operationHandlers.set(operationType, customHandler)
     }
@@ -92,9 +123,9 @@ class TerminalOutputRouter {
     this.operationHandlers.set('file-listing', (data, terminal) => {})
 
     this.operationHandlers.set('file-saving', (data, terminal) => {
-      // Success or errors should be shown
-      if (data.includes('OK') || data.includes('Error') || data.includes('Traceback')) {
-        terminal.write(data)
+      const str = toStr(data)
+      if (str.includes('Error') || str.includes('Traceback')) {
+        terminal.write(ANSI.error(str))
         terminal.scrollToBottom()
       }
     })
@@ -103,9 +134,9 @@ class TerminalOutputRouter {
 
     this.operationHandlers.set('directory-navigation', (data, terminal) => {})
 
-    // Code execution: stream stdout then stderr from the raw REPL exec protocol.
+    // Code execution: stream stdout, buffer+colorise stderr from the raw REPL exec protocol.
     // Protocol: enter_raw_repl → exec_raw → OK<stdout>\x04<stderr>\x04> → exit_raw_repl
-    // Phases: wait (buffer until OK) → stdout (stream until \x04) → stderr (stream until \x04)
+    // Phases: wait (buffer until OK) → stdout (stream) → stderr (buffer) → done (emit coloured)
     this.operationHandlers.set('code-execution', (data, terminal) => {
       let str = toStr(data)
 
@@ -118,21 +149,36 @@ class TerminalOutputRouter {
         this._execPhase = 'stdout'
       }
 
-      // Process current chunk through stdout and potentially into stderr
       while (str.length > 0 && this._execPhase !== 'done') {
         const eotIndex = str.indexOf('\x04')
         if (eotIndex === -1) {
-          terminal.write(str)
-          terminal.scrollToBottom()
+          if (this._execPhase === 'stdout') {
+            terminal.write(str)
+            terminal.scrollToBottom()
+          } else {
+            this._stderrBuffer += str
+          }
           break
         }
         const output = str.slice(0, eotIndex)
-        if (output.length > 0) {
-          terminal.write(output)
-          terminal.scrollToBottom()
-        }
         str = str.slice(eotIndex + 1)
-        this._execPhase = this._execPhase === 'stdout' ? 'stderr' : 'done'
+        if (this._execPhase === 'stdout') {
+          if (output.length > 0) {
+            terminal.write(output)
+            terminal.scrollToBottom()
+          }
+          this._execPhase = 'stderr'
+        } else {
+          // End of stderr: colorise based on content and emit
+          this._stderrBuffer += output
+          if (this._stderrBuffer.trim().length > 0) {
+            const level = this._stderrBuffer.includes('KeyboardInterrupt') ? 'warning' : 'error'
+            terminal.write(ANSI[level](this._stderrBuffer))
+            terminal.scrollToBottom()
+          }
+          this._stderrBuffer = ''
+          this._execPhase = 'done'
+        }
       }
     })
 
@@ -141,7 +187,7 @@ class TerminalOutputRouter {
       const str = toStr(data)
       const filtered = stripNoise(str, 'rawReplEntry', 'banner', 'helpHint', 'rawOk', 'eot', 'prompt', 'rawPrompt')
       if (filtered.trim().length > 0 && (str.includes('Error') || str.includes('Traceback'))) {
-        terminal.write(filtered)
+        terminal.write(ANSI.error(filtered))
         terminal.scrollToBottom()
       }
     })
@@ -149,30 +195,65 @@ class TerminalOutputRouter {
     // Suppress: silently drop all output, no hooks (used internally e.g. during getPrompt)
     this.operationHandlers.set('suppress', () => {})
 
-    // Stop: show traceback/errors but filter banner noise and >>> spam
+    // Stop: buffer all chunks, flush+colorise in setOperation when leaving stop.
+    // Buffering is needed because KeyboardInterrupt arrives in a later chunk than
+    // the start of the traceback, so per-chunk coloring produces partial output.
     this.operationHandlers.set('stop', (data, terminal) => {
       const str = toStr(data)
       const filtered = stripNoise(str, 'rawReplEntry', 'banner', 'helpHint', 'promptOnly', 'eot', 'rawPrompt')
       if (filtered.trim().length > 0) {
-        terminal.write(filtered)
-        terminal.scrollToBottom()
+        this._stopBuffer += filtered
       }
     })
 
-    // Reset: let output through but strip >>> prompts and the pre-reboot banner
+    // Reset: colorise MPY: soft reboot line as info, strip banner/>>>
     // (exit_raw_repl fires Ctrl+B before the actual reset, producing a spurious banner)
     this.operationHandlers.set('reset', (data, terminal) => {
       const str = toStr(data)
       const filtered = stripNoise(str, 'banner', 'helpHint', 'prompt')
       if (filtered.length > 0) {
-        terminal.write(filtered)
+        terminal.write(filtered.includes('MPY:') ? ANSI.info(filtered) : filtered)
         terminal.scrollToBottom()
       }
     })
 
-    // Allow normal output for interactive REPL
+    // Interactive REPL: pass through normally, but detect tracebacks and colorise them.
+    // Tracebacks span multiple chunks so we buffer from the trigger word until the next
+    // >>> prompt, then flush with the appropriate colour level.
     this.operationHandlers.set('repl-interactive', (data, terminal) => {
-      terminal.write(data)
+      let str = toStr(data)
+
+      if (this._replErrorBuffer !== null) {
+        this._replErrorBuffer += str
+        const promptIndex = this._replErrorBuffer.search(/>>>\s*/)
+        if (promptIndex !== -1) {
+          const errorContent = this._replErrorBuffer.slice(0, promptIndex)
+          const prompt = this._replErrorBuffer.slice(promptIndex)
+          const level = errorContent.includes('KeyboardInterrupt') ? 'warning' : 'error'
+          if (errorContent.trim().length > 0) terminal.write(ANSI[level](errorContent))
+          terminal.write(prompt)
+          terminal.scrollToBottom()
+          this._replErrorBuffer = null
+        }
+        return
+      }
+
+      const triggerIndex = str.search(/Traceback|KeyboardInterrupt/)
+      if (triggerIndex !== -1) {
+        if (triggerIndex > 0) terminal.write(str.slice(0, triggerIndex))
+        const rest = str.slice(triggerIndex)
+        const promptIndex = rest.search(/>>>\s*/)
+        if (promptIndex !== -1) {
+          const errorContent = rest.slice(0, promptIndex)
+          const level = errorContent.includes('KeyboardInterrupt') ? 'warning' : 'error'
+          if (errorContent.trim().length > 0) terminal.write(ANSI[level](errorContent))
+          terminal.write(rest.slice(promptIndex))
+        } else {
+          this._replErrorBuffer = rest
+        }
+      } else {
+        terminal.write(str)
+      }
       terminal.scrollToBottom()
     })
   }

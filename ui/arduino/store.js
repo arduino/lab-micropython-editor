@@ -258,8 +258,12 @@ async function store(state, emitter) {
   emitter.on('disconnected', () => {
     if (terminalRouter) {
       terminalRouter.write('\r\n' + ANSI.muted('--- Disconnected from board ---') + '\r\n')
+      terminalRouter.setOperation('repl-interactive')
     }
     state.isConnected = false
+    state.isLoadingFiles = false
+    state.isTransferring = false
+    state.transferringProgress = ''
     state.panelHeight = PANEL_CLOSED
     state.boardFiles = []
     state.boardNavigationPath = '/'
@@ -1271,92 +1275,95 @@ async function store(state, emitter) {
     if (state.isLoadingFiles) return
     state.isLoadingFiles = true
     emitter.emit('render')
-    for (let i in state.selectedFiles) {
-      let selectedFile = state.selectedFiles[i]
-      if (selectedFile.type == 'folder') {
-        // Don't open folders
-        continue
-      }
-      // ALl good until here
-
-      const alreadyOpen = state.openFiles.find((f) => {
-        return f.fileName == selectedFile.fileName
-              && f.source == selectedFile.source
-              && f.parentFolder == selectedFile.parentFolder
-      })
-
-      if (!alreadyOpen) {
-        // This file is not open yet,
-        // load content and append it to the list of files to open
-        let file = null
-        if (selectedFile.source == 'board') {
-          if (terminalRouter) terminalRouter.setOperation('file-loading')
-          // fileContent receives a raw buffer from loadFile()
-          const fileContent = await serialBridge.loadFile(
-            serialBridge.getFullPath(
-              state.boardNavigationRoot,
-              state.boardNavigationPath,
-              selectedFile.fileName
-            )
-          )
-          // we convert the buffer to a Uint8Array
-          const contentArray = new Uint8Array(fileContent);
-          // we feed the Uint8Array to the TextDecoder
-          const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
-          file = createFile({
-            parentFolder: state.boardNavigationPath,
-            fileName: selectedFile.fileName,
-            source: selectedFile.source,
-            content: bytesToSource
-          })
-          file.editor.onChange = function() {
-            file.hasChanges = true
-            emitter.emit('render')
-          }
-        } else if (selectedFile.source == 'disk') {
-          const fileContent = await disk.loadFile(
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              state.diskNavigationPath,
-              selectedFile.fileName
-            )
-          )
-          file = createFile({
-            parentFolder: state.diskNavigationPath,
-            fileName: selectedFile.fileName,
-            source: selectedFile.source,
-            content: fileContent
-          })
-          file.editor.onChange = function() {
-            file.hasChanges = true
-            emitter.emit('render')
-          }
+    try {
+      for (let i in state.selectedFiles) {
+        let selectedFile = state.selectedFiles[i]
+        if (selectedFile.type == 'folder') {
+          // Don't open folders
+          continue
         }
-        filesToOpen.push(file)
-      } else {
-        // This file is already open,
-        // append it to the list of files that are already open
-        filesAlreadyOpen.push(alreadyOpen)
+        // ALl good until here
+
+        const alreadyOpen = state.openFiles.find((f) => {
+          return f.fileName == selectedFile.fileName
+                && f.source == selectedFile.source
+                && f.parentFolder == selectedFile.parentFolder
+        })
+
+        if (!alreadyOpen) {
+          // This file is not open yet,
+          // load content and append it to the list of files to open
+          let file = null
+          if (selectedFile.source == 'board') {
+            if (terminalRouter) terminalRouter.setOperation('file-loading')
+            // fileContent receives a raw buffer from loadFile()
+            const fileContent = await serialBridge.loadFile(
+              serialBridge.getFullPath(
+                state.boardNavigationRoot,
+                state.boardNavigationPath,
+                selectedFile.fileName
+              )
+            )
+            // we convert the buffer to a Uint8Array
+            const contentArray = new Uint8Array(fileContent);
+            // we feed the Uint8Array to the TextDecoder
+            const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
+            file = createFile({
+              parentFolder: state.boardNavigationPath,
+              fileName: selectedFile.fileName,
+              source: selectedFile.source,
+              content: bytesToSource
+            })
+            file.editor.onChange = function() {
+              file.hasChanges = true
+              emitter.emit('render')
+            }
+          } else if (selectedFile.source == 'disk') {
+            const fileContent = await disk.loadFile(
+              disk.getFullPath(
+                state.diskNavigationRoot,
+                state.diskNavigationPath,
+                selectedFile.fileName
+              )
+            )
+            file = createFile({
+              parentFolder: state.diskNavigationPath,
+              fileName: selectedFile.fileName,
+              source: selectedFile.source,
+              content: fileContent
+            })
+            file.editor.onChange = function() {
+              file.hasChanges = true
+              emitter.emit('render')
+            }
+          }
+          filesToOpen.push(file)
+        } else {
+          // This file is already open,
+          // append it to the list of files that are already open
+          filesAlreadyOpen.push(alreadyOpen)
+        }
+
       }
-      
-    }
 
-    // If opening an already open file, switch to its tab
-    if (filesAlreadyOpen.length > 0) {
-      state.editingFile = filesAlreadyOpen[0].id
-    }
-    // If there are new files to open, they take priority
-    if (filesToOpen.length > 0) {
-      state.editingFile = filesToOpen[0].id
-    }
+      // If opening an already open file, switch to its tab
+      if (filesAlreadyOpen.length > 0) {
+        state.editingFile = filesAlreadyOpen[0].id
+      }
+      // If there are new files to open, they take priority
+      if (filesToOpen.length > 0) {
+        state.editingFile = filesToOpen[0].id
+      }
 
-    state.openFiles = state.openFiles.concat(filesToOpen)
-    state.selectedFiles = []
-    state.view = 'editor'
-    updateMenu()
-    state.isLoadingFiles = false
-    if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
-    emitter.emit('render')
+      state.openFiles = state.openFiles.concat(filesToOpen)
+      state.selectedFiles = []
+      state.view = 'editor'
+      updateMenu()
+    } finally {
+      state.isLoadingFiles = false
+      if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
+      emitter.emit('render')
+    }
   })
   emitter.on('open-file', (source, file) => {
     log('open-file', source, file)
@@ -1375,141 +1382,137 @@ async function store(state, emitter) {
     state.isTransferring = true
     emitter.emit('render')
 
-    // Check which files will be overwritten on the board
-    if (terminalRouter) terminalRouter.setOperation('file-listing')
-    const willOverwrite = await checkOverwrite({
-      source: 'board',
-      fileNames: state.selectedFiles.map(f => f.fileName),
-      parentPath: serialBridge.getFullPath(
-        state.boardNavigationRoot,
-        state.boardNavigationPath,
-        ''
-      ),
-    })
+    try {
+      // Check which files will be overwritten on the board
+      if (terminalRouter) terminalRouter.setOperation('file-listing')
+      const willOverwrite = await checkOverwrite({
+        source: 'board',
+        fileNames: state.selectedFiles.map(f => f.fileName),
+        parentPath: serialBridge.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          ''
+        ),
+      })
 
-    if (willOverwrite.length > 0) {
-      let message = `You are about to overwrite the following files/folders on your board:\n\n`
-      willOverwrite.forEach(f => message += `${f.fileName}\n`)
-      message += `\n`
-      message += `Are you sure you want to proceed?`
-      const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
-      if (!confirmAction) {
-        state.isTransferring = false
-        emitter.emit('render')
-        return
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following files/folders on your board:\n\n`
+        willOverwrite.forEach(f => message += `${f.fileName}\n`)
+        message += `\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+        if (!confirmAction) return
       }
-    }
 
-    if (terminalRouter) terminalRouter.setOperation('file-uploading')
+      if (terminalRouter) terminalRouter.setOperation('file-uploading')
 
-    for (let i in state.selectedFiles) {
-      const file = state.selectedFiles[i]
-      const srcPath = disk.getFullPath(
-        state.diskNavigationRoot,
-        state.diskNavigationPath,
-        file.fileName
-      )
-      const destPath = serialBridge.getFullPath(
-        state.boardNavigationRoot,
-        state.boardNavigationPath,
-        file.fileName
-      )
-
-      if (file.type == 'folder') {
-        await uploadFolder(
-          srcPath, destPath,
-          (progress, fileName) => {
-            state.transferringProgress = `${fileName}: ${progress}`
-            emitter.emit('render')
-          }
-
+      for (let i in state.selectedFiles) {
+        const file = state.selectedFiles[i]
+        const srcPath = disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          file.fileName
         )
-        state.transferringProgress = ''
-      } else {
-        await serialBridge.uploadFile(
-          srcPath, destPath,
-          (progress) => {
-            state.transferringProgress = `${file.fileName}: ${progress}`
-            emitter.emit('render')
-          }
+        const destPath = serialBridge.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          file.fileName
         )
-        state.transferringProgress = ''
+
+        if (file.type == 'folder') {
+          await uploadFolder(
+            srcPath, destPath,
+            (progress, fileName) => {
+              state.transferringProgress = `${fileName}: ${progress}`
+              emitter.emit('render')
+            }
+
+          )
+        } else {
+          await serialBridge.uploadFile(
+            srcPath, destPath,
+            (progress) => {
+              state.transferringProgress = `${file.fileName}: ${progress}`
+              emitter.emit('render')
+            }
+          )
+        }
       }
+      state.selectedFiles = []
+    } finally {
+      state.transferringProgress = ''
+      state.isTransferring = false
+      if (terminalRouter) terminalRouter.setOperation('repl-interactive')
+      emitter.emit('refresh-files')
+      emitter.emit('render')
     }
-
-    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
-    state.isTransferring = false
-    state.selectedFiles = []
-    emitter.emit('refresh-files')
-    emitter.emit('render')
   })
   emitter.on('download-files', async () => {
     log('download-files')
     state.isTransferring = true
     emitter.emit('render')
 
-    // Check which files will be overwritten on the disk
-    const willOverwrite = await checkOverwrite({
-      source: 'disk',
-      fileNames: state.selectedFiles.map(f => f.fileName),
-      parentPath: disk.getFullPath(
-        state.diskNavigationRoot,
-        state.diskNavigationPath,
-        ''
-      ),
-    })
+    try {
+      // Check which files will be overwritten on the disk
+      const willOverwrite = await checkOverwrite({
+        source: 'disk',
+        fileNames: state.selectedFiles.map(f => f.fileName),
+        parentPath: disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          ''
+        ),
+      })
 
-    if (willOverwrite.length > 0) {
-      let message = `You are about to overwrite the following files/folders on your disk:\n\n`
-      willOverwrite.forEach(f => message += `${f.fileName}\n`)
-      message += `\n`
-      message += `Are you sure you want to proceed?`
-      const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
-      if (!confirmAction) {
-        state.isTransferring = false
-        emitter.emit('render')
-        return
+      if (willOverwrite.length > 0) {
+        let message = `You are about to overwrite the following files/folders on your disk:\n\n`
+        willOverwrite.forEach(f => message += `${f.fileName}\n`)
+        message += `\n`
+        message += `Are you sure you want to proceed?`
+        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+        if (!confirmAction) return
       }
-    }
 
-    if (terminalRouter) terminalRouter.setOperation('file-loading')
+      if (terminalRouter) terminalRouter.setOperation('file-loading')
 
-    for (let i in state.selectedFiles) {
-      const file = state.selectedFiles[i]
-      const srcPath = serialBridge.getFullPath(
-        state.boardNavigationRoot,
-        state.boardNavigationPath,
-        file.fileName
-      )
-      const destPath = disk.getFullPath(
-        state.diskNavigationRoot,
-        state.diskNavigationPath,
-        file.fileName
-      )
-      if (file.type == 'folder') {
-        await downloadFolder(
-          srcPath, destPath,
-          (e) => {
-            state.transferringProgress = e
-            emitter.emit('render')
-          }
+      for (let i in state.selectedFiles) {
+        const file = state.selectedFiles[i]
+        const srcPath = serialBridge.getFullPath(
+          state.boardNavigationRoot,
+          state.boardNavigationPath,
+          file.fileName
         )
-      } else {
-        await serialBridge.downloadFile(
-          srcPath, destPath,
-          (e) => {
-            state.transferringProgress = e
-            emitter.emit('render')
-          }
+        const destPath = disk.getFullPath(
+          state.diskNavigationRoot,
+          state.diskNavigationPath,
+          file.fileName
         )
+        if (file.type == 'folder') {
+          await downloadFolder(
+            srcPath, destPath,
+            (e) => {
+              state.transferringProgress = e
+              emitter.emit('render')
+            }
+          )
+        } else {
+          await serialBridge.downloadFile(
+            srcPath, destPath,
+            (e) => {
+              state.transferringProgress = e
+              emitter.emit('render')
+            }
+          )
+        }
       }
+      state.selectedFiles = []
+    } finally {
+      state.transferringProgress = ''
+      state.isTransferring = false
+      if (terminalRouter) terminalRouter.setOperation('repl-interactive')
+      emitter.emit('refresh-files')
+      emitter.emit('render')
     }
-
-    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
-    state.isTransferring = false
-    state.selectedFiles = []
-    emitter.emit('refresh-files')
-    emitter.emit('render')
   })
 
   // NAVIGATION

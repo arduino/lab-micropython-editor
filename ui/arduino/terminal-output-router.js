@@ -71,18 +71,22 @@ class TerminalOutputRouter {
   }
 
   setOperation(operationType, customHandler = null) {
-    // Flush stop buffer before firing after hook
+    // Flush stop buffer before firing after hook.
+    // Residual stdout lines (e.g. print() output still in-flight when stop was triggered)
+    // were already displayed during execution — skip them and show only the error context.
     if (this.currentOperation === 'stop' && this._stopBuffer.trim().length > 0) {
       const tracebackIndex = this._stopBuffer.indexOf('Traceback')
-      if (tracebackIndex > 0) {
-        this.terminal.write(this._stopBuffer.slice(0, tracebackIndex))
+      const kiIndex = this._stopBuffer.indexOf('KeyboardInterrupt')
+      // Start from whichever error marker appears first; fall back to 0 if neither found
+      const errorStart = tracebackIndex >= 0 && (kiIndex < 0 || tracebackIndex <= kiIndex)
+                       ? tracebackIndex
+                       : kiIndex >= 0 ? kiIndex : 0
+      const errorContent = this._stopBuffer.slice(errorStart)
+      if (errorContent.trim().length > 0) {
+        const level = errorContent.includes('KeyboardInterrupt') ? 'warning' : 'error'
+        this.terminal.write(ANSI[level](errorContent))
+        this.terminal.scrollToBottom()
       }
-      const traceback = tracebackIndex >= 0 ? this._stopBuffer.slice(tracebackIndex) : this._stopBuffer
-      if (traceback.trim().length > 0) {
-        const level = traceback.includes('KeyboardInterrupt') ? 'warning' : 'error'
-        this.terminal.write(ANSI[level](traceback))
-      }
-      this.terminal.scrollToBottom()
       this._stopBuffer = ''
     }
 

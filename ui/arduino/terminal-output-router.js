@@ -89,9 +89,7 @@ class TerminalOutputRouter {
 
   registerHandlers() {
     // File listing should not produce output
-    this.operationHandlers.set('file-listing', (data, terminal) => {
-      // console.log('File listing output suppressed:', data) // remove after tests
-    })
+    this.operationHandlers.set('file-listing', (data, terminal) => {})
 
     this.operationHandlers.set('file-saving', (data, terminal) => {
       // Success or errors should be shown
@@ -101,13 +99,9 @@ class TerminalOutputRouter {
       }
     })
 
-    this.operationHandlers.set('file-loading', (data, terminal) => {
-      return
-    })
+    this.operationHandlers.set('file-loading', (data, terminal) => {})
 
-    this.operationHandlers.set('directory-navigation', (data, terminal) => {
-      return
-    })
+    this.operationHandlers.set('directory-navigation', (data, terminal) => {})
 
     // Code execution: stream stdout then stderr from the raw REPL exec protocol.
     // Protocol: enter_raw_repl → exec_raw → OK<stdout>\x04<stderr>\x04> → exit_raw_repl

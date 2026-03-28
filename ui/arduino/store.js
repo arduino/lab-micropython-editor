@@ -206,7 +206,6 @@ async function store(state, emitter) {
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     terminalRouter = new TerminalOutputRouter(term)
-    terminalRouter.registerHandlers()
     terminalRouter.setHook('code-execution:before', (router) => {
       router.write('\r\n')
     })
@@ -317,7 +316,7 @@ async function store(state, emitter) {
     const startIndex = openFile.editor.editor.state.selection.ranges[0].from
     const endIndex = openFile.editor.editor.state.selection.ranges[0].to
     if (endIndex - startIndex > 0 && onlySelected) {
-      selectedCode = openFile.editor.editor.state.doc.toString().substring(startIndex, endIndex)
+      const selectedCode = openFile.editor.editor.state.doc.toString().substring(startIndex, endIndex)
       // Checking to see if the user accidentally double-clicked some whitespace
       // While a random selection would yield an error when executed, 
       // selecting only whitespace would not and the user would have no feedback.
@@ -362,7 +361,12 @@ async function store(state, emitter) {
     if (state.isConnected) {
       if (terminalRouter) terminalRouter.setOperation('stop')
       await serialBridge.getPrompt()
-      await sleep(150) // drain in-flight IPC data before opening the REPL
+      // getPrompt() resolves via ipcRenderer.invoke (microtask), but the serial-on-data
+      // events carrying the stop output (traceback, >>>) are pushed events (macrotasks)
+      // that may still be queued. Yield here so those events fire and are routed through
+      // the 'stop' handler before we flip to 'repl-interactive'. 150ms is empirical —
+      // enough to drain the IPC queue even on a slow board or loaded system.
+      await sleep(150)
       if (terminalRouter && terminalRouter.currentOperation === 'stop') {
         terminalRouter.setOperation('repl-interactive')
       }
@@ -603,7 +607,11 @@ async function store(state, emitter) {
             ''
           )
         )
-        await sleep(150) // drain in-flight IPC data before opening the REPL
+        // ilistFiles resolves via ipcRenderer.invoke (microtask), but serial-on-data
+        // events carrying the file listing protocol bytes (>OK[...]) are pushed events
+        // (macrotasks) that may still be queued. Yield here so those events fire and are
+        // absorbed by the 'file-listing' handler before we flip to 'repl-interactive'.
+        await sleep(150)
         if (terminalRouter) terminalRouter.setOperation('repl-interactive')
       } catch (e) {
         state.boardFiles = []
@@ -691,7 +699,7 @@ async function store(state, emitter) {
             emitter.emit('render')
             return
           }
-          // TODO: Remove existing file
+          // fs_save opens with 'wb' which truncates the existing file — no explicit removal needed
         }
         if (terminalRouter) terminalRouter.setOperation('file-saving')
         await serialBridge.saveFileContent(
@@ -718,7 +726,7 @@ async function store(state, emitter) {
           emitter.emit('render')
           return
         }
-        // TODO: Remove existing file
+          // disk.saveFileContent uses fs.writeFile which truncates — no explicit removal needed
       }
       await disk.saveFileContent(
         disk.getFullPath(

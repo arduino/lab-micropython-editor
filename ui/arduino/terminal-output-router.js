@@ -34,6 +34,10 @@ function stripNoise(str, ...keys) {
   return keys.reduce((s, key) => s.replace(NOISE[key], ''), str)
 }
 
+function classifyError(str) {
+  return str.includes('KeyboardInterrupt') ? 'warning' : 'error'
+}
+
 // Semantic ANSI colour levels mapped to the terminal theme palette.
 // Each function wraps text in the appropriate escape sequence and resets after.
 const ANSI = {
@@ -59,6 +63,7 @@ class TerminalOutputRouter {
       this.terminal.scrollToBottom()
     }
     this.currentOperation = null
+    this.registerHandlers()
   }
 
   setHook(event, fn) {
@@ -83,7 +88,7 @@ class TerminalOutputRouter {
                        : kiIndex >= 0 ? kiIndex : 0
       const errorContent = this._stopBuffer.slice(errorStart)
       if (errorContent.trim().length > 0) {
-        const level = errorContent.includes('KeyboardInterrupt') ? 'warning' : 'error'
+        const level = classifyError(errorContent)
         this.terminal.write(ANSI[level](errorContent))
         this.terminal.scrollToBottom()
       }
@@ -100,6 +105,12 @@ class TerminalOutputRouter {
       this._stderrBuffer = ''
     }
     this._stopBuffer = ''
+    // Flush any partially-buffered traceback (e.g. board disconnected before >>> arrived)
+    if (this._replErrorBuffer !== null && this._replErrorBuffer.trim().length > 0) {
+      const level = classifyError(this._replErrorBuffer)
+      this.terminal.write(ANSI[level](this._replErrorBuffer))
+      this.terminal.scrollToBottom()
+    }
     this._replErrorBuffer = null
     if (customHandler) {
       this.operationHandlers.set(operationType, customHandler)
@@ -118,6 +129,9 @@ class TerminalOutputRouter {
       const handler = this.operationHandlers.get(this.currentOperation)
       handler(data, this.terminal)
     } else {
+      if (this.currentOperation) {
+        console.warn(`TerminalOutputRouter: no handler registered for operation '${this.currentOperation}' — falling through to defaultHandler`)
+      }
       this.defaultHandler(data)
     }
   }
@@ -176,7 +190,7 @@ class TerminalOutputRouter {
           // End of stderr: colorise based on content and emit
           this._stderrBuffer += output
           if (this._stderrBuffer.trim().length > 0) {
-            const level = this._stderrBuffer.includes('KeyboardInterrupt') ? 'warning' : 'error'
+            const level = classifyError(this._stderrBuffer)
             terminal.write(ANSI[level](this._stderrBuffer))
             terminal.scrollToBottom()
           }
@@ -233,7 +247,7 @@ class TerminalOutputRouter {
         if (promptIndex !== -1) {
           const errorContent = this._replErrorBuffer.slice(0, promptIndex)
           const prompt = this._replErrorBuffer.slice(promptIndex)
-          const level = errorContent.includes('KeyboardInterrupt') ? 'warning' : 'error'
+          const level = classifyError(errorContent)
           if (errorContent.trim().length > 0) terminal.write(ANSI[level](errorContent))
           terminal.write(prompt)
           terminal.scrollToBottom()
@@ -249,7 +263,7 @@ class TerminalOutputRouter {
         const promptIndex = rest.search(/>>>\s*/)
         if (promptIndex !== -1) {
           const errorContent = rest.slice(0, promptIndex)
-          const level = errorContent.includes('KeyboardInterrupt') ? 'warning' : 'error'
+          const level = classifyError(errorContent)
           if (errorContent.trim().length > 0) terminal.write(ANSI[level](errorContent))
           terminal.write(rest.slice(promptIndex))
         } else {

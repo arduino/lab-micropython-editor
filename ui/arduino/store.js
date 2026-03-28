@@ -127,8 +127,10 @@ async function store(state, emitter) {
       state.selectedFiles = []
     }
     if(view === 'file-manager') {
-      emitter.emit('stop')
-      await sleep(250) // Give the board time to stop the program and return to the prompt
+      if (state.isConnected) {
+        terminalRouter.setOperation('suppress')
+        await serialBridge.getPrompt()
+      }
       emitter.emit('refresh-files')
     }
     state.view = view
@@ -186,10 +188,10 @@ async function store(state, emitter) {
     } catch(e) {
       console.error(e)
     }
-    // Stop whatever is going on
-    // Recover from getting stuck in raw repl
-    
-    await serialBridge.getPrompt()
+    // Stop whatever is going on, recover from raw repl
+    // Suppress stream noise — we'll write the greeting directly after terminal is bound
+    if (terminalRouter) terminalRouter.setOperation('suppress')
+    const connectGreeting = await serialBridge.getPrompt()
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
@@ -205,6 +207,21 @@ async function store(state, emitter) {
     let term = state.cache(XTerm, 'terminal').term
     terminalRouter = new TerminalOutputRouter(term)
     terminalRouter.registerHandlers()
+    terminalRouter.setHook('code-execution:before', (router) => {
+      router.write('\r\n')
+    })
+    terminalRouter.setHook('code-execution:after', (router) => {
+      router.write('>>> ')
+    })
+    terminalRouter.setHook('stop:before', (router) => {
+      router.write('\r\n\x1b[2m--- Execution halted ---\x1b[0m\r\n')
+    })
+    terminalRouter.setHook('stop:after', (router) => {
+      router.write('>>> ')
+    })
+    terminalRouter.setHook('reset:before', (router) => {
+      router.write('\r\n\x1b[2m--- Resetting board ---\x1b[0m\r\n')
+    })
     if (!state.isTerminalBound) {
       state.isTerminalBound = true
       term.onData((data) => {
@@ -218,6 +235,11 @@ async function store(state, emitter) {
       // term.scrollToBottom()
       terminalRouter.routeData(data)
     })
+    if (connectGreeting) {
+      const mpyIndex = connectGreeting.indexOf('MicroPython')
+      const greeting = mpyIndex !== -1 ? connectGreeting.slice(mpyIndex) : connectGreeting
+      terminalRouter.write(greeting)
+    }
     terminalRouter.setOperation('repl-interactive')
     // Update the UI when the conncetion is closed
     // This may happen when unplugging the board
@@ -298,13 +320,18 @@ async function store(state, emitter) {
     emitter.emit('render')
 
     try {
-      terminalRouter.setOperation('code-execution')
+      terminalRouter.setOperation('suppress')
       await serialBridge.getPrompt()
+      terminalRouter.setOperation('code-execution')
       await serialBridge.run(code)
     } catch(e) {
       log('error', e)
     } finally {
-      terminalRouter.setOperation('repl-interactive')
+      // Only reset to repl-interactive if stop/reset hasn't already taken over.
+      // If the user pressed stop, the stop handler owns the operation from here.
+      if (terminalRouter.currentOperation === 'code-execution') {
+        terminalRouter.setOperation('repl-interactive')
+      }
     }
     
     el = document.querySelector('.cm-content')
@@ -321,9 +348,13 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     emitter.emit('render')
     if (state.isConnected) {
+      terminalRouter.setOperation('stop')
       await serialBridge.getPrompt()
+      await sleep(150) // drain in-flight IPC data before opening the REPL
+      if (terminalRouter.currentOperation === 'stop') {
+        terminalRouter.setOperation('repl-interactive')
+      }
     }
-
   })
   emitter.on('reset', async () => {
     log('reset')
@@ -333,7 +364,9 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     await resizeTerminal()
     emitter.emit('render')
+    terminalRouter.setOperation('reset')
     await serialBridge.reset()
+    terminalRouter.setOperation('repl-interactive')
     emitter.emit('update-files')
     emitter.emit('render')
   })
@@ -420,6 +453,7 @@ async function store(state, emitter) {
     // Check if the current full path exists
     let fullPathExists = false
     if (openFile.source == 'board') {
+      if (terminalRouter) terminalRouter.setOperation('suppress')
       await serialBridge.getPrompt()
       fullPathExists = await serialBridge.fileExists(
         serialBridge.getFullPath(
@@ -478,8 +512,9 @@ async function store(state, emitter) {
     const contents = openFile.editor.editor.state.doc.toString()
     try {
       if (openFile.source == 'board') {
-        terminalRouter.setOperation('file-saving')
+        terminalRouter.setOperation('suppress')
         await serialBridge.getPrompt()
+        terminalRouter.setOperation('file-saving')
         await serialBridge.saveFileContent(
           serialBridge.getFullPath(
             state.boardNavigationRoot,
@@ -557,6 +592,7 @@ async function store(state, emitter) {
             ''
           )
         )
+        await sleep(150) // drain in-flight IPC data before opening the REPL
         terminalRouter.setOperation('repl-interactive')
       } catch (e) {
         state.boardFiles = []
@@ -801,6 +837,8 @@ async function store(state, emitter) {
       return
     }
 
+    if (terminalRouter) terminalRouter.setOperation('suppress')
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       if (file.type == 'folder') {
@@ -842,6 +880,7 @@ async function store(state, emitter) {
       }
     }
 
+    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
     emitter.emit('refresh-files')
     state.selectedFiles = []
     state.isRemoving = false
@@ -1245,6 +1284,7 @@ async function store(state, emitter) {
         // load content and append it to the list of files to open
         let file = null
         if (selectedFile.source == 'board') {
+          if (terminalRouter) terminalRouter.setOperation('file-loading')
           // fileContent receives a raw buffer from loadFile()
           const fileContent = await serialBridge.loadFile(
             serialBridge.getFullPath(
@@ -1309,6 +1349,7 @@ async function store(state, emitter) {
     state.view = 'editor'
     updateMenu()
     state.isLoadingFiles = false
+    if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
     emitter.emit('render')
   })
   emitter.on('open-file', (source, file) => {
@@ -1329,6 +1370,7 @@ async function store(state, emitter) {
     emitter.emit('render')
 
     // Check which files will be overwritten on the board
+    if (terminalRouter) terminalRouter.setOperation('file-listing')
     const willOverwrite = await checkOverwrite({
       source: 'board',
       fileNames: state.selectedFiles.map(f => f.fileName),
@@ -1352,6 +1394,8 @@ async function store(state, emitter) {
       }
     }
 
+    if (terminalRouter) terminalRouter.setOperation('file-uploading')
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       const srcPath = disk.getFullPath(
@@ -1364,6 +1408,7 @@ async function store(state, emitter) {
         state.boardNavigationPath,
         file.fileName
       )
+
       if (file.type == 'folder') {
         await uploadFolder(
           srcPath, destPath,
@@ -1371,7 +1416,7 @@ async function store(state, emitter) {
             state.transferringProgress = `${fileName}: ${progress}`
             emitter.emit('render')
           }
-          
+
         )
         state.transferringProgress = ''
       } else {
@@ -1386,6 +1431,7 @@ async function store(state, emitter) {
       }
     }
 
+    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
     state.isTransferring = false
     state.selectedFiles = []
     emitter.emit('refresh-files')
@@ -1420,6 +1466,8 @@ async function store(state, emitter) {
       }
     }
 
+    if (terminalRouter) terminalRouter.setOperation('file-loading')
+
     for (let i in state.selectedFiles) {
       const file = state.selectedFiles[i]
       const srcPath = serialBridge.getFullPath(
@@ -1451,6 +1499,7 @@ async function store(state, emitter) {
       }
     }
 
+    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
     state.isTransferring = false
     state.selectedFiles = []
     emitter.emit('refresh-files')
@@ -1758,15 +1807,14 @@ async function getBoardNavigationPath() {
 }
 
 async function getBoardFiles(path) {
-  terminalRouter.setOperation('directory-navigation')
   await serialBridge.getPrompt()
   let files = await serialBridge.ilistFiles(path)
+
   files = files.map(f => ({
     fileName: f[0],
     type: f[1] === 0x4000 ? 'folder' : 'file'
   }))
   files = files.sort(sortFilesAlphabetically)
-  terminalRouter.setOperation('repl-interactive')
   return files
 }
 
@@ -1791,6 +1839,11 @@ async function checkOverwrite({ fileNames = [], parentPath, source }) {
     files = await getBoardFiles(parentPath)
   } else {
     files = await getDiskFiles(parentPath)
+  }
+  // Board filesystem (FAT) is case-insensitive, so compare lowercase for board source
+  if (source === 'board') {
+    const lowerNames = fileNames.map(n => n.toLowerCase())
+    return files.filter((f) => lowerNames.indexOf(f.fileName.toLowerCase()) !== -1)
   }
   return files.filter((f) => fileNames.indexOf(f.fileName) !== -1)
 }

@@ -169,8 +169,16 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     win.webContents.send('check-before-close')
   })
 
-  ipcMain.handle('serial', (event, command, ...args) => {
+  ipcMain.handle('serial', async (event, command, ...args) => {
     // console.debug('Handling IPC serial command:', command, ...args)
-    return serial[command](...args)
+    try {
+      return await serial[command](...args)
+    } catch (e) {
+      // 'pre stop' and 're-run' are expected cancellations from micropython.js
+      // when a running operation is interrupted by stop() or a subsequent run().
+      // Resolve with null so Electron doesn't log these as IPC errors.
+      if (e.message === 'pre stop' || e.message === 're-run') return null
+      throw e
+    }
   })
 }

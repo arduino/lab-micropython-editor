@@ -701,6 +701,15 @@ async function store(state, emitter) {
           }
           // fs_save opens with 'wb' which truncates the existing file — no explicit removal needed
         }
+        const boardTabConflicts = findTabConflicts('board', state.boardNavigationPath, [fileNameParameter])
+        if (!willOverwrite && boardTabConflicts.length > 0) {
+          const confirmAction = await confirmDialog(`${fileNameParameter} is open in the editor with unsaved changes. Creating this file will overwrite the open version.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+          if (!confirmAction) {
+            state.creatingFile = null
+            emitter.emit('render')
+            return
+          }
+        }
         if (terminalRouter) terminalRouter.setOperation('file-saving')
         await serialBridge.saveFileContent(
           serialBridge.getFullPath(
@@ -710,6 +719,14 @@ async function store(state, emitter) {
           ),
           newFileContent
         )
+        for (const tab of boardTabConflicts) {
+          tab.editor.editor.dispatch({
+            changes: { from: 0, to: tab.editor.editor.state.doc.length, insert: newFileContent }
+          })
+          tab.editor.content = newFileContent
+          tab.parentFolder = state.boardNavigationPath
+          tab.hasChanges = false
+        }
       } finally {
         if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       }
@@ -728,6 +745,15 @@ async function store(state, emitter) {
         }
           // disk.saveFileContent uses fs.writeFile which truncates — no explicit removal needed
       }
+      const diskTabConflicts = findTabConflicts('disk', state.diskNavigationPath, [fileNameParameter])
+      if (!willOverwrite && diskTabConflicts.length > 0) {
+        const confirmAction = await confirmDialog(`${fileNameParameter} is open in the editor with unsaved changes. Creating this file will overwrite the open version.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        if (!confirmAction) {
+          state.creatingFile = null
+          emitter.emit('render')
+          return
+        }
+      }
       await disk.saveFileContent(
         disk.getFullPath(
           state.diskNavigationRoot,
@@ -736,6 +762,14 @@ async function store(state, emitter) {
         ),
         newFileContent
       )
+      for (const tab of diskTabConflicts) {
+        tab.editor.editor.dispatch({
+          changes: { from: 0, to: tab.editor.editor.state.doc.length, insert: newFileContent }
+        })
+        tab.editor.content = newFileContent
+        tab.parentFolder = state.diskNavigationPath
+        tab.hasChanges = false
+      }
     }
 
     setTimeout(() => {
@@ -1076,6 +1110,19 @@ async function store(state, emitter) {
     if (!value || openFile.fileName == value) {
       state.renamingTab = null
       state.isSaving = false
+      emitter.emit('render')
+      return
+    }
+
+    // Block rename if another open tab already uses the target name at the destination.
+    // For existing files the destination is the current parentFolder; for new unsaved files
+    // it will be the active navigation path when saved.
+    const destFolder = openFile.parentFolder !== null
+      ? openFile.parentFolder
+      : openFile.source === 'board' ? state.boardNavigationPath : state.diskNavigationPath
+    if (findTabConflicts(openFile.source, destFolder, [value], openFile.id).length > 0) {
+      await confirmDialog(`${value} is already open in another tab. Please choose a different name.`, 'OK')
+      state.renamingTab = null
       emitter.emit('render')
       return
     }
@@ -1434,6 +1481,25 @@ async function store(state, emitter) {
         if (!confirmAction) return
       }
 
+      // Collect all open board tabs matching the upload destination — covers both
+      // files already on the board (caught by checkOverwrite) and unsaved new tabs.
+      const affectedTabs = findTabConflicts(
+        'board',
+        state.boardNavigationPath,
+        state.selectedFiles.map(f => f.fileName)
+      )
+
+      // Warn separately about unsaved tabs not already covered by the board overwrite dialog.
+      const overwrittenNames = new Set(willOverwrite.map(f => f.fileName.toLowerCase()))
+      const tabOnlyConflicts = affectedTabs.filter(f => !overwrittenNames.has(f.fileName.toLowerCase()))
+      if (tabOnlyConflicts.length > 0) {
+        let message = `The following files are open in the editor with unsaved changes and will conflict with this upload:\n\n`
+        tabOnlyConflicts.forEach(f => message += `${f.fileName}\n`)
+        message += `\nUploading will overwrite the open version. Are you sure you want to proceed?`
+        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+        if (!confirmAction) return
+      }
+
       if (terminalRouter) terminalRouter.setOperation('file-uploading')
 
       for (let i in state.selectedFiles) {
@@ -1469,6 +1535,21 @@ async function store(state, emitter) {
         }
       }
       state.selectedFiles = []
+
+      // Reload open tabs that were overwritten so they reflect the uploaded content.
+      for (const tab of affectedTabs) {
+        if (terminalRouter) terminalRouter.setOperation('file-loading')
+        const fileContent = await serialBridge.loadFile(
+          serialBridge.getFullPath(state.boardNavigationRoot, state.boardNavigationPath, tab.fileName)
+        )
+        const content = new TextDecoder('utf-8').decode(new Uint8Array(fileContent))
+        tab.editor.editor.dispatch({
+          changes: { from: 0, to: tab.editor.editor.state.doc.length, insert: content }
+        })
+        tab.editor.content = content
+        tab.parentFolder = state.boardNavigationPath
+        tab.hasChanges = false
+      }
     } finally {
       state.transferringProgress = ''
       state.isTransferring = false
@@ -1780,6 +1861,21 @@ async function store(state, emitter) {
     state.openFiles.push(newFile)
     state.editingFile = newFile.id
     return true
+  }
+
+  // Returns open tabs that conflict with the given filenames at a destination folder.
+  // parentFolder === null tabs are included — they are unsaved new files that will land
+  // in destFolder when saved. Case-insensitive for board (FAT filesystem).
+  function findTabConflicts(source, destFolder, fileNames, excludeId = null) {
+    const eq = source === 'board'
+      ? (a, b) => a.toLowerCase() === b.toLowerCase()
+      : (a, b) => a === b
+    return state.openFiles.filter(f =>
+      f.id !== excludeId &&
+      f.source === source &&
+      (f.parentFolder === destFolder || f.parentFolder === null) &&
+      fileNames.some(name => eq(f.fileName, name))
+    )
   }
 
 }

@@ -234,6 +234,12 @@ async function store(state, emitter) {
       // term.scrollToBottom()
       terminalRouter.routeData(data)
     })
+    // Suppress queued serial-on-data events from getPrompt() recovery before going live.
+    // getPrompt() resolves via ipcRenderer.invoke (microtask), but raw REPL exit bytes
+    // (\x04, >, >>>) are pushed events (macrotasks) that may still be queued at this point.
+    // Start suppressed, write the greeting directly, then yield so those events are absorbed
+    // before flipping to repl-interactive.
+    terminalRouter.setOperation('suppress')
     if (connectGreeting) {
       const mpyIndex = connectGreeting.indexOf('MicroPython')
       const greeting = mpyIndex !== -1 ? connectGreeting.slice(mpyIndex) : connectGreeting
@@ -245,6 +251,7 @@ async function store(state, emitter) {
         terminalRouter.write(ANSI.info(greeting))
       }
     }
+    await sleep(150)
     terminalRouter.setOperation('repl-interactive')
     // Update the UI when the conncetion is closed
     // This may happen when unplugging the board
@@ -529,7 +536,7 @@ async function store(state, emitter) {
         if (terminalRouter) terminalRouter.setOperation('suppress')
         await serialBridge.getPrompt()
         if (terminalRouter) terminalRouter.setOperation('file-saving')
-        await serialBridge.saveFileContent(
+        await serialBridge.saveFileContentAtomic(
           serialBridge.getFullPath(
             state.boardNavigationRoot,
             openFile.parentFolder,
@@ -554,6 +561,10 @@ async function store(state, emitter) {
 
       openFile.hasChanges = false
       saved = true
+    } catch (e) {
+      // Disconnect during save: the 'disconnected' event already shows the notification
+      // and resets UI. Only surface errors that occur while still connected.
+      if (state.isConnected) console.error('Save failed:', e)
     } finally {
       state.isSaving = false
       state.savingProgress = 0
@@ -711,7 +722,7 @@ async function store(state, emitter) {
           }
         }
         if (terminalRouter) terminalRouter.setOperation('file-saving')
-        await serialBridge.saveFileContent(
+        await serialBridge.saveFileContentAtomic(
           serialBridge.getFullPath(
             state.boardNavigationRoot,
             state.boardNavigationPath,
@@ -727,6 +738,8 @@ async function store(state, emitter) {
           tab.parentFolder = state.boardNavigationPath
           tab.hasChanges = false
         }
+      } catch (e) {
+        if (state.isConnected) console.error('Create file failed:', e)
       } finally {
         if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       }
@@ -1208,7 +1221,7 @@ async function store(state, emitter) {
             if (openFile.source == 'board') {
               await serialBridge.getPrompt()
               if (terminalRouter) terminalRouter.setOperation('file-saving')
-              await serialBridge.saveFileContent(
+              await serialBridge.saveFileContentAtomic(
                 serialBridge.getFullPath(
                   state.boardNavigationRoot,
                   openFile.parentFolder,
@@ -1274,7 +1287,7 @@ async function store(state, emitter) {
           if (openFile.source == 'board') {
             await serialBridge.getPrompt()
             if (terminalRouter) terminalRouter.setOperation('file-saving')
-            await serialBridge.saveFileContent(
+            await serialBridge.saveFileContentAtomic(
               serialBridge.getFullPath(
                 state.boardNavigationRoot,
                 openFile.parentFolder,

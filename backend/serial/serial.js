@@ -56,8 +56,15 @@ class Serial {
             this.win.webContents.send('serial-on-data', data)
         })
 
+        // Prevent uncaught-exception dialogs when the OS rejects a write to a
+        // disconnected device (ENXIO). The 'close' event follows and handles cleanup.
+        this.board.serial.on('error', (err) => {
+            console.error('Serial port error:', err.message)
+        })
+
         this.board.serial.on('close', () => {
             this.board.serial.removeAllListeners("data")
+            this.board.serial.removeAllListeners("error")
             this.board.serial.removeAllListeners("close")
             this.win.webContents.send('serial-on-connection-closed')
         })
@@ -84,6 +91,33 @@ class Serial {
         return await this.board.fs_save(content || ' ', filename, (progress) => {
             this.win.webContents.send('serial-on-file-save-progress', progress)
         })
+    }
+
+    async saveFileContentAtomic(filename, content) {
+        const tmp = filename + '.tmp'
+        // Race fs_save against the serial port close event. micropython.js waits for board
+        // responses and does not handle port close internally — without this race, a mid-save
+        // disconnect causes fs_save to hang indefinitely, blocking the IPC invoke reply.
+        let onClose
+        const closeRace = new Promise((_, reject) => {
+            onClose = () => reject(new Error('Serial port closed during save'))
+            this.board.serial.once('close', onClose)
+        })
+        try {
+            await Promise.race([
+                this.board.fs_save(content || ' ', tmp, (progress) => {
+                    this.win.webContents.send('serial-on-file-save-progress', progress)
+                }),
+                closeRace
+            ])
+            this.board.serial.removeListener('close', onClose)
+            await this.board.fs_rename(tmp, filename)
+        } catch (e) {
+            this.board.serial.removeListener('close', onClose)
+            // Best-effort cleanup — do not await, a disconnected board will hang fs_rm
+            this.board.fs_rm(tmp).catch(() => {})
+            throw e
+        }
     }
 
     async uploadFile(src, dest) {

@@ -43,7 +43,6 @@ function classifyError(str) {
 const ANSI = {
   error:   (text) => `\x1b[31m${text}\x1b[0m`,  // red    #ff6b6b
   warning: (text) => `\x1b[33m${text}\x1b[0m`,  // yellow #ffd166
-  success: (text) => `\x1b[32m${text}\x1b[0m`,  // teal   #4ecdc4
   info:    (text) => `\x1b[36m${text}\x1b[0m`,  // cyan   #00d4aa
   muted:   (text) => `\x1b[2m${text}\x1b[0m`,   // dim
 }
@@ -137,9 +136,12 @@ class TerminalOutputRouter {
   }
 
   registerHandlers() {
-    // File listing should not produce output
+    // file-listing: ilistFiles produces >OK[...] protocol bytes — drop everything.
     this.operationHandlers.set('file-listing', (data, terminal) => {})
 
+    // file-saving: fs_save produces raw REPL protocol bytes that are already stripped
+    // by the file-uploading handler's noise patterns, but here we only care about errors.
+    // No stripNoise needed — the only relevant output is an error/traceback from the board.
     this.operationHandlers.set('file-saving', (data, terminal) => {
       const str = toStr(data)
       if (str.includes('Error') || str.includes('Traceback')) {
@@ -148,13 +150,18 @@ class TerminalOutputRouter {
       }
     })
 
+    // file-loading: fs_cat produces raw binary content returned via invoke, not serial-on-data.
+    // Anything arriving here is protocol noise — drop it.
     this.operationHandlers.set('file-loading', (data, terminal) => {})
 
+    // directory-navigation: path computation is local; any serial data arriving here is
+    // residual protocol noise from the preceding operation — drop it.
     this.operationHandlers.set('directory-navigation', (data, terminal) => {})
 
     // Code execution: stream stdout, buffer+colorise stderr from the raw REPL exec protocol.
     // Protocol: enter_raw_repl → exec_raw → OK<stdout>\x04<stderr>\x04> → exit_raw_repl
     // Phases: wait (buffer until OK) → stdout (stream) → stderr (buffer) → done (emit coloured)
+    // No stripNoise here — the protocol structure is parsed explicitly by phase.
     this.operationHandlers.set('code-execution', (data, terminal) => {
       let str = toStr(data)
 
@@ -200,7 +207,9 @@ class TerminalOutputRouter {
       }
     })
 
-    // File uploading: suppress >OK/protocol noise per chunk, show only errors
+    // file-uploading: fs_put sends chunks via raw REPL, each producing >OK protocol bytes.
+    // Strip rawOk (>OK per chunk), eot (\x04), rawReplEntry/banner/helpHint (enter/exit raw REPL),
+    // prompt/rawPrompt (>>> and bare >). Keep errors — a board write failure produces a Traceback.
     this.operationHandlers.set('file-uploading', (data, terminal) => {
       const str = toStr(data)
       const filtered = stripNoise(str, 'rawReplEntry', 'banner', 'helpHint', 'rawOk', 'eot', 'prompt', 'rawPrompt')
@@ -210,12 +219,16 @@ class TerminalOutputRouter {
       }
     })
 
-    // Suppress: silently drop all output, no hooks (used internally e.g. during getPrompt)
+    // suppress: intentional blackhole — used around getPrompt()/fileExists() calls where
+    // raw REPL entry/exit bytes would otherwise reach the terminal. No patterns needed.
     this.operationHandlers.set('suppress', () => {})
 
-    // Stop: buffer all chunks, flush+colorise in setOperation when leaving stop.
+    // stop: buffer all chunks, flush+colorise in setOperation when leaving stop.
     // Buffering is needed because KeyboardInterrupt arrives in a later chunk than
     // the start of the traceback, so per-chunk coloring produces partial output.
+    // Uses promptOnly (not prompt) to keep the \r\n before >>> — it separates the
+    // traceback from the prompt visually. rawOk not stripped here because stop output
+    // never contains >OK chunks (stop uses get_prompt, not exec_raw).
     this.operationHandlers.set('stop', (data, terminal) => {
       const str = toStr(data)
       const filtered = stripNoise(str, 'rawReplEntry', 'banner', 'helpHint', 'promptOnly', 'eot', 'rawPrompt')
@@ -224,8 +237,10 @@ class TerminalOutputRouter {
       }
     })
 
-    // Reset: colorise MPY: soft reboot line as info, strip banner/>>>
-    // (exit_raw_repl fires Ctrl+B before the actual reset, producing a spurious banner)
+    // reset: strip banner/helpHint (spurious Ctrl+B banner from exit_raw_repl) and prompt
+    // (>>> that follows the reboot). Uses prompt (not promptOnly) to also consume the
+    // preceding \r\n — the MPY: soft reboot line provides its own newline so none is needed.
+    // Passes remaining content through; MPY: lines are coloured info, everything else plain.
     this.operationHandlers.set('reset', (data, terminal) => {
       const str = toStr(data)
       const filtered = stripNoise(str, 'banner', 'helpHint', 'prompt')

@@ -191,8 +191,16 @@ async function store(state, emitter) {
     // Stop whatever is going on, recover from raw repl
     // Suppress stream noise — we'll write the greeting directly after terminal is bound
     if (terminalRouter) terminalRouter.setOperation('suppress')
-    const connectGreeting = await serialBridge.getPrompt()
-    console.log('connect greeting raw:', JSON.stringify(connectGreeting))
+    let connectGreeting
+    try {
+      connectGreeting = await serialBridge.getPrompt()
+    } catch(e) {
+      // Board timed out or disconnected during getPrompt() — the UI-level timeout
+      // (above) already shows the dialog; just bail out cleanly here.
+      console.error('getPrompt failed:', e)
+      clearTimeout(timeout_id)
+      return
+    }
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
@@ -207,6 +215,10 @@ async function store(state, emitter) {
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     terminalRouter = new TerminalOutputRouter(term)
+    // Suppress immediately so that any serial-on-data IPC events still queued from
+    // getPrompt()'s passThrough (macrotasks dispatched before this microtask chain
+    // resumes) are dropped rather than written raw to the terminal via defaultHandler.
+    terminalRouter.setOperation('suppress')
     terminalRouter.setHook('code-execution:before', (router) => {
       router.write('\r\n')
     })
@@ -231,16 +243,8 @@ async function store(state, emitter) {
       serialBridge.eval('\x02') // Send Ctrl+B to enter normal repl mode
     }
     serialBridge.onData((data) => {
-      // term.write(data)
-      // term.scrollToBottom()
       terminalRouter.routeData(data)
     })
-    // Suppress queued serial-on-data events from getPrompt() recovery before going live.
-    // getPrompt() resolves via ipcRenderer.invoke (microtask), but raw REPL exit bytes
-    // (\x04, >, >>>) are pushed events (macrotasks) that may still be queued at this point.
-    // Start suppressed, write the greeting directly, then yield so those events are absorbed
-    // before flipping to repl-interactive.
-    terminalRouter.setOperation('suppress')
     if (connectGreeting) {
       const mpyIndex = connectGreeting.indexOf('MicroPython')
       const greeting = mpyIndex !== -1 ? connectGreeting.slice(mpyIndex) : connectGreeting
@@ -340,15 +344,19 @@ async function store(state, emitter) {
     emitter.emit('render')
 
     try {
+      // suppress covers getPrompt() noise (Ctrl-C response, banner from step 1 passThrough
+      // bytes that escape the stop handler's noise patterns, etc.).
       if (terminalRouter) terminalRouter.setOperation('suppress')
       await serialBridge.getPrompt()
+      // code-execution before run(): micropython.js only forwards bytes from exec_raw
+      // with passThrough=true (user code), so enter_raw_repl/_checkRam bytes never
+      // arrive here regardless of mode. The handler receives OK+stdout+\x04+stderr+\x04>.
       if (terminalRouter) terminalRouter.setOperation('code-execution')
       await serialBridge.run(code)
     } catch(e) {
       log('error', e)
     } finally {
       // Only reset to repl-interactive if stop/reset hasn't already taken over.
-      // If the user pressed stop, the stop handler owns the operation from here.
       if (terminalRouter && terminalRouter.currentOperation === 'code-execution') {
         terminalRouter.setOperation('repl-interactive')
       }
@@ -389,17 +397,29 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     await resizeTerminal()
     emitter.emit('render')
-    // Suppress noise from stop() + exit_raw_repl() (KeyboardInterrupt, Ctrl+B banner).
-    // Only switch to 'reset' before the actual board reset so the handler sees only
-    // genuine reboot output — making the >>> trigger board-agnostic.
+    // Stay suppressed through prepareReset() AND the enter_raw_repl() ceremony inside
+    // doReset() — both produce protocol noise (KeyboardInterrupt, Ctrl+B banner, raw REPL
+    // entry bytes, interactive >>> echo) that must not reach the reset handler.
+    // onBeforeReset fires after the code write but before \x04 triggers the actual reboot,
+    // so the first genuine reboot bytes arrive while already in reset mode.
     if (terminalRouter) terminalRouter.setOperation('suppress')
-    await serialBridge.prepareReset()
-    if (terminalRouter) terminalRouter.setOperation('reset')
-    await serialBridge.doReset()
+    serialBridge.onBeforeReset(() => {
+      if (terminalRouter) terminalRouter.setOperation('reset')
+    })
+    try {
+      await serialBridge.prepareReset()
+      await serialBridge.doReset()
+    } catch (e) {
+      log('reset error:', e)
+    }
     // The reset handler owns the repl-interactive transition when the board sends >>>.
     // Sleep is a safety fallback if the board never completes the reboot (crash/hang).
+    // Also covers suppress — meaning onBeforeReset never fired (e.g. doReset threw early).
     await sleep(4000)
-    if (terminalRouter && terminalRouter.currentOperation === 'reset') {
+    if (terminalRouter && (
+      terminalRouter.currentOperation === 'reset' ||
+      terminalRouter.currentOperation === 'suppress'
+    )) {
       terminalRouter.setOperation('repl-interactive')
     }
     emitter.emit('update-files')
@@ -1483,7 +1503,6 @@ async function store(state, emitter) {
     log('upload-files')
     state.isTransferring = true
     emitter.emit('render')
-    log('files:', state.selectedFiles)
     try {
       // Check which files will be overwritten on the board
       if (terminalRouter) terminalRouter.setOperation('file-listing')

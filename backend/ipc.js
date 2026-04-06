@@ -1,6 +1,7 @@
 const fs = require('fs')
 const registerMenu = require('./menu.js')
 const serial = require('./serial/serial.js').sharedInstance
+const { MicroPythonError } = require('micropython.js')
 const { shell } = require('electron');
 
 const {
@@ -174,10 +175,14 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     try {
       return await serial[command](...args)
     } catch (e) {
-      // 'pre stop' and 're-run' are expected cancellations from micropython.js
-      // when a running operation is interrupted by stop() or a subsequent run().
-      // Resolve with null so Electron doesn't log these as IPC errors.
-      if (e.message === 'pre stop' || e.message === 're-run') return null
+      // Expected cancellations from micropython.js — operation interrupted by stop(),
+      // a subsequent run(), or a reset(). Resolve with null so Electron doesn't log
+      // these as IPC errors.
+      if (e instanceof MicroPythonError && (
+        e.code === MicroPythonError.INTERRUPTED_BY_STOP  ||
+        e.code === MicroPythonError.INTERRUPTED_BY_RERUN ||
+        e.code === MicroPythonError.INTERRUPTED_BY_RESET
+      )) return null
       throw e
     }
   })

@@ -42,11 +42,36 @@ class Serial {
 
     async prepareReset() {
         await this.board.stop()
-        await this.board.exit_raw_repl()
+        // exit_raw_repl() may timeout if the board is in an unexpected state.
+        // Don't let that block doReset() — the reset should still proceed.
+        try {
+            await this.board.exit_raw_repl()
+        } catch (e) {
+            console.warn('prepareReset: exit_raw_repl failed, proceeding anyway:', e.message)
+        }
     }
 
     async doReset() {
-        await this.board.reset()
+        // soft_reset may throw if enter_raw_repl times out (board in unexpected state).
+        // Fire the before-reset IPC event regardless so the router transitions to reset
+        // mode and the 4-second fallback in the editor can clean up correctly.
+        let fired = false
+        try {
+            await this.board.soft_reset(() => {
+                fired = true
+                this.win.webContents.send('serial-on-before-reset')
+            })
+            // After machine.soft_reset() via raw REPL the board comes back in raw REPL
+            // mode. Exit raw REPL with passThrough=true so the banner bytes (including
+            // \r\n>>> ) are forwarded to _dataCallback and reach the reset handler,
+            // which strips noise and auto-transitions to repl-interactive.
+            await this.board.exit_raw_repl(true)
+        } catch (e) {
+            console.warn('doReset: failed:', e.message)
+            if (!fired) {
+                this.win.webContents.send('serial-on-before-reset')
+            }
+        }
     }
 
     async reset() {
@@ -59,12 +84,19 @@ class Serial {
     }
 
     registerCallbacks() {
-        this.board.serial.on('data', (data) => {
+        // Route data through micropython.js rather than tapping the raw port directly.
+        // micropython.js forwards bytes here only when appropriate:
+        //   - interactive REPL bytes (no read_until active)
+        //   - user code output (exec_raw with passThrough=true)
+        //   - get_prompt step 1 bytes (passThrough=true, so stop tracebacks reach the handler)
+        // Internal protocol bytes (enter/exit raw REPL, _checkRam, fs_* etc.) are never
+        // forwarded — they are consumed silently inside micropython.js read_until calls.
+        this.board.setDataCallback((data) => {
             this.win.webContents.send('serial-on-data', data)
         })
 
-        // Prevent uncaught-exception dialogs when the OS rejects a write to a
-        // disconnected device (ENXIO). The 'close' event follows and handles cleanup.
+        // micropython.js registers its own 'error' handler in open() that cancels
+        // pending reads. This handler adds console logging for observability.
         this.board.serial.on('error', (err) => {
             console.error('Serial port error:', err.message)
         })
@@ -102,26 +134,15 @@ class Serial {
 
     async saveFileContentAtomic(filename, content) {
         const tmp = filename + '.tmp'
-        // Race fs_save against the serial port close event. micropython.js waits for board
-        // responses and does not handle port close internally — without this race, a mid-save
-        // disconnect causes fs_save to hang indefinitely, blocking the IPC invoke reply.
-        let onClose
-        const closeRace = new Promise((_, reject) => {
-            onClose = () => reject(new Error('Serial port closed during save'))
-            this.board.serial.once('close', onClose)
-        })
+        // micropython.js cancels in-flight reads via _cancelPendingReads on port close/error,
+        // so fs_save rejects cleanly on disconnect — no external race needed.
         try {
-            await Promise.race([
-                this.board.fs_save(content || ' ', tmp, (progress) => {
-                    this.win.webContents.send('serial-on-file-save-progress', progress)
-                }),
-                closeRace
-            ])
-            this.board.serial.removeListener('close', onClose)
+            await this.board.fs_save(content || ' ', tmp, (progress) => {
+                this.win.webContents.send('serial-on-file-save-progress', progress)
+            })
             await this.board.fs_rename(tmp, filename)
         } catch (e) {
-            this.board.serial.removeListener('close', onClose)
-            // Best-effort cleanup — do not await, a disconnected board will hang fs_rm
+            // Best-effort cleanup — fs_rm may fail if the board is disconnected; ignore.
             this.board.fs_rm(tmp).catch(() => {})
             throw e
         }

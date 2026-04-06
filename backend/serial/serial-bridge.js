@@ -37,6 +37,14 @@ const SerialBridge = {
   eval: (d) => {
     return ipcRenderer.invoke('serial', 'eval', d)
   },
+  onBeforeReset: (callback) => {
+    if (ipcRenderer.listeners("serial-on-before-reset").length > 0) {
+      ipcRenderer.removeAllListeners("serial-on-before-reset")
+    }
+    ipcRenderer.once('serial-on-before-reset', () => {
+      callback()
+    })
+  },
   onData: (callback) => {
     // Remove all previous listeners
     if (ipcRenderer.listeners("serial-on-data").length > 0) {

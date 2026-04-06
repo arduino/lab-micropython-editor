@@ -18,16 +18,20 @@ function toStr(data) {
 // Named noise patterns for raw REPL protocol and MicroPython banner fragments.
 // Centralised here so handlers stay readable and changes propagate everywhere.
 const NOISE = {
-  banner:       /MicroPython [^\r\n]+\r?\n?/g,
-  helpHint:     /Type "help\(\)" for more information\.\r?\n?/g,
+  banner:          /MicroPython [^\r\n]+\r?\n?/g,
+  helpHint:        /Type "help\(\)" for more information\.\r?\n?/g,
   // prompt: strips >>> including any preceding \r\n (use where that newline is pure noise)
-  prompt:       /(\r?\n)?>>>\s*/g,
+  prompt:          /(\r?\n)?>>>\s*/g,
   // promptOnly: strips >>> but keeps the preceding \r\n (use where it separates real content)
-  promptOnly:   />>>\s*/g,
-  eot:          /\x04/g,
-  rawPrompt:    /^>\s*\r?\n?/gm,
-  rawReplEntry: /raw REPL; CTRL-B to exit\r?\n?/g,
-  rawOk:        /(>OK)+/g,
+  promptOnly:      />>>\s*/g,
+  eot:             /\x04/g,
+  rawPrompt:       /^>\s*\r?\n?/gm,
+  rawReplEntry:    /raw REPL; CTRL-B to exit\r?\n?/g,
+  rawOk:           /(>OK)+/g,
+  // rawExecResponse: the OK\x04\x04 prefix that raw REPL sends at the start of an exec
+  // response (OK = started, first \x04 = end of stdout, second = end of stderr).
+  // Appears in the reset buffer when machine.soft_reset() is executed via raw REPL.
+  rawExecResponse: /OK\x04*/g,
 }
 
 function stripNoise(str, ...keys) {
@@ -80,13 +84,19 @@ class TerminalOutputRouter {
     // Residual stdout lines (e.g. print() output still in-flight when stop was triggered)
     // were already displayed during execution — skip them and show only the error context.
     if (this.currentOperation === 'stop' && this._stopBuffer.trim().length > 0) {
-      const tracebackIndex = this._stopBuffer.indexOf('Traceback')
-      const kiIndex = this._stopBuffer.indexOf('KeyboardInterrupt')
+      // Strip noise from the full accumulated buffer. Applying regexes on the complete
+      // string handles banner fragments that arrive split across serial chunks — e.g.
+      // "MicroPython v1.27.0 on 2025-12-09" in one chunk and "; ESP module with ESP8266"
+      // in the next. Per-chunk stripping would leave the tail fragment, which has no
+      // "MicroPython " prefix and evades the banner regex.
+      const stripped = stripNoise(this._stopBuffer, 'rawReplEntry', 'banner', 'helpHint', 'promptOnly', 'eot', 'rawPrompt')
+      const tracebackIndex = stripped.indexOf('Traceback')
+      const kiIndex = stripped.indexOf('KeyboardInterrupt')
       // Start from whichever error marker appears first; fall back to 0 if neither found
       const errorStart = tracebackIndex >= 0 && (kiIndex < 0 || tracebackIndex <= kiIndex)
                        ? tracebackIndex
                        : kiIndex >= 0 ? kiIndex : 0
-      const errorContent = this._stopBuffer.slice(errorStart)
+      const errorContent = stripped.slice(errorStart)
       if (errorContent.trim().length > 0) {
         const level = classifyError(errorContent)
         this.terminal.write(ANSI[level](errorContent))
@@ -228,15 +238,13 @@ class TerminalOutputRouter {
     // stop: buffer all chunks, flush+colorise in setOperation when leaving stop.
     // Buffering is needed because KeyboardInterrupt arrives in a later chunk than
     // the start of the traceback, so per-chunk coloring produces partial output.
-    // Uses promptOnly (not prompt) to keep the \r\n before >>> — it separates the
-    // traceback from the prompt visually. rawOk not stripped here because stop output
-    // never contains >OK chunks (stop uses get_prompt, not exec_raw).
+    // Raw bytes are accumulated without stripping — noise is stripped from the full
+    // buffer at flush time in setOperation(), so split banner fragments like
+    // "; ESP module with ESP8266" are reassembled and correctly matched by the regex.
+    // rawOk not stripped here because stop output never contains >OK chunks
+    // (stop uses get_prompt, not exec_raw).
     this.operationHandlers.set('stop', (data, terminal) => {
-      const str = toStr(data)
-      const filtered = stripNoise(str, 'rawReplEntry', 'banner', 'helpHint', 'promptOnly', 'eot', 'rawPrompt')
-      if (filtered.trim().length > 0) {
-        this._stopBuffer += filtered
-      }
+      this._stopBuffer += toStr(data)
     })
 
     // reset: buffer all reboot output until '>>> ' arrives, then strip noise and display.
@@ -255,7 +263,10 @@ class TerminalOutputRouter {
       const content = this._resetBuffer.slice(0, promptIdx)
       this._resetBuffer = ''
 
-      const filtered = stripNoise(content, 'banner', 'helpHint')
+      // Strip raw REPL exec response artifacts (OK\x04\x04 from machine.soft_reset()
+      // running inside raw REPL) and the raw REPL re-entry line. Keep the MicroPython
+      // banner and helpHint — they confirm the firmware version after reboot.
+      const filtered = stripNoise(content, 'rawExecResponse', 'rawReplEntry', 'rawPrompt')
       if (filtered.trim().length > 0) {
         terminal.write(ANSI.info(filtered))
         terminal.scrollToBottom()

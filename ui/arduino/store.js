@@ -192,6 +192,7 @@ async function store(state, emitter) {
     // Suppress stream noise — we'll write the greeting directly after terminal is bound
     if (terminalRouter) terminalRouter.setOperation('suppress')
     const connectGreeting = await serialBridge.getPrompt()
+    console.log('connect greeting raw:', JSON.stringify(connectGreeting))
     clearTimeout(timeout_id)
     // Connected and ready
     state.isConnecting = false
@@ -249,6 +250,7 @@ async function store(state, emitter) {
         terminalRouter.write(promptMatch[2])
       } else {
         terminalRouter.write(ANSI.info(greeting))
+        terminalRouter.write('>>> ')
       }
     }
     await sleep(150)
@@ -387,9 +389,19 @@ async function store(state, emitter) {
     emitter.emit('open-panel')
     await resizeTerminal()
     emitter.emit('render')
+    // Suppress noise from stop() + exit_raw_repl() (KeyboardInterrupt, Ctrl+B banner).
+    // Only switch to 'reset' before the actual board reset so the handler sees only
+    // genuine reboot output — making the >>> trigger board-agnostic.
+    if (terminalRouter) terminalRouter.setOperation('suppress')
+    await serialBridge.prepareReset()
     if (terminalRouter) terminalRouter.setOperation('reset')
-    await serialBridge.reset()
-    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
+    await serialBridge.doReset()
+    // The reset handler owns the repl-interactive transition when the board sends >>>.
+    // Sleep is a safety fallback if the board never completes the reboot (crash/hang).
+    await sleep(4000)
+    if (terminalRouter && terminalRouter.currentOperation === 'reset') {
+      terminalRouter.setOperation('repl-interactive')
+    }
     emitter.emit('update-files')
     emitter.emit('render')
   })
@@ -1471,7 +1483,7 @@ async function store(state, emitter) {
     log('upload-files')
     state.isTransferring = true
     emitter.emit('render')
-
+    log('files:', state.selectedFiles)
     try {
       // Check which files will be overwritten on the board
       if (terminalRouter) terminalRouter.setOperation('file-listing')

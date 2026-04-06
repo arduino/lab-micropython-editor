@@ -56,6 +56,7 @@ class TerminalOutputRouter {
     this._execBuffer = ''
     this._stderrBuffer = ''
     this._stopBuffer = ''
+    this._resetBuffer = ''
     this._replErrorBuffer = null  // null = not buffering; string = buffering traceback
     this.defaultHandler = (data) => {
       this.terminal.write(data)
@@ -104,6 +105,7 @@ class TerminalOutputRouter {
       this._stderrBuffer = ''
     }
     this._stopBuffer = ''
+    this._resetBuffer = ''
     // Flush any partially-buffered traceback (e.g. board disconnected before >>> arrived)
     if (this._replErrorBuffer !== null && this._replErrorBuffer.trim().length > 0) {
       const level = classifyError(this._replErrorBuffer)
@@ -237,17 +239,30 @@ class TerminalOutputRouter {
       }
     })
 
-    // reset: strip banner/helpHint (spurious Ctrl+B banner from exit_raw_repl) and prompt
-    // (>>> that follows the reboot). Uses prompt (not promptOnly) to also consume the
-    // preceding \r\n — the MPY: soft reboot line provides its own newline so none is needed.
-    // Passes remaining content through; MPY: lines are coloured info, everything else plain.
+    // reset: buffer all reboot output until '>>> ' arrives, then strip noise and display.
+    //
+    // store.js suppresses stop()/exit_raw_repl() output before entering this mode, so
+    // every byte seen here is genuine reboot output. Any '>>> ' is therefore the final
+    // prompt — no board-specific heuristics needed.
+    //
+    // Strip the reboot banner and helpHint, display only MPY: reboot lines in cyan,
+    // write '>>> ', and transition to repl-interactive.
     this.operationHandlers.set('reset', (data, terminal) => {
-      const str = toStr(data)
-      const filtered = stripNoise(str, 'banner', 'helpHint', 'prompt')
-      if (filtered.length > 0) {
-        terminal.write(filtered.includes('MPY:') ? ANSI.info(filtered) : filtered)
+      this._resetBuffer += toStr(data)
+      const promptIdx = this._resetBuffer.search(/>>>\s*/)
+      if (promptIdx === -1) return
+
+      const content = this._resetBuffer.slice(0, promptIdx)
+      this._resetBuffer = ''
+
+      const filtered = stripNoise(content, 'banner', 'helpHint')
+      if (filtered.trim().length > 0) {
+        terminal.write(ANSI.info(filtered))
         terminal.scrollToBottom()
       }
+      terminal.write('>>> ')
+      terminal.scrollToBottom()
+      this.setOperation('repl-interactive')
     })
 
     // Interactive REPL: pass through normally, but detect tracebacks and colorise them.

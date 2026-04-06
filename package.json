@@ -13,10 +13,10 @@
     "postinstall": "npm run post-set-shell && npm run rebuild"
   },
   "devDependencies": {
+    "@electron/notarize": "^2.2.1",
+    "@electron/rebuild": "^3.2.13",
     "electron": "^19.0.10",
     "electron-builder": "^23.3.3",
-    "@electron/rebuild": "^3.2.13",
-    "@electron/notarize": "^2.2.1",
     "is-ci": "^3.0.1"
   },
   "build": {
@@ -52,8 +52,8 @@
     "browserify": "^17.0.1",
     "choo": "^7.1.0",
     "codemirror": "^6.0.2",
-    "esbuild": "^0.25.9",
-    "micropython.js": "github:arduino/micropython.js#v1.5.2"
+    "micropython.js": "github:arduino/micropython.js#v1.5.2",
+    "esbuild": "^0.25.9"
   },
   "engines": {
     "node": ">=20"

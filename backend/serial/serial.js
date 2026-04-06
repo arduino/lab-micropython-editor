@@ -40,11 +40,18 @@ class Serial {
         return Promise.resolve()
     }
 
-    async reset() {
+    async prepareReset() {
         await this.board.stop()
         await this.board.exit_raw_repl()
+    }
+
+    async doReset() {
         await this.board.reset()
-        return Promise.resolve()
+    }
+
+    async reset() {
+        await this.prepareReset()
+        await this.doReset()
     }
 
     async eval(d) {

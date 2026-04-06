@@ -24,6 +24,12 @@ const SerialBridge = {
     await ipcRenderer.invoke('serial', 'keyboardInterrupt')
     return Promise.resolve()
   },
+  prepareReset: async () => {
+    await ipcRenderer.invoke('serial', 'prepareReset')
+  },
+  doReset: async () => {
+    await ipcRenderer.invoke('serial', 'doReset')
+  },
   reset: async () => {
     await ipcRenderer.invoke('serial', 'reset')
     return Promise.resolve()

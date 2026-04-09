@@ -841,6 +841,9 @@ button.small .icon {
   padding: 1em 1.5em;
   text-align: center;
   min-width: 220px;
+  max-width: 320px;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
 }
 
 #overlay .overlay-pct {
@@ -865,6 +868,10 @@ button.small .icon {
   transition: width 0.15s;
 }
 
+#overlay.open.interactive {
+  cursor: default;
+}
+
 #overlay .cancel-btn {
   width: auto;
   height: auto;
@@ -877,5 +884,39 @@ button.small .icon {
 }
 
 #overlay .cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+#overlay .overlay-btn-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1em;
+}
+
+#overlay .overlay-btn {
+  width: auto;
+  height: auto;
+  padding: 0.4em 1.2em;
+  border-radius: 6px;
+  font-size: 0.9em;
+  cursor: pointer !important;
+}
+
+#overlay .overlay-btn--primary {
+  background: rgba(0, 129, 132, 1);
+  color: white;
+}
+
+#overlay .overlay-btn--primary:hover {
+  background: rgba(0, 129, 132, 0.8);
+}
+
+#overlay .overlay-btn--secondary {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+#overlay .overlay-btn--secondary:hover {
   background: rgba(0, 0, 0, 0.15);
 }

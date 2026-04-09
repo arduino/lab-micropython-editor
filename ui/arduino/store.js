@@ -21,7 +21,7 @@ async function confirmDialog(msg, cancelMsg, confirmMsg) {
   let buttons = []
   if (confirmMsg) buttons.push(confirmMsg)
   if (cancelMsg) buttons.push(cancelMsg)
-  
+
   let response = await win.openDialog({
     type: 'question',
     buttons: buttons,
@@ -30,6 +30,34 @@ async function confirmDialog(msg, cancelMsg, confirmMsg) {
     message: msg
   })
   return Promise.resolve(response)
+}
+
+// In-app overlay replacement for confirmDialog.
+// Resolves with true (confirmed) or false (cancelled) when the user clicks a button.
+// Only one overlay can be pending at a time — safe because Choo event handlers are linear.
+let _overlayResolver = null
+
+function showConfirmOverlay(state, emitter, msg, cancelLabel, confirmLabel) {
+  if (_overlayResolver !== null) {
+    console.warn('showConfirmOverlay: called while another overlay is pending')
+    return Promise.resolve(false)
+  }
+  return new Promise((resolve) => {
+    _overlayResolver = resolve
+    state.overlay = confirmLabel
+      ? { type: 'confirm', props: {
+          message: msg,
+          buttons: [
+            { label: cancelLabel, result: false, style: 'secondary' },
+            { label: confirmLabel, result: true,  style: 'primary'  }
+          ]
+        }}
+      : { type: 'alert', props: {
+          message: msg,
+          buttons: [{ label: cancelLabel, result: true, style: 'primary' }]
+        }}
+    emitter.emit('render')
+  })
 }
 
 
@@ -72,6 +100,7 @@ async function store(state, emitter) {
   state.isRemoving = false
 
   state.isLoadingFiles = false
+  state.overlay = null
   state.dialogs = []
 
   state.isTerminalBound = false
@@ -552,7 +581,7 @@ async function store(state, emitter) {
       }
 
       if (willOverwrite) {
-        const confirmation = await confirmDialog(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmation = await showConfirmOverlay(state, emitter, `You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmation) {
           openFile.parentFolder = oldParentFolder
           return  // finally handles isSaving reset and router restore
@@ -615,7 +644,7 @@ async function store(state, emitter) {
     log('close-tab', id)
     const currentTab = state.openFiles.find(f => f.id === id)
     if (currentTab.hasChanges) {
-      let response = await confirmDialog("Your file has unsaved changes. Are you sure you want to proceed?", "Cancel", "Yes")
+      let response = await showConfirmOverlay(state, emitter, "Your file has unsaved changes. Are you sure you want to proceed?", "Cancel", "Yes")
       if (!response) return false
     }
     state.openFiles = state.openFiles.filter(f => f.id !== id)
@@ -733,7 +762,7 @@ async function store(state, emitter) {
           fileName: fileNameParameter
         })
         if (willOverwrite) {
-          const confirmAction = await confirmDialog(`You are about to overwrite the file ${fileNameParameter} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+          const confirmAction = await showConfirmOverlay(state, emitter, `You are about to overwrite the file ${fileNameParameter} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.creatingFile = null
             emitter.emit('render')
@@ -743,7 +772,7 @@ async function store(state, emitter) {
         }
         const boardTabConflicts = findTabConflicts('board', state.boardNavigationPath, [fileNameParameter])
         if (!willOverwrite && boardTabConflicts.length > 0) {
-          const confirmAction = await confirmDialog(`${fileNameParameter} is open in the editor with unsaved changes. Creating this file will overwrite the open version.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+          const confirmAction = await showConfirmOverlay(state, emitter, `${fileNameParameter} is open in the editor with unsaved changes. Creating this file will overwrite the open version.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.creatingFile = null
             emitter.emit('render')
@@ -779,7 +808,7 @@ async function store(state, emitter) {
         fileName: fileNameParameter
       })
       if (willOverwrite) {
-        const confirmAction = await confirmDialog(`You are about to overwrite the file ${fileNameParameter} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await showConfirmOverlay(state, emitter, `You are about to overwrite the file ${fileNameParameter} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -789,7 +818,7 @@ async function store(state, emitter) {
       }
       const diskTabConflicts = findTabConflicts('disk', state.diskNavigationPath, [fileNameParameter])
       if (!willOverwrite && diskTabConflicts.length > 0) {
-        const confirmAction = await confirmDialog(`${fileNameParameter} is open in the editor with unsaved changes. Creating this file will overwrite the open version.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await showConfirmOverlay(state, emitter, `${fileNameParameter} is open in the editor with unsaved changes. Creating this file will overwrite the open version.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFile = null
           emitter.emit('render')
@@ -847,7 +876,7 @@ async function store(state, emitter) {
           fileName: value
         })
         if (willOverwrite) {
-          const confirmAction = await confirmDialog(`You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+          const confirmAction = await showConfirmOverlay(state, emitter, `You are about to overwrite ${value} on your board.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.creatingFolder = null
             emitter.emit('render')
@@ -879,7 +908,7 @@ async function store(state, emitter) {
         fileName: value
       })
       if (willOverwrite) {
-        const confirmAction = await confirmDialog(`You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmAction = await showConfirmOverlay(state, emitter, `You are about to overwrite ${value} on your disk.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmAction) {
           state.creatingFolder = null
           emitter.emit('render')
@@ -936,7 +965,7 @@ async function store(state, emitter) {
     }
 
     message += `Are you sure you want to proceed?`
-    const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+    const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
     if (!confirmAction) {
       state.isRemoving = false
       emitter.emit('render')
@@ -1029,7 +1058,7 @@ async function store(state, emitter) {
           let message = `You are about to overwrite the following file/folder on your board:\n\n`
           message += `${value}\n\n`
           message += `Are you sure you want to proceed?`
-          const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+          const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.renamingFile = null
             return  // finally handles isSaving, router, render
@@ -1065,7 +1094,7 @@ async function store(state, emitter) {
           let message = `You are about to overwrite the following file/folder on your disk:\n\n`
           message += `${value}\n\n`
           message += `Are you sure you want to proceed?`
-          const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+          const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.renamingFile = null
             return  // finally handles isSaving, router, render
@@ -1163,7 +1192,7 @@ async function store(state, emitter) {
       ? openFile.parentFolder
       : openFile.source === 'board' ? state.boardNavigationPath : state.diskNavigationPath
     if (findTabConflicts(openFile.source, destFolder, [value], openFile.id).length > 0) {
-      await confirmDialog(`${value} is already open in another tab. Please choose a different name.`, 'OK')
+      await showConfirmOverlay(state, emitter, `${value} is already open in another tab. Please choose a different name.`, 'OK')
       state.renamingTab = null
       emitter.emit('render')
       return
@@ -1234,7 +1263,7 @@ async function store(state, emitter) {
       }
 
       if (willOverwrite) {
-        const confirmation = await confirmDialog(`You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\n Are you sure you want to proceed?`, 'Cancel', 'Yes')
+        const confirmation = await showConfirmOverlay(state, emitter, `You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmation) {
           openFile.fileName = oldName
           state.renamingTab = null
@@ -1495,6 +1524,14 @@ async function store(state, emitter) {
     emitter.emit('open-selected-files')
   })
 
+  emitter.on('overlay-button-clicked', (result) => {
+    state.overlay = null
+    const fn = _overlayResolver
+    _overlayResolver = null
+    emitter.emit('render')
+    if (fn) fn(result)
+  })
+
   emitter.on('cancel-operation', async () => {
     if (state.isConnected) await serialBridge.keyboardInterrupt()
   })
@@ -1522,7 +1559,7 @@ async function store(state, emitter) {
         willOverwrite.forEach(f => message += `${f.fileName}\n`)
         message += `\n`
         message += `Are you sure you want to proceed?`
-        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+        const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
         if (!confirmAction) return
       }
 
@@ -1541,7 +1578,7 @@ async function store(state, emitter) {
         let message = `The following files are open in the editor with unsaved changes and will conflict with this upload:\n\n`
         tabOnlyConflicts.forEach(f => message += `${f.fileName}\n`)
         message += `\nUploading will overwrite the open version. Are you sure you want to proceed?`
-        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+        const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
         if (!confirmAction) return
       }
 
@@ -1625,7 +1662,7 @@ async function store(state, emitter) {
         willOverwrite.forEach(f => message += `${f.fileName}\n`)
         message += `\n`
         message += `Are you sure you want to proceed?`
-        const confirmAction = await confirmDialog(message, 'Cancel', 'Yes')
+        const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
         if (!confirmAction) return
       }
 
@@ -1725,7 +1762,7 @@ async function store(state, emitter) {
   }),
   
   win.onKeyboardShortcut((key) => {
-    if (state.isTransferring || state.isRemoving || state.isSaving || state.isConnectionDialogOpen || state.isNewFileDialogOpen) return
+    if (state.overlay !== null || state.isTransferring || state.isRemoving || state.isSaving || state.isConnectionDialogOpen || state.isNewFileDialogOpen) return
     if (state.shortcutsDisabled) return
     if (key === shortcuts.CLOSE) {
       emitter.emit('close-tab', state.editingFile)
@@ -1894,7 +1931,7 @@ async function store(state, emitter) {
     }
     const tabExists = state.openFiles.find(f => f.parentFolder === newFile.parentFolder && f.fileName === newFile.fileName && f.source === newFile.source)
     if (tabExists || fullPathExists) {
-      const confirmation = await confirmDialog(`File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
+      const confirmation = await showConfirmOverlay(state, emitter, `File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
       return false
     }
     // LEAK > listeners keep getting added and not removed when tabs are closed

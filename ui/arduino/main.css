@@ -839,4 +839,43 @@ button.small .icon {
 #overlay.open > * {
   background: white;
   padding: 1em 1.5em;
+  text-align: center;
+  min-width: 220px;
+}
+
+#overlay .overlay-pct {
+  display: block;
+  font-size: 0.85em;
+  color: #888;
+  margin-bottom: 0.3em;
+}
+
+#overlay .overlay-progress {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.75em;
+}
+
+#overlay .overlay-progress-fill {
+  height: 100%;
+  background: rgba(0, 129, 132, 1);
+  border-radius: 3px;
+  transition: width 0.15s;
+}
+
+#overlay .cancel-btn {
+  width: auto;
+  height: auto;
+  padding: 0.4em 1.2em;
+  border-radius: 6px;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.08);
+  cursor: pointer !important;
+  font-size: 0.9em;
+}
+
+#overlay .cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.15);
 }

@@ -215,9 +215,6 @@ async function store(state, emitter) {
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     terminalRouter = new TerminalOutputRouter(term)
-    // Suppress immediately so that any serial-on-data IPC events still queued from
-    // getPrompt()'s passThrough (macrotasks dispatched before this microtask chain
-    // resumes) are dropped rather than written raw to the terminal via defaultHandler.
     terminalRouter.setOperation('suppress')
     terminalRouter.setHook('code-execution:before', (router) => {
       router.write('\r\n')
@@ -1496,6 +1493,10 @@ async function store(state, emitter) {
       parentFolder: state[`${source}NavigationPath`] // XXX
     }]
     emitter.emit('open-selected-files')
+  })
+
+  emitter.on('cancel-operation', async () => {
+    if (state.isConnected) await serialBridge.keyboardInterrupt()
   })
 
   // DOWNLOAD AND UPLOAD FILES

@@ -34,7 +34,19 @@ function ProgressLayout(props, emit) {
 }
 
 function ConfirmLayout(props, emit) {
-  const el = html`<div><p>${props.message}</p></div>`
+  const el = html`<div></div>`
+  const p = document.createElement('p')
+  props.message.split('\n').forEach((line, i, arr) => {
+    if (line.startsWith('**') && line.endsWith('**')) {
+      const strong = document.createElement('strong')
+      strong.textContent = line.slice(2, -2)
+      p.appendChild(strong)
+    } else {
+      p.appendChild(document.createTextNode(line))
+    }
+    if (i < arr.length - 1) p.appendChild(document.createElement('br'))
+  })
+  el.appendChild(p)
   el.appendChild(ButtonRow(props.buttons, emit))
   return el
 }

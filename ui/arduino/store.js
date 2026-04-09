@@ -100,6 +100,7 @@ async function store(state, emitter) {
   state.isRemoving = false
 
   state.isLoadingFiles = false
+  state.boardInfo = null
   state.overlay = null
   state.dialogs = []
 
@@ -235,6 +236,7 @@ async function store(state, emitter) {
     state.isConnecting = false
     state.isConnected = true
     state.boardNavigationPath = await getBoardNavigationPath()
+    state.boardInfo = await getBoardInfo()
     updateMenu()
     if (state.view === 'editor' && state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
@@ -304,9 +306,9 @@ async function store(state, emitter) {
     state.transferringProgress = ''
     state.isSaving = false
     state.savingProgress = 0
-    state.panelHeight = PANEL_CLOSED
     state.boardFiles = []
     state.boardNavigationPath = '/'
+    state.boardInfo = null
     emitter.emit('refresh-files')
     emitter.emit('render')
     updateMenu()
@@ -1056,7 +1058,7 @@ async function store(state, emitter) {
         })
         if (willOverwrite.length > 0) {
           let message = `You are about to overwrite the following file/folder on your board:\n\n`
-          message += `${value}\n\n`
+          message += `**${value}**\n\n`
           message += `Are you sure you want to proceed?`
           const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
           if (!confirmAction) {
@@ -1092,7 +1094,7 @@ async function store(state, emitter) {
         })
         if (willOverwrite.length > 0) {
           let message = `You are about to overwrite the following file/folder on your disk:\n\n`
-          message += `${value}\n\n`
+          message += `**${value}**\n\n`
           message += `Are you sure you want to proceed?`
           const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
           if (!confirmAction) {
@@ -1556,7 +1558,7 @@ async function store(state, emitter) {
 
       if (willOverwrite.length > 0) {
         let message = `You are about to overwrite the following files/folders on your board:\n\n`
-        willOverwrite.forEach(f => message += `${f.fileName}\n`)
+        willOverwrite.forEach(f => message += `**${f.fileName}**\n`)
         message += `\n`
         message += `Are you sure you want to proceed?`
         const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
@@ -1576,7 +1578,7 @@ async function store(state, emitter) {
       const tabOnlyConflicts = affectedTabs.filter(f => !overwrittenNames.has(f.fileName.toLowerCase()))
       if (tabOnlyConflicts.length > 0) {
         let message = `The following files are open in the editor with unsaved changes and will conflict with this upload:\n\n`
-        tabOnlyConflicts.forEach(f => message += `${f.fileName}\n`)
+        tabOnlyConflicts.forEach(f => message += `**${f.fileName}**\n`)
         message += `\nUploading will overwrite the open version. Are you sure you want to proceed?`
         const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
         if (!confirmAction) return
@@ -1659,7 +1661,7 @@ async function store(state, emitter) {
 
       if (willOverwrite.length > 0) {
         let message = `You are about to overwrite the following files/folders on your disk:\n\n`
-        willOverwrite.forEach(f => message += `${f.fileName}\n`)
+        willOverwrite.forEach(f => message += `**${f.fileName}**\n`)
         message += `\n`
         message += `Are you sure you want to proceed?`
         const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
@@ -2026,6 +2028,21 @@ async function getBoardNavigationPath() {
     log('error', output)
   }
   return boardRoot
+}
+
+async function getBoardInfo() {
+  await serialBridge.execFile(await getHelperFullPath())
+  let output = await serialBridge.run(`iget_board_info()`)
+  try {
+    output = output.substring(
+      output.indexOf('OK') + 2,
+      output.indexOf('\x04')
+    )
+    return JSON.parse(output)
+  } catch (e) {
+    log('error', output)
+    return null
+  }
 }
 
 async function getBoardFiles(path) {

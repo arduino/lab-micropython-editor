@@ -20,7 +20,7 @@ function ReplPanel(state, emit) {
       <div class="panel-bar">
         <div id="connection-status" style="visibility:${state.isConnected ? 'visible' : 'hidden'};">
           <img src="media/connect.svg" />
-          <div>${state.isConnected ? 'Connected to ' + state.connectedPort : ''}</div>
+          <div>${state.isConnected && state.boardInfo ? html`<span>${state.boardInfo.machine.split('with')[0].trim()} (<strong>${state.connectedPort}</strong>)</span>` : ''}</div>
         </div>
         <div class="spacer"></div>
         <div id="drag-handle"

@@ -61,6 +61,39 @@ function showConfirmOverlay(state, emitter, msg, cancelLabel, confirmLabel) {
 }
 
 
+function showInputOverlay(state, emitter, title, placeholder, isConnected) {
+  if (_overlayResolver !== null) {
+    console.warn('showInputOverlay: called while another overlay is pending')
+    return Promise.resolve(null)
+  }
+  return new Promise((resolve) => {
+    _overlayResolver = resolve
+    state.overlay = { type: 'input', props: { title, placeholder, isConnected } }
+    emitter.emit('render')
+  })
+}
+
+const SILENT_ERRORS = new Set([
+  'INTERRUPTED_BY_RERUN',
+  'INTERRUPTED_BY_STOP',
+  'INTERRUPTED_BY_RESET',
+])
+
+function extractErrorMessage(e) {
+  const raw = e.message || String(e)
+  const marker = 'MicroPythonError: '
+  const idx = raw.indexOf(marker)
+  return idx !== -1 ? raw.slice(idx + marker.length) : raw
+}
+
+function alertError(state, emitter, e, context = '') {
+  const raw = e?.message || String(e)
+  if (SILENT_ERRORS.has(e?.code) || [...SILENT_ERRORS].some(code => raw.includes(code))) return
+  console.error(context || 'error', e)
+  const msg = context ? `${context}\n\n${extractErrorMessage(e)}` : extractErrorMessage(e)
+  return showConfirmOverlay(state, emitter, msg, 'OK')
+}
+
 // Store: state wrapper
 
 async function store(state, emitter) {
@@ -86,12 +119,9 @@ async function store(state, emitter) {
 
   state.availablePorts = []
 
-  state.isConnectionDialogOpen = false
   state.isConnecting = false
   state.isConnected = false
   state.connectedPort = null
-
-  state.isNewFileDialogOpen = false
 
   state.isSaving = false
   state.savingProgress = 0
@@ -175,17 +205,14 @@ async function store(state, emitter) {
   // CONNECTION DIALOG
   emitter.on('open-connection-dialog', async () => {
     log('open-connection-dialog')
-    // UI should be in disconnected state, no need to update
     dismissOpenDialogs()
     await serialBridge.disconnect()
     state.availablePorts = await getAvailablePorts()
-    state.isConnectionDialogOpen = true
+    state.overlay = { type: 'connection', props: {} }
     emitter.emit('render')
-    document.addEventListener('keydown', dismissOpenDialogs)
   })
   emitter.on('close-connection-dialog', async () => {
-    state.isConnectionDialogOpen = false
-    dismissOpenDialogs()
+    state.overlay = null
     await resizeTerminal()
     emitter.emit('render')
   })
@@ -246,6 +273,7 @@ async function store(state, emitter) {
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     terminalRouter = new TerminalOutputRouter(term)
+    window._termRouter = terminalRouter  // DEBUG: check currentOperation in console
     terminalRouter.setOperation('suppress')
     terminalRouter.setHook('code-execution:before', (router) => {
       router.write('\r\n')
@@ -320,7 +348,7 @@ async function store(state, emitter) {
     state.isConnected = false
     state.isConnecting = false
     state.availablePorts = await getAvailablePorts()
-    state.isConnectionDialogOpen = true
+    state.overlay = { type: 'connection', props: {} }
     emitter.emit('render')
   })
 
@@ -382,7 +410,7 @@ async function store(state, emitter) {
       if (terminalRouter) terminalRouter.setOperation('code-execution')
       await serialBridge.run(code)
     } catch(e) {
-      log('error', e)
+      await alertError(state, emitter, e)
     } finally {
       // Only reset to repl-interactive if stop/reset hasn't already taken over.
       if (terminalRouter && terminalRouter.currentOperation === 'code-execution') {
@@ -438,7 +466,7 @@ async function store(state, emitter) {
       await serialBridge.prepareReset()
       await serialBridge.doReset()
     } catch (e) {
-      log('reset error:', e)
+      await alertError(state, emitter, e, 'Reset failed')
     }
     // The reset handler owns the repl-interactive transition when the board sends >>>.
     // Sleep is a safety fallback if the board never completes the reboot (crash/hang).
@@ -487,18 +515,11 @@ async function store(state, emitter) {
   })
 
   // NEW FILE AND SAVING
-  emitter.on('create-new-file', () => {
+  emitter.on('create-new-file', async () => {
     log('create-new-file')
     dismissOpenDialogs()
-    state.isNewFileDialogOpen = true
-    emitter.emit('render')
-    document.addEventListener('keydown', dismissOpenDialogs)
-  })
-  emitter.on('close-new-file-dialog', () => {
-    state.isNewFileDialogOpen = false
-    
-    dismissOpenDialogs()
-    emitter.emit('render')
+    const result = await showInputOverlay(state, emitter, 'Create new file', generateFileName(), state.isConnected)
+    if (result) emitter.emit('create-new-tab', result.device, result.fileName)
   })
   emitter.on('save', async () => {
     log('save')
@@ -624,7 +645,7 @@ async function store(state, emitter) {
     } catch (e) {
       // Disconnect during save: the 'disconnected' event already shows the notification
       // and resets UI. Only surface errors that occur while still connected.
-      if (state.isConnected) console.error('Save failed:', e)
+      if (state.isConnected) await alertError(state, emitter, e, 'Save failed')
     } finally {
       state.isSaving = false
       state.savingProgress = 0
@@ -646,7 +667,7 @@ async function store(state, emitter) {
     log('close-tab', id)
     const currentTab = state.openFiles.find(f => f.id === id)
     if (currentTab.hasChanges) {
-      let response = await showConfirmOverlay(state, emitter, "Your file has unsaved changes. Are you sure you want to proceed?", "Cancel", "Yes")
+      let response = await showConfirmOverlay(state, emitter, "Your file has unsaved changes.\nAre you sure you want to proceed?", "Cancel", "Yes")
       if (!response) return false
     }
     state.openFiles = state.openFiles.filter(f => f.id !== id)
@@ -729,9 +750,8 @@ async function store(state, emitter) {
     log('create-new-tab', device, fileName, parentFolder)
     const success = await createNewTab(device, fileName, parentFolder)
     if (success) {
-      emitter.emit('close-new-file-dialog')
       emitter.emit('render')
-    }  
+    }
   })
   emitter.on('create-file', (device, fileName = null) => {
     log('create-file', device)
@@ -799,7 +819,7 @@ async function store(state, emitter) {
           tab.hasChanges = false
         }
       } catch (e) {
-        if (state.isConnected) console.error('Create file failed:', e)
+        if (state.isConnected) await alertError(state, emitter, e, 'Create file failed')
       } finally {
         if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       }
@@ -1158,7 +1178,7 @@ async function store(state, emitter) {
         }
         renamed = true
       } catch (e) {
-        alert(`The file ${file.fileName} could not be renamed to ${value}`)
+        await alertError(state, emitter, e, `Could not rename ${file.fileName} to ${value}`)
       }
     } finally {
       state.isSaving = false
@@ -1305,7 +1325,7 @@ async function store(state, emitter) {
               )
             }
           } catch (e) {
-            log('error', e)
+            await alertError(state, emitter, e, 'Save failed')
           }
         }
         // RENAME FILE
@@ -1338,7 +1358,7 @@ async function store(state, emitter) {
             )
           }
         } catch(e) {
-          log('error', e)
+          await alertError(state, emitter, e, 'Rename failed')
         }
       } else if (!fullPathExists) {
         // SAVE FILE CONTENTS
@@ -1370,7 +1390,7 @@ async function store(state, emitter) {
             )
           }
         } catch (e) {
-          log('error', e)
+          await alertError(state, emitter, e, 'Save failed')
         }
       }
 
@@ -1526,12 +1546,22 @@ async function store(state, emitter) {
     emitter.emit('open-selected-files')
   })
 
+  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'input', 'connection'])
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DISMISSABLE_OVERLAY_TYPES.has(state.overlay?.type)) {
+      emitter.emit('overlay-button-clicked', null)
+    }
+  })
+
   emitter.on('overlay-button-clicked', (result) => {
+    const prevType = state.overlay?.type
     state.overlay = null
     const fn = _overlayResolver
     _overlayResolver = null
     emitter.emit('render')
     if (fn) fn(result)
+    if (terminalRouter) terminalRouter.terminal.focus()
+    if (prevType === 'connection') resizeTerminal()
   })
 
   emitter.on('cancel-operation', async () => {
@@ -1634,6 +1664,8 @@ async function store(state, emitter) {
         tab.parentFolder = state.boardNavigationPath
         tab.hasChanges = false
       }
+    } catch (e) {
+      await alertError(state, emitter, e, 'Upload failed')
     } finally {
       state.transferringProgress = ''
       state.isTransferring = false
@@ -1701,6 +1733,8 @@ async function store(state, emitter) {
         }
       }
       state.selectedFiles = []
+    } catch (e) {
+      await alertError(state, emitter, e, 'Download failed')
     } finally {
       state.transferringProgress = ''
       state.isTransferring = false
@@ -1764,7 +1798,7 @@ async function store(state, emitter) {
   }),
   
   win.onKeyboardShortcut((key) => {
-    if (state.overlay !== null || state.isTransferring || state.isRemoving || state.isSaving || state.isConnectionDialogOpen || state.isNewFileDialogOpen) return
+    if (state.overlay !== null || state.isTransferring || state.isRemoving || state.isSaving) return
     if (state.shortcutsDisabled) return
     if (key === shortcuts.CLOSE) {
       emitter.emit('close-tab', state.editingFile)
@@ -1824,12 +1858,8 @@ async function store(state, emitter) {
 
   })
 
-  function dismissOpenDialogs(keyEvent = null) {
-    if (keyEvent && keyEvent.key != 'Escape') return
+  function dismissOpenDialogs() {
     document.removeEventListener('keydown', dismissOpenDialogs)
-    state.isConnectionDialogOpen = false
-    state.isNewFileDialogOpen = false
-    emitter.emit('render')
   }
 
   // Ensures that even if the RUN button is clicked multiple times

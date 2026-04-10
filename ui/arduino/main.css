@@ -823,6 +823,10 @@ button.small .icon {
   text-align: center;
 }
 
+#overlay:focus {
+  outline: none;
+}
+
 #overlay.open {
   width: 100%;
   height: 100%;
@@ -872,6 +876,31 @@ button.small .icon {
   cursor: default;
 }
 
+#overlay.open > .dismissable {
+  position: relative;
+}
+
+#overlay .overlay-close {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  cursor: pointer !important;
+  padding: 0;
+  line-height: 1;
+}
+
+#overlay .overlay-close:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
 #overlay .cancel-btn {
   width: auto;
   height: auto;
@@ -919,4 +948,88 @@ button.small .icon {
 
 #overlay .overlay-btn--secondary:hover {
   background: rgba(0, 0, 0, 0.15);
+}
+
+#overlay.open > .overlay-input-card {
+  min-width: 420px;
+  max-width: 520px;
+  text-align: left;
+}
+
+#overlay .overlay-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+#overlay .overlay-input:focus {
+  border-color: rgba(0, 129, 132, 1);
+  box-shadow: 0 0 0 2px rgba(0, 129, 132, 0.2);
+}
+
+.overlay-input-btn-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1em;
+}
+
+.overlay-input-btn-row .overlay-btn {
+  flex: 0 0 calc(50% - 5px);
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+}
+
+.overlay-input-btn-row .overlay-btn:hover,
+.overlay-input-btn-row .overlay-btn:focus {
+  background: rgba(0, 129, 132, 1);
+  color: white;
+  outline: none;
+}
+
+#overlay.open > .overlay-connection-card {
+  min-width: 320px;
+  max-width: 480px;
+  text-align: left;
+}
+
+#overlay .overlay-connection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0.5em;
+}
+
+#overlay .overlay-connection-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5em 0.75em;
+  border-radius: 6px;
+  text-align: left;
+  background: transparent;
+  cursor: pointer !important;
+  font-family: inherit;
+  font-size: 0.9em;
+}
+
+#overlay .overlay-connection-item:hover {
+  background: rgba(0, 129, 132, 1);
+  color: white;
+}
+
+#overlay .overlay-connection-refresh {
+  margin-top: 4px;
+  color: rgba(0, 129, 132, 1);
+  /* border-top: 1px solid rgba(0, 0, 0, 0.08); */
+  border-radius: 6px;
+  padding-top: 0.6em;
+}
+
+#overlay .overlay-connection-refresh:hover {
+  color: white;
 }

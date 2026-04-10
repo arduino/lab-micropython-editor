@@ -6,7 +6,5 @@ function EditorView(state, emit) {
       ${CodeEditor(state, emit)}
       ${ReplPanel(state, emit)}
     </div>
-    ${ConnectionDialog(state, emit)}
-    ${NewFileDialog(state, emit)}
   `
 }

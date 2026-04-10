@@ -10,7 +10,7 @@ function ReplPanel(state, emit) {
   // const pointerEventsClass = state.isNewFileDialogOpen || state.isDialogOpen ? 'open' : 'closed'
   const termOperationsVisibility = state.panelHeight > PANEL_TOO_SMALL ? 'visible' : 'hidden'
   let terminalDisabledClass = 'terminal-enabled'
-  if (!state.isConnected || state.isNewFileDialogOpen) {
+  if (!state.isConnected || state.overlay !== null) {
     terminalDisabledClass = 'terminal-disabled'
   }
   // const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'

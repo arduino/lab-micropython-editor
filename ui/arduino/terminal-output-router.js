@@ -85,23 +85,37 @@ class TerminalOutputRouter {
     // were already displayed during execution — skip them and show only the error context.
     if (this.currentOperation === 'stop' && this._stopBuffer.trim().length > 0) {
       // Strip noise from the full accumulated buffer. Applying regexes on the complete
-      // string handles banner fragments that arrive split across serial chunks — e.g.
-      // "MicroPython v1.27.0 on 2025-12-09" in one chunk and "; ESP module with ESP8266"
-      // in the next. Per-chunk stripping would leave the tail fragment, which has no
-      // "MicroPython " prefix and evades the banner regex.
+      // string handles banner fragments that arrive split across serial chunks.
       const stripped = stripNoise(this._stopBuffer, 'rawReplEntry', 'banner', 'helpHint', 'promptOnly', 'eot', 'rawPrompt')
       const tracebackIndex = stripped.indexOf('Traceback')
       const kiIndex = stripped.indexOf('KeyboardInterrupt')
-      // Start from whichever error marker appears first; fall back to 0 if neither found
-      const errorStart = tracebackIndex >= 0 && (kiIndex < 0 || tracebackIndex <= kiIndex)
-                       ? tracebackIndex
-                       : kiIndex >= 0 ? kiIndex : 0
-      const errorContent = stripped.slice(errorStart)
-      if (errorContent.trim().length > 0) {
-        const level = classifyError(errorContent)
-        this.terminal.write(ANSI[level](errorContent))
-        this.terminal.scrollToBottom()
+
+      // Find whichever error marker appears first
+      let errorStart = -1
+      if (tracebackIndex >= 0 && (kiIndex < 0 || tracebackIndex <= kiIndex)) {
+        errorStart = tracebackIndex
+      } else if (kiIndex >= 0) {
+        errorStart = kiIndex
       }
+
+      if (errorStart >= 0) {
+        // Print any stdout that arrived before the error in normal colour
+        const beforeError = stripped.slice(0, errorStart)
+        const errorContent = stripped.slice(errorStart)
+        if (beforeError.trim().length > 0) {
+          this.terminal.write(beforeError)
+        }
+        this.terminal.write(ANSI.muted('\r\n--- execution halted ---\r\n'))
+        if (errorContent.trim().length > 0) {
+          const level = classifyError(errorContent)
+          this.terminal.write(ANSI[level](errorContent))
+        }
+      } else if (stripped.trim().length > 0) {
+        // No recognisable error marker — print remaining output as-is
+        this.terminal.write(stripped)
+      }
+
+      this.terminal.scrollToBottom()
       this._stopBuffer = ''
     }
 

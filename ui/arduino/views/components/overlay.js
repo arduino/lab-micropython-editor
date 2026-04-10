@@ -2,12 +2,21 @@
 // buttons: [{ label, result, style }] where style is 'primary' or 'secondary'.
 function ButtonRow(buttons, emit) {
   const row = html`<div class="overlay-btn-row"></div>`
+  let focusTarget = null
   for (const btn of buttons) {
     const b = html`<button class="overlay-btn overlay-btn--${btn.style}">${btn.label}</button>`
     b.addEventListener('click', () => emit('overlay-button-clicked', btn.result))
     row.appendChild(b)
+    if (btn.style === 'primary' || focusTarget === null) focusTarget = b
   }
+  if (focusTarget) requestAnimationFrame(() => focusTarget.focus())
   return row
+}
+
+function CloseButton(emit) {
+  const btn = html`<button class="overlay-close">✕</button>`
+  btn.addEventListener('click', () => emit('overlay-button-clicked', null))
+  return btn
 }
 
 function SpinnerLayout(props) {
@@ -33,8 +42,55 @@ function ProgressLayout(props, emit) {
   return el
 }
 
+function InputLayout(props, emit) {
+  const el = html`<div class="overlay-input-card dismissable"></div>`
+  el.appendChild(CloseButton(emit))
+  const title = document.createElement('p')
+  title.textContent = props.title
+  el.appendChild(title)
+  const input = html`<input class="overlay-input" type="text" placeholder="${props.placeholder}" />`
+  el.appendChild(input)
+  const btnRow = html`<div class="overlay-input-btn-row"></div>`
+
+  let boardBtn = null
+  if (props.isConnected) {
+    boardBtn = html`<button class="overlay-btn overlay-btn--secondary">Board</button>`
+    boardBtn.addEventListener('click', () => {
+      const fileName = input.value.trim() || input.placeholder
+      emit('overlay-button-clicked', { device: 'board', fileName })
+    })
+    btnRow.appendChild(boardBtn)
+  }
+  const diskBtn = html`<button class="overlay-btn overlay-btn--secondary">Computer</button>`
+  diskBtn.addEventListener('click', () => {
+    const fileName = input.value.trim() || input.placeholder
+    emit('overlay-button-clicked', { device: 'disk', fileName })
+  })
+  btnRow.appendChild(diskBtn)
+  el.appendChild(btnRow)
+
+  const focusables = [input, ...(boardBtn ? [boardBtn] : []), diskBtn]
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      const idx = focusables.indexOf(document.activeElement)
+      const next = e.shiftKey
+        ? focusables[(idx - 1 + focusables.length) % focusables.length]
+        : focusables[(idx + 1) % focusables.length]
+      next.focus()
+    } else if (e.key === 'Enter' && document.activeElement === input && !props.isConnected) {
+      const fileName = input.value.trim() || input.placeholder
+      emit('overlay-button-clicked', { device: 'disk', fileName })
+    }
+  })
+
+  requestAnimationFrame(() => input.focus())
+  return el
+}
+
 function ConfirmLayout(props, emit) {
-  const el = html`<div></div>`
+  const el = html`<div class="dismissable"></div>`
+  el.appendChild(CloseButton(emit))
   const p = document.createElement('p')
   props.message.split('\n').forEach((line, i, arr) => {
     if (line.startsWith('**') && line.endsWith('**')) {
@@ -51,6 +107,25 @@ function ConfirmLayout(props, emit) {
   return el
 }
 
+function ConnectionLayout(ports, emit) {
+  const el = html`<div class="overlay-connection-card dismissable"></div>`
+  el.appendChild(CloseButton(emit))
+  const title = document.createElement('p')
+  title.textContent = 'Connect to...'
+  el.appendChild(title)
+  const list = html`<div class="overlay-connection-list"></div>`
+  for (const port of ports) {
+    const item = html`<button class="overlay-connection-item">${port.path}</button>`
+    item.addEventListener('click', () => emit('select-port', port))
+    list.appendChild(item)
+  }
+  const refreshBtn = html`<button class="overlay-connection-item overlay-connection-refresh">Refresh</button>`
+  refreshBtn.addEventListener('click', () => emit('update-ports'))
+  list.appendChild(refreshBtn)
+  el.appendChild(list)
+  return el
+}
+
 function Overlay(state, emit) {
   let layout = null
   let interactive = false
@@ -63,6 +138,12 @@ function Overlay(state, emit) {
       layout = ProgressLayout(props, emit)
     } else if (type === 'confirm' || type === 'alert') {
       layout = ConfirmLayout(props, emit)
+      interactive = true
+    } else if (type === 'input') {
+      layout = InputLayout(props, emit)
+      interactive = true
+    } else if (type === 'connection') {
+      layout = ConnectionLayout(state.availablePorts, emit)
       interactive = true
     }
   } else {
@@ -88,5 +169,24 @@ function Overlay(state, emit) {
   }
 
   if (!layout) return html`<div id="overlay" class="closed"></div>`
-  return html`<div id="overlay" class="open${interactive ? ' interactive' : ''}">${layout}</div>`
+
+  // Immediately blur any focused element outside the overlay so it can't
+  // receive keyboard events (e.g. Enter re-triggering the button that opened this).
+  const currentOverlay = document.getElementById('overlay')
+  if (document.activeElement &&
+      document.activeElement !== document.body &&
+      !currentOverlay?.contains(document.activeElement)) {
+    document.activeElement.blur()
+  }
+
+  // After render: if no child claimed focus (button/input rAF runs first),
+  // focus the overlay container so keyboard events are captured by it.
+  requestAnimationFrame(() => {
+    const overlayEl = document.getElementById('overlay')
+    if (overlayEl && !overlayEl.contains(document.activeElement)) {
+      overlayEl.focus()
+    }
+  })
+
+  return html`<div id="overlay" class="open${interactive ? ' interactive' : ''}" tabindex="-1">${layout}</div>`
 }

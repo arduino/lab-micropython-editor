@@ -31,7 +31,9 @@ jobs:
           - os: macos-latest
             id: macos-universal
           - os: [self-hosted, windows-sign-pc]
-            id: windows
+            id: windows-x64
+          - os: [self-hosted, windows-sign-pc]
+            id: windows-arm64
           - os: ubuntu-latest
             id: linux-x64
           - os: ubuntu-24.04-arm
@@ -88,8 +90,8 @@ jobs:
           # IS_NIGHTLY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
-          npm_config_target_arch: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
-          ELECTRON_BUILDER_ARCH: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
+          npm_config_target_arch: ${{ (matrix.config.id == 'linux-arm64' || matrix.config.id == 'windows-arm64') && 'arm64' || '' }}
+          ELECTRON_BUILDER_ARCH: ${{ (matrix.config.id == 'linux-arm64' || matrix.config.id == 'windows-arm64') && 'arm64' || '' }}
 
         run: |
             # See: https://www.electron.build/code-signing
@@ -138,7 +140,10 @@ jobs:
             id: macos-universal
           - path: "*-win_x64.zip"
             name: Arduino.Lab.for.MicroPython-win_x64
-            id: windows
+            id: windows-x64
+          - path: "*-win_arm64.zip"
+            name: Arduino.Lab.for.MicroPython-win_arm64
+            id: windows-arm64
           - path: "*-linux_x64.zip"
             name: Arduino.Lab.for.MicroPython-linux_x64
             id: linux-x64

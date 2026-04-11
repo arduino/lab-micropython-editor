@@ -580,28 +580,33 @@ button.small .icon {
   width: calc(50vw - 64px);
 }
 
-#file-actions {
+.device-header.selection-active button {
+  opacity: 1;
+}
+
+.device-header.selection-active button[disabled] {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.device-header .deselect-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  background: #008184;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 20px;
+  line-height: 1;
   display: flex;
-  width: 32px;
-  padding: 10px;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
-  align-self: stretch;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
 }
 
-#file-actions button[disabled], #file-actions button[disabled]:hover {
-  opacity: 0.4;
-}
-
-#file-actions button .icon {
-  width: 100%;
-  height: 100%;
-}
-
-#file-actions button:hover {
-  opacity: 0.5;
+.device-header .deselect-btn:hover {
+  background: #006366;
 }
 
 .device-header {
@@ -610,6 +615,7 @@ button.small .icon {
   align-items: flex-start;
   align-self: stretch;
   width: 100%;
+  gap: 6px;
 }
 
 .device-header button {
@@ -727,23 +733,23 @@ button.small .icon {
   line-height: 1.3em;
 }
 
-.file-list .item .checkbox .icon.off,
-.file-list .item .checkbox .icon.on {
+.file-list .item .checkbox {
   display: none;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
 }
 
-.file-list .item:hover .checkbox.unchecked .icon {
-  display: none;
-}
-.file-list .item:hover .checkbox.unchecked .icon.off {
-  display: block;
+.file-list.selection-mode .item .checkbox {
+  display: flex;
 }
 
-.file-list .item .checkbox.checked .icon {
-  display: none;
-}
-.file-list .item .checkbox.checked .icon.on  {
-  display: block;
+.file-list .item .checkbox img {
+  width: 24px;
+  height: 24px;
 }
 
 .file-list .item input {

@@ -30,6 +30,8 @@ function generateFileList(source) {
       </div>
     `
 
+    const selectionMode = state.selectedFiles.filter(f => f.source === source).length > 0
+
     function FileItem(item, i) {
       const renamingFileItem = html`
         <input type="text"
@@ -43,6 +45,7 @@ function generateFileList(source) {
       const isChecked = state.selectedFiles.find(
         f => f.fileName === item.fileName && f.source === source
       )
+
       function renameItem(e) {
         e.preventDefault()
         emit('rename-file', source, item)
@@ -54,12 +57,25 @@ function generateFileList(source) {
       function openFile() {
         if (!state.renamingFile) emit(`open-file`, source, item)
       }
+      function checkboxToggle(e) {
+        e.stopPropagation()
+        // Always toggle (add/remove) without clearing other selections
+        emit('toggle-file-selection', item, source, { ctrlKey: true })
+      }
+
       let fileName = item.fileName
-      const isSelected = state.selectedFiles.find(f => f.fileName === fileName)
+      const isSelected = state.selectedFiles.find(f => f.fileName === fileName && f.source === source)
 
       if (state.renamingFile == source && isSelected) {
         fileName = renamingFileItem
       }
+
+      const checkbox = html`
+        <div class="checkbox" onclick=${checkboxToggle}>
+          <img src="media/${isChecked ? 'checked' : 'unchecked'}.svg" />
+        </div>
+      `
+
       if (item.type === 'folder') {
         return html`
           <div
@@ -69,9 +85,7 @@ function generateFileList(source) {
             >
             <img class="icon" src="media/folder.svg" />
             <div class="text">${fileName}</div>
-            <div class="options" onclick=${renameItem}>
-              <img src="media/cursor.svg" />
-            </div>
+            ${selectionMode ? checkbox : ''}
           </div>
         `
       } else {
@@ -81,38 +95,33 @@ function generateFileList(source) {
             onclick=${(e) => emit('toggle-file-selection', item, source, e)}
             ondblclick=${openFile}
             >
-            <img class="icon" src="media/file.svg"  />
+            <img class="icon" src="media/file.svg" />
             <div class="text">${fileName}</div>
-            <div class="options" onclick=${renameItem}>
-              <img src="media/cursor.svg" />
-            </div>
+            ${selectionMode ? checkbox : ''}
           </div>
         `
       }
     }
 
-    // XXX: Use `source` to filter an array of files with a `source` as proprety
     const files = state[`${source}Files`].sort((a, b) => {
       const nameA = a.fileName.toUpperCase()
       const nameB = b.fileName.toUpperCase()
-      // Folders come first than files
       if (a.type === 'folder' && b.type === 'file') return -1
-      // Folders and files come in alphabetic order
       if (a.type === b.type) {
         if (nameA < nameB) return -1
         if (nameA > nameB) return 1
       }
       return 0
     })
-    const parentNavigationDots = html`<div class="item"
-  onclick=${() => emit(`navigate-${source}-parent`)}
-  style="cursor: pointer"
-  >
-  ..
-</div>`
+
+    const parentNavigationDots = html`
+      <div class="item" onclick=${() => emit(`navigate-${source}-parent`)} style="cursor: pointer">
+        ..
+      </div>
+    `
 
     const list = html`
-      <div class="file-list">
+      <div class="file-list ${selectionMode ? 'selection-mode' : ''}">
         <div class="list">
           ${source === 'disk' && state.diskNavigationPath != '/' ? parentNavigationDots : ''}
           ${source === 'board' && state.boardNavigationPath != '/' ? parentNavigationDots : ''}
@@ -123,14 +132,13 @@ function generateFileList(source) {
       </div>
     `
 
-    // Mutation observer
     const observer = new MutationObserver((mutations) => {
       const el = list.querySelector('input')
       if (el) {
         el.focus()
       }
     })
-    observer.observe(list, { childList: true, subtree:true })
+    observer.observe(list, { childList: true, subtree: true })
 
     return list
   }

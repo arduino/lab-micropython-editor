@@ -67,7 +67,7 @@ jobs:
             npm version "$TAG" --no-git-tag-version --allow-same-version
           elif [ "$IS_INTERNAL" = "true" ]; then
             CURRENT=$(node -p "require('./package.json').version")
-            npm pkg set version="$CURRENT (internal)"
+            npm version "${CURRENT}-internal" --no-git-tag-version --allow-same-version
           fi
 
       - name: Package

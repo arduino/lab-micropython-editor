@@ -24,6 +24,9 @@ function createWindow () {
   })
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
+  win.webContents.on('did-finish-load', () => {
+    win.setTitle(`Arduino Lab for MicroPython - ${app.getVersion()}`)
+  })
 
   // If the app takes a while to open, show splash screen
   // Create the splash screen

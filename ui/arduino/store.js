@@ -15,24 +15,7 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function confirmDialog(msg, cancelMsg, confirmMsg) {
-  // cancelMsg = cancelMsg || 'Cancel'
-  // confirmMsg = confirmMsg || 'Yes'
-  let buttons = []
-  if (confirmMsg) buttons.push(confirmMsg)
-  if (cancelMsg) buttons.push(cancelMsg)
-
-  let response = await win.openDialog({
-    type: 'question',
-    buttons: buttons,
-    defaultId: 0,
-    cancelId: 1,
-    message: msg
-  })
-  return Promise.resolve(response)
-}
-
-// In-app overlay replacement for confirmDialog.
+// In-app overlay confirm/alert system.
 // Resolves with true (confirmed) or false (cancelled) when the user clicks a button.
 // Only one overlay can be pending at a time — safe because Choo event handlers are linear.
 let _overlayResolver = null
@@ -1785,9 +1768,11 @@ async function store(state, emitter) {
   })
 
   win.beforeClose(async () => {
-    const hasChanges = !!state.openFiles.find(f => f.hasChanges)
-    if (hasChanges) {
-      const response = await confirmDialog('You may have unsaved changes. Are you sure you want to proceed?', 'Cancel', 'Yes')
+    const unsaved = state.openFiles.filter(f => f.hasChanges)
+    if (unsaved.length > 0) {
+      const fileList = unsaved.map(f => f.fileName).join('\n')
+      const message = `**Unsaved changes**\nThe following files have unsaved changes:\n${fileList}\n\nAre you sure you want to quit?`
+      const response = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Quit')
       if (!response) return false
     }
     await win.confirmClose()

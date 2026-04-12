@@ -565,7 +565,7 @@ button.small .icon {
   padding: 12px 32px 24px 32px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 18px;
   flex: 1 0 0;
   align-self: stretch;
 }
@@ -589,45 +589,37 @@ button.small .icon {
   pointer-events: none;
 }
 
-.device-header .deselect-btn {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  background: #008184;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 20px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-}
-
-.device-header .deselect-btn:hover {
-  background: #006366;
+.device-header .header-checkbox {
+  background: none;
 }
 
 .device-header {
   display: flex;
-  padding: 10px 0;
+  padding: 10px 8px;
   align-items: flex-start;
   align-self: stretch;
   width: 100%;
   gap: 6px;
+  box-sizing: border-box;
 }
 
 .device-header button {
   width: 32px;
   height: auto;
   padding: 0;
+  border-radius: 0;
+}
+
+.device-header img {
+  max-width: none;
+  max-height: none;
 }
 
 .device-header .icon {
-  width: 22px;
+  width: auto;
   height: 22px;
 }
+
 
 .device-header .text {
   width: 100%;
@@ -690,12 +682,13 @@ button.small .icon {
   height: 28px;
   min-height: 28px;
   max-height: 28px;;
-  padding: 5px 10px;
+  padding: 5px 0px;
   align-items: center;
   gap: 10px;
   align-self: stretch;
   transition: all 0.1s;
 }
+
 
 .file-list .item.selected,
 .file-list .item:hover {
@@ -735,9 +728,9 @@ button.small .icon {
 
 .file-list .item .checkbox {
   display: none;
-  width: 24px;
+  /* width: 24px;
   min-width: 24px;
-  height: 24px;
+  height: 24px; */
   cursor: pointer;
   align-items: center;
   justify-content: center;
@@ -748,8 +741,9 @@ button.small .icon {
 }
 
 .file-list .item .checkbox img {
-  width: 24px;
-  height: 24px;
+  /* width: 24px;
+  height: 24px; */
+  max-width: fit-content;
 }
 
 .file-list .item input {
@@ -1026,6 +1020,13 @@ button.small .icon {
 #overlay .overlay-connection-item:hover {
   background: rgba(0, 129, 132, 1);
   color: white;
+}
+
+#overlay .overlay-connection-error {
+  color: #c0392b;
+  font-size: 0.85em;
+  margin: 4px 0 8px;
+  text-align: center;
 }
 
 #overlay .overlay-connection-refresh {

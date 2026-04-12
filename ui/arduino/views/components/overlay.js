@@ -107,12 +107,18 @@ function ConfirmLayout(props, emit) {
   return el
 }
 
-function ConnectionLayout(ports, emit) {
+function ConnectionLayout(ports, emit, props) {
   const el = html`<div class="overlay-connection-card dismissable"></div>`
   el.appendChild(CloseButton(emit))
   const title = document.createElement('p')
   title.textContent = 'Connect to...'
   el.appendChild(title)
+  if (props && props.error) {
+    const error = document.createElement('p')
+    error.textContent = props.error
+    error.className = 'overlay-connection-error'
+    el.appendChild(error)
+  }
   const list = html`<div class="overlay-connection-list"></div>`
   for (const port of ports) {
     const item = html`<button class="overlay-connection-item">${port.path}</button>`
@@ -143,7 +149,7 @@ function Overlay(state, emit) {
       layout = InputLayout(props, emit)
       interactive = true
     } else if (type === 'connection') {
-      layout = ConnectionLayout(state.availablePorts, emit)
+      layout = ConnectionLayout(state.availablePorts, emit, props)
       interactive = true
     }
   } else {

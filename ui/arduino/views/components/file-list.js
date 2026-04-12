@@ -51,10 +51,23 @@ function generateFileList(source) {
         emit('rename-file', source, item)
         return false
       }
+      let clickTimer = null
+      function handleClick(e) {
+        clearTimeout(clickTimer)
+        clickTimer = setTimeout(() => emit('toggle-file-selection', item, source, e), 250)
+      }
       function navigateToFolder() {
-        if (!state.renamingFile) emit(`navigate-${source}-folder`, item.fileName)
+        clearTimeout(clickTimer)
+        if (!state.renamingFile) {
+          emit(`navigate-${source}-folder`, item.fileName)
+          requestAnimationFrame(() => {
+            const el = document.querySelector(`#${source}-files .file-list`)
+            if (el) el.scrollTop = 0
+          })
+        }
       }
       function openFile() {
+        clearTimeout(clickTimer)
         if (!state.renamingFile) emit(`open-file`, source, item)
       }
       function checkboxToggle(e) {
@@ -80,7 +93,7 @@ function generateFileList(source) {
         return html`
           <div
             class="item ${isChecked ? 'selected' : ''}"
-            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
+            onclick=${handleClick}
             ondblclick=${navigateToFolder}
             >
             <img class="icon" src="media/folder.svg" />
@@ -92,7 +105,7 @@ function generateFileList(source) {
         return html`
           <div
             class="item ${isChecked ? 'selected' : ''}"
-            onclick=${(e) => emit('toggle-file-selection', item, source, e)}
+            onclick=${handleClick}
             ondblclick=${openFile}
             >
             <img class="icon" src="media/file.svg" />
@@ -114,8 +127,16 @@ function generateFileList(source) {
       return 0
     })
 
+    function navigateToParent() {
+      emit(`navigate-${source}-parent`)
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`#${source}-files .file-list`)
+        if (el) el.scrollTop = 0
+      })
+    }
+
     const parentNavigationDots = html`
-      <div class="item" onclick=${() => emit(`navigate-${source}-parent`)} style="cursor: pointer">
+      <div class="item" onclick=${navigateToParent} style="cursor: pointer">
         ..
       </div>
     `

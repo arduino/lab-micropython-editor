@@ -46,8 +46,8 @@ function FileManagerView(state, emit) {
       <button disabled=${!allowDelete} onclick=${() => emit('remove-files')} title="Delete">
         <img class="icon" src="media/delete.svg" />
       </button>
-      <button class="deselect-btn" onclick=${() => emit('clear-selection-by-source', source)} title="Deselect all">
-        −
+      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} title="Deselect all">
+        <img class="icon" src="media/clear-checked.svg" />
       </button>
     `
 

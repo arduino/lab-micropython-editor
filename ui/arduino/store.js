@@ -209,18 +209,13 @@ async function store(state, emitter) {
     const path = port.path
 
     state.isConnecting = true
+    state.overlay = { type: 'spinner', props: { message: `Connecting to ${path}…` } }
     emitter.emit('render')
 
     // The following Timeout operation will be cleared after a succesful getPrompt()
     // If a board has crashed and/or cannot return a REPL prompt, the connection will fail
     // and the user will be prompted to reset the device and try again.
     let timeout_id = setTimeout(() => {
-      let response = win.openDialog({
-        type: 'question',
-        buttons: ['OK'],
-        cancelId: 0,
-        message: "Could not connect to the board. Reset it and try again."
-      })
       emitter.emit('connection-timeout')
     }, 3500)
     try {
@@ -331,7 +326,7 @@ async function store(state, emitter) {
     state.isConnected = false
     state.isConnecting = false
     state.availablePorts = await getAvailablePorts()
-    state.overlay = { type: 'connection', props: {} }
+    state.overlay = { type: 'connection', props: { error: 'Could not connect. Reset the board and try again.' } }
     emitter.emit('render')
   })
 
@@ -957,7 +952,7 @@ async function store(state, emitter) {
       .filter(file => file.source === 'disk')
       .map(file => file.fileName)
 
-    let message = `You are about to delete the following files:\n\n`
+    let message = `You are about to delete the following items:\n\n`
     if (boardNames.length) {
       message += `From your board:\n`
       boardNames.forEach(name => message += `${name}\n`)

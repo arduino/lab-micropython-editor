@@ -562,7 +562,7 @@ button.small .icon {
 
 #file-manager {
   display: flex;
-  padding: 12px 32px 24px 32px;
+  padding: 16px 32px 24px 32px;
   justify-content: center;
   align-items: center;
   gap: 18px;
@@ -608,6 +608,32 @@ button.small .icon {
   height: auto;
   padding: 0;
   border-radius: 0;
+}
+
+.device-header button[data-tooltip] {
+  position: relative;
+}
+
+.device-header button[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 3px 7px;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease 0s;
+}
+
+.device-header button[data-tooltip]:hover::after {
+  opacity: 1;
+  transition-delay: 0.3s;
 }
 
 .device-header img {

@@ -25,28 +25,28 @@ function FileManagerView(state, emit) {
     const transferIcon = source === 'board' ? 'download.svg' : 'upload.svg'
 
     const defaultButtons = html`
-      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)}>
+      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)} data-tooltip="New folder">
         <img class="icon" src="media/new-folder.svg" />
       </button>
-      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-file', source)}>
+      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-file', source)} data-tooltip="New file">
         <img class="icon" src="media/new-file.svg" />
       </button>
     `
 
     const selectionButtons = html`
-      <button disabled=${!allowTransfer} onclick=${() => emit(source === 'board' ? 'download-files' : 'upload-files')} title="${source === 'board' ? 'Download to computer' : 'Upload to board'}">
+      <button disabled=${!allowTransfer} onclick=${() => emit(source === 'board' ? 'download-files' : 'upload-files')} data-tooltip="${source === 'board' ? 'Download to computer' : 'Upload to board'}">
         <img class="icon" src="media/${transferIcon}" />
       </button>
-      <button disabled=${!allowOpen} onclick=${() => emit('open-selected-files')} title="Open">
+      <button disabled=${!allowOpen} onclick=${() => emit('open-selected-files')} data-tooltip="Open">
         <img class="icon" src="media/open.svg" />
       </button>
-      <button disabled=${!allowRename} onclick=${() => emit('rename-file', source, sourceSelected[0])} title="Rename">
+      <button disabled=${!allowRename} onclick=${() => emit('rename-file', source, sourceSelected[0])} data-tooltip="Rename">
         <img class="icon" src="media/rename_v2.svg" />
       </button>
-      <button disabled=${!allowDelete} onclick=${() => emit('remove-files')} title="Delete">
+      <button disabled=${!allowDelete} onclick=${() => emit('remove-files')} data-tooltip="Delete">
         <img class="icon" src="media/delete.svg" />
       </button>
-      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} title="Deselect all">
+      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all">
         <img class="icon" src="media/clear-checked.svg" />
       </button>
     `

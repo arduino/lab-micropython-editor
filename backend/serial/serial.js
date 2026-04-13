@@ -31,8 +31,8 @@ class Serial {
         return await this.board.execfile(path)
     }
 
-    async getPrompt() {
-        return await this.board.get_prompt()
+    async getPrompt(captureInterrupt = false) {
+        return await this.board.get_prompt(captureInterrupt)
     }
 
     async keyboardInterrupt() {

@@ -411,7 +411,7 @@ async function store(state, emitter) {
     emitter.emit('render')
     if (state.isConnected) {
       if (terminalRouter) terminalRouter.setOperation('stop')
-      await serialBridge.getPrompt()
+      await serialBridge.getPrompt(true)
       // getPrompt() resolves via ipcRenderer.invoke (microtask), but the serial-on-data
       // events carrying the stop output (traceback, >>>) are pushed events (macrotasks)
       // that may still be queued. Yield here so those events fire and are routed through

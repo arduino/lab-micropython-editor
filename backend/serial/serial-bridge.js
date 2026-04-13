@@ -17,8 +17,8 @@ const SerialBridge = {
   execFile: async (path) => {
     return await ipcRenderer.invoke('serial', 'execFile', path)
   },
-  getPrompt: async () => {
-    return await ipcRenderer.invoke('serial', 'getPrompt')
+  getPrompt: async (captureInterrupt = false) => {
+    return await ipcRenderer.invoke('serial', 'getPrompt', captureInterrupt)
   },
   keyboardInterrupt: async () => {
     await ipcRenderer.invoke('serial', 'keyboardInterrupt')

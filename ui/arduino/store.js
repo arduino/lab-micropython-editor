@@ -106,8 +106,6 @@ async function store(state, emitter) {
   state.isConnected = false
   state.connectedPort = null
 
-  state.isSaving = false
-  state.savingProgress = 0
   state.isTransferring = false
   state.transferringProgress = ''
   state.isRemoving = false
@@ -310,8 +308,7 @@ async function store(state, emitter) {
     state.isLoadingFiles = false
     state.isTransferring = false
     state.transferringProgress = ''
-    state.isSaving = false
-    state.savingProgress = 0
+    state.overlay = null
     state.boardFiles = []
     state.boardNavigationPath = '/'
     state.boardInfo = null
@@ -512,7 +509,7 @@ async function store(state, emitter) {
       return
     }
 
-    state.isSaving = true
+    state.overlay = { type: 'spinner', props: { message: 'Saving…' } }
     emitter.emit('render')
 
     // Get open file
@@ -585,7 +582,7 @@ async function store(state, emitter) {
         const confirmation = await showConfirmOverlay(state, emitter, `You are about to overwrite the file ${openFile.fileName} on your ${openFile.source}.\n\nAre you sure you want to proceed?`, 'Cancel', 'Yes')
         if (!confirmation) {
           openFile.parentFolder = oldParentFolder
-          return  // finally handles isSaving reset and router restore
+          return  // finally handles overlay reset and router restore
         }
       }
 
@@ -595,6 +592,7 @@ async function store(state, emitter) {
         if (terminalRouter) terminalRouter.setOperation('suppress')
         await serialBridge.getPrompt()
         if (terminalRouter) terminalRouter.setOperation('file-saving')
+        state.overlay = { type: 'progress', props: { message: 'Saving…', pct: 0 } }
         await serialBridge.saveFileContentAtomic(
           serialBridge.getFullPath(
             state.boardNavigationRoot,
@@ -603,7 +601,7 @@ async function store(state, emitter) {
           ),
           contents,
           (e) => {
-            state.savingProgress = e
+            state.overlay = { type: 'progress', props: { message: 'Saving…', pct: parseInt(e) || 0 } }
             emitter.emit('render')
           }
         )
@@ -625,8 +623,7 @@ async function store(state, emitter) {
       // and resets UI. Only surface errors that occur while still connected.
       if (state.isConnected) await alertError(state, emitter, e, 'Save failed')
     } finally {
-      state.isSaving = false
-      state.savingProgress = 0
+      state.overlay = null
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       // refresh-files must fire AFTER setOperation('repl-interactive') so it can safely
       // override the operation to 'file-listing' without being stomped by this finally
@@ -1039,7 +1036,7 @@ async function store(state, emitter) {
       return
     }
 
-    state.isSaving = true
+    state.overlay = { type: 'spinner', props: { message: 'Renaming…' } }
     emitter.emit('render')
 
     let renamed = false
@@ -1061,7 +1058,7 @@ async function store(state, emitter) {
           const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.renamingFile = null
-            return  // finally handles isSaving, router, render
+            return  // finally handles overlay, router, render
           }
 
           if (file.type == 'folder') {
@@ -1097,7 +1094,7 @@ async function store(state, emitter) {
           const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
           if (!confirmAction) {
             state.renamingFile = null
-            return  // finally handles isSaving, router, render
+            return  // finally handles overlay, router, render
           }
 
           if (file.type == 'folder') {
@@ -1159,7 +1156,7 @@ async function store(state, emitter) {
         await alertError(state, emitter, e, `Could not rename ${file.fileName} to ${value}`)
       }
     } finally {
-      state.isSaving = false
+      state.overlay = null
       state.renamingFile = null
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       if (renamed) emitter.emit('refresh-files')
@@ -1180,7 +1177,6 @@ async function store(state, emitter) {
 
     if (!value || openFile.fileName == value) {
       state.renamingTab = null
-      state.isSaving = false
       emitter.emit('render')
       return
     }
@@ -1198,7 +1194,7 @@ async function store(state, emitter) {
       return
     }
 
-    state.isSaving = true
+    state.overlay = { type: 'spinner', props: { message: 'Renaming…' } }
     emitter.emit('render')
 
     const oldParentFolder = openFile.parentFolder
@@ -1267,7 +1263,7 @@ async function store(state, emitter) {
         if (!confirmation) {
           openFile.fileName = oldName
           state.renamingTab = null
-          return  // finally handles isSaving, router, render
+          return  // finally handles overlay, router, render
         }
       }
 
@@ -1279,6 +1275,7 @@ async function store(state, emitter) {
             if (openFile.source == 'board') {
               await serialBridge.getPrompt()
               if (terminalRouter) terminalRouter.setOperation('file-saving')
+              state.overlay = { type: 'progress', props: { message: 'Saving…', pct: 0 } }
               await serialBridge.saveFileContentAtomic(
                 serialBridge.getFullPath(
                   state.boardNavigationRoot,
@@ -1287,7 +1284,7 @@ async function store(state, emitter) {
                 ),
                 contents,
                 (e) => {
-                  state.savingProgress = e
+                  state.overlay = { type: 'progress', props: { message: 'Saving…', pct: parseInt(e) || 0 } }
                   emitter.emit('render')
                 }
               )
@@ -1345,6 +1342,7 @@ async function store(state, emitter) {
           if (openFile.source == 'board') {
             await serialBridge.getPrompt()
             if (terminalRouter) terminalRouter.setOperation('file-saving')
+            state.overlay = { type: 'progress', props: { message: 'Saving…', pct: 0 } }
             await serialBridge.saveFileContentAtomic(
               serialBridge.getFullPath(
                 state.boardNavigationRoot,
@@ -1353,7 +1351,7 @@ async function store(state, emitter) {
               ),
               contents,
               (e) => {
-                state.savingProgress = e
+                state.overlay = { type: 'progress', props: { message: 'Saving…', pct: parseInt(e) || 0 } }
                 emitter.emit('render')
               }
             )
@@ -1376,8 +1374,7 @@ async function store(state, emitter) {
       state.renamingTab = null
       saved = true
     } finally {
-      state.isSaving = false
-      state.savingProgress = 0
+      state.overlay = null
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       if (saved) emitter.emit('refresh-files')
       emitter.emit('render')
@@ -1448,18 +1445,28 @@ async function store(state, emitter) {
           let file = null
           if (selectedFile.source == 'board') {
             if (terminalRouter) terminalRouter.setOperation('file-loading')
+            state.overlay = { type: 'progress', props: { message: `Opening ${selectedFile.fileName}…`, pct: 0 } }
+            emitter.emit('render')
             // fileContent receives a raw buffer from loadFile()
             const fileContent = await serialBridge.loadFile(
               serialBridge.getFullPath(
                 state.boardNavigationRoot,
                 state.boardNavigationPath,
                 selectedFile.fileName
-              )
+              ),
+              (progress) => {
+                console.log('[load-progress]', progress)
+                state.overlay = { type: 'progress', props: { message: `Opening ${selectedFile.fileName}…`, pct: parseInt(progress) || 0 } }
+                emitter.emit('render')
+              }
             )
+            console.log('[open-file] fileContent type:', typeof fileContent, '| constructor:', fileContent?.constructor?.name, '| byteLength:', fileContent?.byteLength, '| length:', fileContent?.length)
             // we convert the buffer to a Uint8Array
             const contentArray = new Uint8Array(fileContent);
+            console.log('[open-file] contentArray length:', contentArray.length)
             // we feed the Uint8Array to the TextDecoder
             const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
+            console.log('[open-file] decoded length:', bytesToSource.length, '| first 80 chars:', JSON.stringify(bytesToSource.slice(0, 80)))
             file = createFile({
               parentFolder: state.boardNavigationPath,
               fileName: selectedFile.fileName,
@@ -1512,6 +1519,8 @@ async function store(state, emitter) {
       state.view = 'editor'
       updateMenu()
     } finally {
+      console.log('[open-selected-files] finally: clearing overlay, isLoadingFiles')
+      state.overlay = null
       state.isLoadingFiles = false
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       emitter.emit('render')
@@ -1708,6 +1717,7 @@ async function store(state, emitter) {
           await serialBridge.downloadFile(
             srcPath, destPath,
             (e) => {
+              console.log('[download-progress]', e)
               state.transferringProgress = e
               emitter.emit('render')
             }
@@ -1782,7 +1792,7 @@ async function store(state, emitter) {
   }),
   
   win.onKeyboardShortcut((key) => {
-    if (state.overlay !== null || state.isTransferring || state.isRemoving || state.isSaving) return
+    if (state.overlay !== null || state.isTransferring || state.isRemoving) return
     if (state.shortcutsDisabled) return
     if (key === shortcuts.CLOSE) {
       emitter.emit('close-tab', state.editingFile)

@@ -60,8 +60,18 @@ const SerialBridge = {
   ilistFiles: async (folder) => {
     return await ipcRenderer.invoke('serial', 'ilistFiles', folder)
   },
-  loadFile: async (file) => {
-    return await ipcRenderer.invoke('serial', 'loadFile', file)
+  loadFile: async (file, dataConsumer) => {
+    if (dataConsumer) {
+      ipcRenderer.removeAllListeners("serial-on-load-progress")
+      ipcRenderer.on('serial-on-load-progress', (event, progress) => {
+        console.log('[serial-bridge] serial-on-load-progress received:', progress)
+        dataConsumer(progress)
+      })
+    }
+    const result = await ipcRenderer.invoke('serial', 'loadFile', file)
+    console.log('[serial-bridge] invoke resolved, removing listener')
+    ipcRenderer.removeAllListeners("serial-on-load-progress")
+    return result
   },
   removeFile: async (file) => {
     return await ipcRenderer.invoke('serial', 'removeFile', file)
@@ -94,8 +104,17 @@ const SerialBridge = {
     })
     return await ipcRenderer.invoke('serial', 'uploadFile', src, dest)
   },
-  downloadFile: async (src, dest) => {
+  downloadFile: async (src, dest, dataConsumer) => {
+    if (dataConsumer) {
+      ipcRenderer.removeAllListeners("serial-on-load-progress")
+      ipcRenderer.on('serial-on-load-progress', (event, progress) => {
+        console.log('[serial-bridge] serial-on-load-progress (download) received:', progress)
+        dataConsumer(progress)
+      })
+    }
     let contents = await ipcRenderer.invoke('serial', 'loadFile', src)
+    console.log('[serial-bridge] download invoke resolved, removing listener')
+    ipcRenderer.removeAllListeners("serial-on-load-progress")
     return ipcRenderer.invoke('save-file', dest, contents)
   },
   renameFile: async (oldName, newName) => {

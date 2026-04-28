@@ -161,10 +161,6 @@ function Overlay(state, emit) {
     if (state.isRemoving)     layout = SpinnerLayout({ message: 'Removing...' })
     if (state.isConnecting)   layout = SpinnerLayout({ message: 'Connecting...' })
     if (state.isLoadingFiles) layout = SpinnerLayout({ message: 'Loading files...' })
-    if (state.isSaving) {
-      const pct = parseInt(state.savingProgress) || 0
-      layout = ProgressLayout({ message: 'Saving file...', pct }, emit)
-    }
     if (state.isTransferring) {
       const raw = state.transferringProgress || ''
       const parts = raw.split(': ')

@@ -118,7 +118,10 @@ class Serial {
     }
 
     async loadFile(file) {
-        const output = await this.board.fs_cat_binary(file)
+        const output = await this.board.fs_cat_binary(file, (progress) => {
+            console.log('[serial.js load-progress]', progress)
+            this.win.webContents.send('serial-on-load-progress', progress)
+        })
         return output || ''
     }
 

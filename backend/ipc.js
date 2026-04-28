@@ -55,16 +55,16 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
     return true
   })
 
-  ipcMain.handle('update-folder', (event, folder) => {
-    console.log('ipcMain', 'update-folder', folder)
-    let files = fs.readdirSync(path.resolve(folder))
-    // Filter out directories
-    files = files.filter(f => {
-      let filePath = path.resolve(folder, f)
-      return !fs.lstatSync(filePath).isDirectory()
-    })
-    return { folder, files }
-  })
+  // ipcMain.handle('update-folder', (event, folder) => {
+  //   console.log('ipcMain', 'update-folder', folder)
+  //   let files = fs.readdirSync(path.resolve(folder))
+  //   // Filter out directories
+  //   files = files.filter(f => {
+  //     let filePath = path.resolve(folder, f)
+  //     return !fs.lstatSync(filePath).isDirectory()
+  //   })
+  //   return { folder, files }
+  // })
 
   ipcMain.handle('remove-file', (event, filePath) => {
     console.log('ipcMain', 'remove-file', filePath)

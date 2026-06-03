@@ -5,8 +5,7 @@ class Serial {
     constructor(win = null) {
         this.win = win
         this.board = new MicroPython()
-        this.board.chunk_size = 192
-        this.board.chunk_sleep = 200
+        this.board.chunkSize = 256
     }
 
     async loadPorts() {
@@ -33,6 +32,10 @@ class Serial {
 
     async getPrompt(captureInterrupt = false) {
         return await this.board.get_prompt(captureInterrupt)
+    }
+
+    async calibrateDelay() {
+        return await this.board.calibrateDelay()
     }
 
     async keyboardInterrupt() {

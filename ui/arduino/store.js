@@ -235,6 +235,10 @@ async function store(state, emitter) {
       return
     }
     clearTimeout(timeout_id)
+    state.overlay = { type: 'spinner', props: { message: 'Optimizing board communication speed…' } }
+    emitter.emit('render')
+    await serialBridge.calibrateDelay()
+    state.overlay = null
     // Connected and ready
     state.isConnecting = false
     state.isConnected = true

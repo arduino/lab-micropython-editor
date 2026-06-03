@@ -20,6 +20,9 @@ const SerialBridge = {
   getPrompt: async (captureInterrupt = false) => {
     return await ipcRenderer.invoke('serial', 'getPrompt', captureInterrupt)
   },
+  calibrateDelay: async () => {
+    return await ipcRenderer.invoke('serial', 'calibrateDelay')
+  },
   keyboardInterrupt: async () => {
     await ipcRenderer.invoke('serial', 'keyboardInterrupt')
     return Promise.resolve()

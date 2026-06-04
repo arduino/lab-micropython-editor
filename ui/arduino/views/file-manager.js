@@ -75,6 +75,7 @@ function FileManagerView(state, emit) {
           })}
           ${BoardFileList(state, emit)}
         </div>
+        ${FileActions(state, emit)}
         <div id="disk-files">
           ${DeviceHeader({
             source: 'disk',

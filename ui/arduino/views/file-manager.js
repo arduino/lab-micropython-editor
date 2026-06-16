@@ -3,6 +3,7 @@ function FileManagerView(state, emit) {
 
   const boardSelected = selectedFiles.filter(f => f.source === 'board')
   const diskSelected  = selectedFiles.filter(f => f.source === 'disk')
+  const anySelected   = boardSelected.length > 0 || diskSelected.length > 0
 
   let boardFullPath = 'Connect to board'
   let diskFullPath = `${state.diskNavigationRoot}${state.diskNavigationPath}`
@@ -34,9 +35,6 @@ function FileManagerView(state, emit) {
     `
 
     const selectionButtons = html`
-      <button disabled=${!allowTransfer} onclick=${() => emit(source === 'board' ? 'download-files' : 'upload-files')} data-tooltip="${source === 'board' ? 'Download to computer' : 'Upload to board'}">
-        <img class="icon" src="media/${transferIcon}" />
-      </button>
       <button disabled=${!allowOpen} onclick=${() => emit('open-selected-files')} data-tooltip="Open">
         <img class="icon" src="media/open.svg" />
       </button>
@@ -65,7 +63,7 @@ function FileManagerView(state, emit) {
   return html`
     <div class="working-area">
       ${Toolbar(state, emit)}
-      <div id="file-manager">
+      <div id="file-manager" class="${anySelected ? 'has-selection' : ''}">
         <div id="board-files">
           ${DeviceHeader({
             source: 'board',
@@ -75,7 +73,7 @@ function FileManagerView(state, emit) {
           })}
           ${BoardFileList(state, emit)}
         </div>
-        ${FileActions(state, emit)}
+        ${FileActions(state, emit, anySelected && isConnected)}
         <div id="disk-files">
           ${DeviceHeader({
             source: 'disk',

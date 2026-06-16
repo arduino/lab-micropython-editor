@@ -1,16 +1,10 @@
-function FileActions(state, emit) {
+function FileActions(state, emit, active = false) {
   const {
     isConnected,
     selectedFiles
   } = state
   return html`
-  <div id="file-actions">
-    ${Button({
-      icon: 'edit.svg',
-      size: 'small',
-      disabled: !canEdit({ selectedFiles: state.selectedFiles }),
-      onClick: () => emit('open-selected-files')
-    })}
+  <div id="file-actions" class="${active ? 'active' : ''}">
     ${Button({
       icon: 'arrow-left-white.svg',
       size: 'small',
@@ -27,13 +21,6 @@ function FileActions(state, emit) {
       disabled: !canDownload({ isConnected, selectedFiles }),
       onClick: () => emit('download-files')
     })}
-    ${Button({
-      icon: 'delete.svg',
-      size: 'small',
-      disabled: state.selectedFiles.length === 0,
-      onClick: () => emit('remove-files')
-    })}
   </div>
-
   `
 }

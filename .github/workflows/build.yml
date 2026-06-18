@@ -161,10 +161,16 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
+      - name: Derive artifact name from filename
+        shell: bash
+        run: |
+          FILE=$(ls ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }})
+          ARTIFACT_NAME=$(basename "$FILE" .zip | tr ' ' '.')
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
       - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact.name }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
           overwrite: true
 

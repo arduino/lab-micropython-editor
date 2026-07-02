@@ -16,14 +16,9 @@ function FileManagerView(state, emit) {
     const sourceSelected = source === 'board' ? boardSelected : diskSelected
     const selectionActive = sourceSelected.length > 0
 
-    const allowTransfer = source === 'board'
-      ? canDownload({ isConnected, selectedFiles })
-      : canUpload({ isConnected, selectedFiles })
     const allowOpen   = canEdit({ selectedFiles: sourceSelected })
     const allowRename = sourceSelected.length === 1
     const allowDelete = sourceSelected.length > 0
-
-    const transferIcon = source === 'board' ? 'download.svg' : 'upload.svg'
 
     const defaultButtons = html`
       <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)} data-tooltip="New folder">

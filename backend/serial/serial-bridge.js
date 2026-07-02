@@ -67,12 +67,10 @@ const SerialBridge = {
     if (dataConsumer) {
       ipcRenderer.removeAllListeners("serial-on-load-progress")
       ipcRenderer.on('serial-on-load-progress', (event, progress) => {
-        console.log('[serial-bridge] serial-on-load-progress received:', progress)
         dataConsumer(progress)
       })
     }
     const result = await ipcRenderer.invoke('serial', 'loadFile', file)
-    console.log('[serial-bridge] invoke resolved, removing listener')
     ipcRenderer.removeAllListeners("serial-on-load-progress")
     return result
   },
@@ -111,12 +109,10 @@ const SerialBridge = {
     if (dataConsumer) {
       ipcRenderer.removeAllListeners("serial-on-load-progress")
       ipcRenderer.on('serial-on-load-progress', (event, progress) => {
-        console.log('[serial-bridge] serial-on-load-progress (download) received:', progress)
         dataConsumer(progress)
       })
     }
     let contents = await ipcRenderer.invoke('serial', 'loadFile', src)
-    console.log('[serial-bridge] download invoke resolved, removing listener')
     ipcRenderer.removeAllListeners("serial-on-load-progress")
     return ipcRenderer.invoke('save-file', dest, contents)
   },

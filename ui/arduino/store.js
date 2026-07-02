@@ -185,7 +185,7 @@ async function store(state, emitter) {
 
   // CONNECTION DIALOG
   emitter.on('open-connection-dialog', async () => {
-    log('open-connection-dialog')
+    // log('open-connection-dialog')
     dismissOpenDialogs()
     await serialBridge.disconnect()
     state.availablePorts = await getAvailablePorts()
@@ -203,7 +203,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('select-port', async (port) => {
-    log('connect', port)
+    // log('connect', port)
     const path = port.path
 
     state.isConnecting = true
@@ -253,7 +253,6 @@ async function store(state, emitter) {
     // Bind terminal
     let term = state.cache(XTerm, 'terminal').term
     terminalRouter = new TerminalOutputRouter(term)
-    window._termRouter = terminalRouter  // DEBUG: check currentOperation in console
     terminalRouter.setOperation('suppress')
     terminalRouter.setHook('code-execution:before', (router) => {
       router.write('\r\n')
@@ -356,7 +355,7 @@ async function store(state, emitter) {
 
 
   emitter.on('run', async (onlySelected = false) => {
-    log('run')
+    // log('run')
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
     let code = openFile.editor.editor.state.doc.toString()
 
@@ -404,7 +403,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('stop', async () => {
-    log('stop')
+    // log('stop')
     if (state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
     }
@@ -425,7 +424,7 @@ async function store(state, emitter) {
     }
   })
   emitter.on('reset', async () => {
-    log('reset')
+    // log('reset')
     if (state.panelHeight <= PANEL_CLOSED) {
       state.panelHeight = state.savedPanelHeight
     }
@@ -477,7 +476,7 @@ async function store(state, emitter) {
     state.cache(XTerm, 'terminal').term.clear()
   })
   emitter.on('start-resizing-panel', () => {
-    log('start-resizing-panel')
+    // log('start-resizing-panel')
     window.addEventListener('mousemove', state.resizePanel)
     // Stop resizing when mouse leaves window or enters the tabs area
     document.body.addEventListener('mouseleave', () => {
@@ -488,20 +487,20 @@ async function store(state, emitter) {
     }, { once: true })
   })
   emitter.on('stop-resizing-panel', () => {
-    log('stop-resizing-panel')
+    // log('stop-resizing-panel')
     resizeTerminal()
     window.removeEventListener('mousemove', state.resizePanel)
   })
 
   // NEW FILE AND SAVING
   emitter.on('create-new-file', async () => {
-    log('create-new-file')
+    // log('create-new-file')
     dismissOpenDialogs()
     const result = await showInputOverlay(state, emitter, 'Create new file', generateFileName(), state.isConnected)
     if (result) emitter.emit('create-new-tab', result.device, result.fileName)
   })
   emitter.on('save', async () => {
-    log('save')
+    // log('save')
     let response = canSave({
       view: state.view,
       isConnected: state.isConnected,
@@ -509,7 +508,7 @@ async function store(state, emitter) {
       editingFile: state.editingFile
     })
     if (response == false) {
-      log("can't save")
+      // log("can't save")
       return
     }
 
@@ -638,12 +637,12 @@ async function store(state, emitter) {
 
   // TABS
   emitter.on('select-tab', (id) => {
-    log('select-tab', id)
+    // log('select-tab', id)
     state.editingFile = id
     emitter.emit('render')
   })
   emitter.on('close-tab', async (id) => {
-    log('close-tab', id)
+    // log('close-tab', id)
     const currentTab = state.openFiles.find(f => f.id === id)
     if (currentTab.hasChanges) {
       let response = await showConfirmOverlay(state, emitter, "Your file has unsaved changes.\nAre you sure you want to proceed?", "Cancel", "Yes")
@@ -663,7 +662,7 @@ async function store(state, emitter) {
 
   // FILE OPERATIONS
   emitter.on('refresh-files', async () => {
-    log('refresh-files')
+    // log('refresh-files')
     if (state.isLoadingFiles) return
     state.isLoadingFiles = true
     emitter.emit('render')
@@ -713,7 +712,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('refresh-selected-files', () => {
-    log('refresh-selected-files')
+    // log('refresh-selected-files')
     state.selectedFiles = state.selectedFiles.filter(f => {
       if (f.source === 'board') {
         if (!state.isConnected) return false
@@ -726,14 +725,14 @@ async function store(state, emitter) {
   })
   emitter.on('create-new-tab', async (device, fileName = null) => {
     const parentFolder = device == 'board' ? state.boardNavigationPath : state.diskNavigationPath
-    log('create-new-tab', device, fileName, parentFolder)
+    // log('create-new-tab', device, fileName, parentFolder)
     const success = await createNewTab(device, fileName, parentFolder)
     if (success) {
       emitter.emit('render')
     }
   })
   emitter.on('create-file', (device, fileName = null) => {
-    log('create-file', device)
+    // log('create-file', device)
     if (state.creatingFile !== null) return
     
     state.creatingFile = device
@@ -745,7 +744,7 @@ async function store(state, emitter) {
   })
   
   emitter.on('finish-creating-file', async (fileNameParameter) => {
-    log('finish-creating', fileNameParameter)
+    // log('finish-creating', fileNameParameter)
     if (!state.creatingFile) return
 
     if (!fileNameParameter) {
@@ -852,14 +851,14 @@ async function store(state, emitter) {
     }, 200)
   })
   emitter.on('create-folder', (device) => {
-    log('create-folder', device)
+    // log('create-folder', device)
     if (state.creatingFolder !== null) return
     state.creatingFolder = device
     state.creatingFile = null
     emitter.emit('render')
   })
   emitter.on('finish-creating-folder', async (value) => {
-    log('finish-creating-folder', value)
+    // log('finish-creating-folder', value)
     if (!state.creatingFolder) return
 
     if (!value) {
@@ -941,7 +940,7 @@ async function store(state, emitter) {
   })
 
   emitter.on('remove-files', async () => {
-    log('remove-files') // and folders
+    // log('remove-files') // and folders
     state.isRemoving = true
     emitter.emit('render')
 
@@ -1024,12 +1023,12 @@ async function store(state, emitter) {
   })
 
   emitter.on('rename-file', (source, item) => {
-    log('rename-file', source, item)
+    // log('rename-file', source, item)
     state.renamingFile = source
     emitter.emit('render')
   })
   emitter.on('finish-renaming-file', async (value) => {
-    log('finish-renaming-file', value)
+    // log('finish-renaming-file', value)
 
     // You can only rename one file, the selected one
     const file = state.selectedFiles[0]
@@ -1169,12 +1168,12 @@ async function store(state, emitter) {
   })
 
   emitter.on('rename-tab', (id) => {
-    log('rename-tab', id)
+    // log('rename-tab', id)
     state.renamingTab = id
     emitter.emit('render')
   })
   emitter.on('finish-renaming-tab', async (value) => {
-    log('finish-renaming-tab', value)
+    // log('finish-renaming-tab', value)
 
     // You can only rename one tab, the active one
     const openFile = state.openFiles.find(f => f.id === state.renamingTab)
@@ -1386,7 +1385,7 @@ async function store(state, emitter) {
   })
 
   emitter.on('toggle-file-selection', (file, source, event) => {
-    log('toggle-file-selection', file, source, event)
+    // log('toggle-file-selection', file, source, event)
     let parentFolder = source == 'board' ? state.boardNavigationPath : state.diskNavigationPath
     // Single file selection unless holding keyboard key
     if (event && !event.ctrlKey && !event.metaKey) {
@@ -1422,7 +1421,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('open-selected-files', async () => {
-    log('open-selected-files')
+    // log('open-selected-files')
     let filesToOpen = []
     let filesAlreadyOpen = []
     if (state.isLoadingFiles) return
@@ -1459,18 +1458,14 @@ async function store(state, emitter) {
                 selectedFile.fileName
               ),
               (progress) => {
-                console.log('[load-progress]', progress)
                 state.overlay = { type: 'progress', props: { message: `Opening ${selectedFile.fileName}…`, pct: parseInt(progress) || 0 } }
                 emitter.emit('render')
               }
             )
-            console.log('[open-file] fileContent type:', typeof fileContent, '| constructor:', fileContent?.constructor?.name, '| byteLength:', fileContent?.byteLength, '| length:', fileContent?.length)
             // we convert the buffer to a Uint8Array
             const contentArray = new Uint8Array(fileContent);
-            console.log('[open-file] contentArray length:', contentArray.length)
             // we feed the Uint8Array to the TextDecoder
             const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
-            console.log('[open-file] decoded length:', bytesToSource.length, '| first 80 chars:', JSON.stringify(bytesToSource.slice(0, 80)))
             file = createFile({
               parentFolder: state.boardNavigationPath,
               fileName: selectedFile.fileName,
@@ -1523,7 +1518,6 @@ async function store(state, emitter) {
       state.view = 'editor'
       updateMenu()
     } finally {
-      console.log('[open-selected-files] finally: clearing overlay, isLoadingFiles')
       state.overlay = null
       state.isLoadingFiles = false
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
@@ -1531,7 +1525,7 @@ async function store(state, emitter) {
     }
   })
   emitter.on('open-file', (source, file) => {
-    log('open-file', source, file)
+    // log('open-file', source, file)
     state.selectedFiles = [{
       fileName: file.fileName,
       type: file.type,
@@ -1565,7 +1559,7 @@ async function store(state, emitter) {
 
   // DOWNLOAD AND UPLOAD FILES
   emitter.on('upload-files', async () => {
-    log('upload-files')
+    // log('upload-files')
     state.isTransferring = true
     emitter.emit('render')
     try {
@@ -1670,7 +1664,7 @@ async function store(state, emitter) {
     }
   })
   emitter.on('download-files', async () => {
-    log('download-files')
+    // log('download-files')
     state.isTransferring = true
     emitter.emit('render')
 
@@ -1721,7 +1715,6 @@ async function store(state, emitter) {
           await serialBridge.downloadFile(
             srcPath, destPath,
             (e) => {
-              console.log('[download-progress]', e)
               state.transferringProgress = e
               emitter.emit('render')
             }
@@ -1742,7 +1735,7 @@ async function store(state, emitter) {
 
   // NAVIGATION
   emitter.on('navigate-board-folder', (folder) => {
-    log('navigate-board-folder', folder)
+    // log('navigate-board-folder', folder)
     if (terminalRouter) terminalRouter.setOperation('directory-navigation')
     state.boardNavigationPath = serialBridge.getNavigationPath(
       state.boardNavigationPath,
@@ -1752,7 +1745,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('navigate-board-parent', () => {
-    log('navigate-board-parent')
+    // log('navigate-board-parent')
     state.boardNavigationPath = serialBridge.getNavigationPath(
       state.boardNavigationPath,
       '..'
@@ -1762,7 +1755,7 @@ async function store(state, emitter) {
   })
 
   emitter.on('navigate-disk-folder', (folder) => {
-    log('navigate-disk-folder', folder)
+    // log('navigate-disk-folder', folder)
     state.diskNavigationPath = disk.getNavigationPath(
       state.diskNavigationPath,
       folder
@@ -1771,7 +1764,7 @@ async function store(state, emitter) {
     emitter.emit('render')
   })
   emitter.on('navigate-disk-parent', () => {
-    log('navigate-disk-parent')
+    // log('navigate-disk-parent')
     state.diskNavigationPath = disk.getNavigationPath(
       state.diskNavigationPath,
       '..'
@@ -2006,7 +1999,7 @@ function saveDiskNavigationRootToStorage(path) {
     localStorage.setItem('diskNavigationRoot', path)
     return true
   } catch(e) {
-    log('saveDiskNavigationRootToStorage', e)
+    // log('saveDiskNavigationRootToStorage', e)
     return false
   }
 }

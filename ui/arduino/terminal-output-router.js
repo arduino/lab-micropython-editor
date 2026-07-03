@@ -105,7 +105,7 @@ class TerminalOutputRouter {
         if (beforeError.trim().length > 0) {
           this.terminal.write(beforeError)
         }
-        this.terminal.write(ANSI.muted('\r\n--- execution halted ---\r\n'))
+        this.terminal.write(ANSI.muted('\r\n--- Execution halted ---\r\n'))
         if (errorContent.trim().length > 0) {
           const level = classifyError(errorContent)
           this.terminal.write(ANSI[level](errorContent))

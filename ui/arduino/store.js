@@ -260,9 +260,6 @@ async function store(state, emitter) {
     terminalRouter.setHook('code-execution:after', (router) => {
       router.write('>>> ')
     })
-    terminalRouter.setHook('stop:before', (router) => {
-      router.write('\r\n' + ANSI.muted('--- Execution halted ---') + '\r\n')
-    })
     terminalRouter.setHook('stop:after', (router) => {
       router.write('>>> ')
     })
@@ -1042,7 +1039,7 @@ async function store(state, emitter) {
         if (terminalRouter) terminalRouter.setOperation('suppress')
         const willOverwrite = await checkOverwrite({
           fileNames: [ value ],
-          parentPath: disk.getFullPath(
+          parentPath: serialBridge.getFullPath(
             state.boardNavigationRoot, state.boardNavigationPath, ''
           ),
           source: 'board'

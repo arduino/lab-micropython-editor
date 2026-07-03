@@ -14,7 +14,7 @@ function ButtonRow(buttons, emit) {
 }
 
 function CloseButton(emit) {
-  const btn = html`<button class="overlay-close">✕</button>`
+  const btn = html`<button class="overlay-close" aria-label="Close dialog" title="Close">✕</button>`
   btn.addEventListener('click', () => emit('overlay-button-clicked', null))
   return btn
 }

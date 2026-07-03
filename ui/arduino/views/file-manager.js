@@ -36,7 +36,7 @@ function FileManagerView(state, emit) {
       <button disabled=${!allowRename} onclick=${() => emit('rename-file', source, sourceSelected[0])} data-tooltip="Rename">
         <img class="icon" src="media/rename_v2.svg" />
       </button>
-      <button disabled=${!allowDelete} onclick=${() => emit('remove-files')} data-tooltip="Delete">
+      <button disabled=${!allowDelete} onclick=${() => emit('remove-files', source)} data-tooltip="Delete">
         <img class="icon" src="media/delete.svg" />
       </button>
       <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all">

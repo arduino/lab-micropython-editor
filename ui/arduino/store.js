@@ -946,32 +946,19 @@ async function store(state, emitter) {
     }, 200)
   })
 
-  emitter.on('remove-files', async () => {
+  emitter.on('remove-files', async (source) => {
     // log('remove-files') // and folders
     state.isRemoving = true
     emitter.emit('render')
 
-    let boardNames = state.selectedFiles
-      .filter(file => file.source === 'board')
-      .map(file => file.fileName)
+    const filesToRemove = state.selectedFiles.filter(file => file.source === source)
+    const names = filesToRemove.map(file => file.fileName)
 
-    let diskNames = state.selectedFiles
-      .filter(file => file.source === 'disk')
-      .map(file => file.fileName)
+    const deviceLabel = source === 'board' ? 'your board' : 'your disk'
+    let message = `You are about to delete the following items from ${deviceLabel}:\n\n`
+    names.forEach(name => message += `${name}\n`)
+    message += `\nAre you sure you want to proceed?`
 
-    let message = `You are about to delete the following items:\n\n`
-    if (boardNames.length) {
-      message += `From your board:\n`
-      boardNames.forEach(name => message += `${name}\n`)
-      message += `\n`
-    }
-    if (diskNames.length) {
-      message += `From your disk:\n`
-      diskNames.forEach(name => message += `${name}\n`)
-      message += `\n`
-    }
-
-    message += `Are you sure you want to proceed?`
     const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
     if (!confirmAction) {
       state.isRemoving = false
@@ -981,14 +968,13 @@ async function store(state, emitter) {
 
     if (terminalRouter) terminalRouter.setOperation('suppress')
 
-    for (let i in state.selectedFiles) {
-      const file = state.selectedFiles[i]
+    for (const file of filesToRemove) {
       if (file.type == 'folder') {
         if (file.source === 'board') {
           await removeBoardFolder(
             serialBridge.getFullPath(
               state.boardNavigationRoot,
-              state.boardNavigationPath,
+              file.parentFolder,
               file.fileName
             )
           )
@@ -996,7 +982,7 @@ async function store(state, emitter) {
           await disk.removeFolder(
             disk.getFullPath(
               state.diskNavigationRoot,
-              state.diskNavigationPath,
+              file.parentFolder,
               file.fileName
             )
           )
@@ -1006,7 +992,7 @@ async function store(state, emitter) {
           await serialBridge.removeFile(
             serialBridge.getFullPath(
               state.boardNavigationRoot,
-              state.boardNavigationPath,
+              file.parentFolder,
               file.fileName
             )
           )
@@ -1014,7 +1000,7 @@ async function store(state, emitter) {
           await disk.removeFile(
             disk.getFullPath(
               state.diskNavigationRoot,
-              state.diskNavigationPath,
+              file.parentFolder,
               file.fileName
             )
           )
@@ -1024,7 +1010,7 @@ async function store(state, emitter) {
 
     if (terminalRouter) terminalRouter.setOperation('repl-interactive')
     emitter.emit('refresh-files')
-    state.selectedFiles = []
+    state.selectedFiles = state.selectedFiles.filter(f => f.source !== source)
     state.isRemoving = false
     emitter.emit('render')
   })

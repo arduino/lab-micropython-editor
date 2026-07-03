@@ -132,7 +132,7 @@ class Serial {
     }
 
     async saveFileContent(filename, content) {
-        return await this.board.fs_save(content || ' ', filename, (progress) => {
+        return await this.board.fs_save(content ?? ' ', filename, (progress) => {
             this.win.webContents.send('serial-on-file-save-progress', progress)
         })
     }
@@ -142,7 +142,7 @@ class Serial {
         // micropython.js cancels in-flight reads via _cancelPendingReads on port close/error,
         // so fs_save rejects cleanly on disconnect — no external race needed.
         try {
-            await this.board.fs_save(content || ' ', tmp, (progress) => {
+            await this.board.fs_save(content ?? ' ', tmp, (progress) => {
                 this.win.webContents.send('serial-on-file-save-progress', progress)
             })
             await this.board.fs_rename(tmp, filename)

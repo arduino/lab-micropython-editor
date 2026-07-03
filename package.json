@@ -52,7 +52,7 @@
     "browserify": "^17.0.1",
     "choo": "^7.1.0",
     "codemirror": "^6.0.2",
-    "micropython.js": "github:arduino/micropython.js#v2.1.0",
+    "micropython.js": "github:arduino/micropython.js#v2.1.1",
     "esbuild": "^0.25.9"
   },
   "engines": {

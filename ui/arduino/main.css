@@ -591,12 +591,14 @@ button.small .icon {
   width: 0;
   overflow: hidden;
   opacity: 0;
+  pointer-events: none;
   transition: width 0.2s ease, opacity 0.15s ease;
 }
 
 #file-actions.active {
   width: 28px;
   opacity: 1;
+  pointer-events: auto;
 }
 
 .device-header.selection-active button {

@@ -121,12 +121,10 @@ function ConnectionLayout(ports, emit, props) {
   }
   const list = html`<div class="overlay-connection-list"></div>`
   for (const port of ports) {
-    const item = html`<button class="overlay-connection-item">${port.path}</button>`
-    item.addEventListener('click', () => emit('select-port', port))
+    const item = html`<button class="overlay-connection-item" onclick=${() => emit('select-port', port)}>${port.path}</button>`
     list.appendChild(item)
   }
-  const refreshBtn = html`<button class="overlay-connection-item overlay-connection-refresh">Refresh</button>`
-  refreshBtn.addEventListener('click', () => emit('update-ports'))
+  const refreshBtn = html`<button class="overlay-connection-item overlay-connection-refresh" onclick=${() => emit('update-ports')}>Refresh</button>`
   list.appendChild(refreshBtn)
   el.appendChild(list)
   return el

@@ -311,6 +311,9 @@ async function store(state, emitter) {
     state.isLoadingFiles = false
     state.isTransferring = false
     state.transferringProgress = ''
+    const fn = _overlayResolver
+    _overlayResolver = null
+    if (fn) fn(false)
     state.overlay = null
     state.boardFiles = []
     state.boardNavigationPath = '/'
@@ -325,6 +328,7 @@ async function store(state, emitter) {
   emitter.on('connection-timeout', async () => {
     state.isConnected = false
     state.isConnecting = false
+    await serialBridge.disconnect()
     state.availablePorts = await getAvailablePorts()
     state.overlay = { type: 'connection', props: { error: 'Could not connect. Reset the board and try again.' } }
     emitter.emit('render')

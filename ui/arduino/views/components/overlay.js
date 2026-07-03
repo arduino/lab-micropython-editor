@@ -150,22 +150,13 @@ function Overlay(state, emit) {
       layout = ConnectionLayout(state.availablePorts, emit, props)
       interactive = true
     }
-  } else {
-    // Legacy boolean shim — kept until boolean flags are migrated to state.overlay
-    if (state.diskFiles == null) {
-      emit('load-disk-files')
-      layout = SpinnerLayout({ message: 'Loading files...' })
-    }
-    if (state.isRemoving)     layout = SpinnerLayout({ message: 'Removing...' })
-    if (state.isConnecting)   layout = SpinnerLayout({ message: 'Connecting...' })
-    if (state.isLoadingFiles) layout = SpinnerLayout({ message: 'Loading files...' })
-    if (state.isTransferring) {
-      const raw = state.transferringProgress || ''
-      const parts = raw.split(': ')
-      const pct = parseInt(parts[parts.length - 1]) || 0
-      const label = parts.length > 1 ? parts.slice(0, -1).join(': ') : ''
-      layout = ProgressLayout({ message: 'Transferring file', pct, label }, emit)
-    }
+  } else if (state.diskFiles == null) {
+    emit('load-disk-files')
+    layout = SpinnerLayout({ message: 'Loading files...' })
+  } else if (state.isConnecting) {
+    layout = SpinnerLayout({ message: 'Connecting...' })
+  } else if (state.isLoadingFiles) {
+    layout = SpinnerLayout({ message: 'Loading files...' })
   }
 
   if (!layout) return html`<div id="overlay" class="closed"></div>`

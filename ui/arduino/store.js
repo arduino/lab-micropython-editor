@@ -106,9 +106,6 @@ async function store(state, emitter) {
   state.isConnected = false
   state.connectedPort = null
 
-  state.isTransferring = false
-  state.transferringProgress = ''
-  state.isRemoving = false
 
   state.isLoadingFiles = false
   state.boardInfo = null
@@ -306,8 +303,6 @@ async function store(state, emitter) {
     }
     state.isConnected = false
     state.isLoadingFiles = false
-    state.isTransferring = false
-    state.transferringProgress = ''
     const fn = _overlayResolver
     _overlayResolver = null
     if (fn) fn(false)
@@ -945,9 +940,6 @@ async function store(state, emitter) {
 
   emitter.on('remove-files', async (source) => {
     // log('remove-files') // and folders
-    state.isRemoving = true
-    emitter.emit('render')
-
     const filesToRemove = state.selectedFiles.filter(file => file.source === source)
     const names = filesToRemove.map(file => file.fileName)
 
@@ -957,59 +949,62 @@ async function store(state, emitter) {
     message += `\nAre you sure you want to proceed?`
 
     const confirmAction = await showConfirmOverlay(state, emitter, message, 'Cancel', 'Yes')
-    if (!confirmAction) {
-      state.isRemoving = false
-      emitter.emit('render')
-      return
-    }
+    if (!confirmAction) return
 
-    if (terminalRouter) terminalRouter.setOperation('suppress')
+    state.overlay = { type: 'spinner', props: { message: `Removing ${names.join(', ')}…` } }
+    emitter.emit('render')
 
-    for (const file of filesToRemove) {
-      if (file.type == 'folder') {
-        if (file.source === 'board') {
-          await removeBoardFolder(
-            serialBridge.getFullPath(
-              state.boardNavigationRoot,
-              file.parentFolder,
-              file.fileName
+    try {
+      if (terminalRouter) terminalRouter.setOperation('suppress')
+
+      for (const file of filesToRemove) {
+        if (file.type == 'folder') {
+          if (file.source === 'board') {
+            await removeBoardFolder(
+              serialBridge.getFullPath(
+                state.boardNavigationRoot,
+                file.parentFolder,
+                file.fileName
+              )
             )
-          )
+          } else {
+            await disk.removeFolder(
+              disk.getFullPath(
+                state.diskNavigationRoot,
+                file.parentFolder,
+                file.fileName
+              )
+            )
+          }
         } else {
-          await disk.removeFolder(
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              file.parentFolder,
-              file.fileName
+          if (file.source === 'board') {
+            await serialBridge.removeFile(
+              serialBridge.getFullPath(
+                state.boardNavigationRoot,
+                file.parentFolder,
+                file.fileName
+              )
             )
-          )
-        }
-      } else {
-        if (file.source === 'board') {
-          await serialBridge.removeFile(
-            serialBridge.getFullPath(
-              state.boardNavigationRoot,
-              file.parentFolder,
-              file.fileName
+          } else {
+            await disk.removeFile(
+              disk.getFullPath(
+                state.diskNavigationRoot,
+                file.parentFolder,
+                file.fileName
+              )
             )
-          )
-        } else {
-          await disk.removeFile(
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              file.parentFolder,
-              file.fileName
-            )
-          )
+          }
         }
       }
+      state.selectedFiles = state.selectedFiles.filter(f => f.source !== source)
+      emitter.emit('refresh-files')
+    } catch (e) {
+      await alertError(state, emitter, e, 'Remove failed')
+    } finally {
+      state.overlay = null
+      if (terminalRouter) terminalRouter.setOperation('repl-interactive')
+      emitter.emit('render')
     }
-
-    if (terminalRouter) terminalRouter.setOperation('repl-interactive')
-    emitter.emit('refresh-files')
-    state.selectedFiles = state.selectedFiles.filter(f => f.source !== source)
-    state.isRemoving = false
-    emitter.emit('render')
   })
 
   emitter.on('rename-file', (source, item) => {
@@ -1552,8 +1547,6 @@ async function store(state, emitter) {
   // DOWNLOAD AND UPLOAD FILES
   emitter.on('upload-files', async () => {
     // log('upload-files')
-    state.isTransferring = true
-    emitter.emit('render')
     try {
       // Check which files will be overwritten on the board
       if (terminalRouter) terminalRouter.setOperation('file-listing')
@@ -1596,6 +1589,8 @@ async function store(state, emitter) {
       }
 
       if (terminalRouter) terminalRouter.setOperation('file-uploading')
+      state.overlay = { type: 'progress', props: { message: 'Uploading…', pct: 0 } }
+      emitter.emit('render')
 
       for (let i in state.selectedFiles) {
         const file = state.selectedFiles[i]
@@ -1614,16 +1609,15 @@ async function store(state, emitter) {
           await uploadFolder(
             srcPath, destPath,
             (progress, fileName) => {
-              state.transferringProgress = `${fileName}: ${progress}`
+              state.overlay = { type: 'progress', props: { message: 'Uploading…', pct: parseInt(progress) || 0, label: fileName } }
               emitter.emit('render')
             }
-
           )
         } else {
           await serialBridge.uploadFile(
             srcPath, destPath,
             (progress) => {
-              state.transferringProgress = `${file.fileName}: ${progress}`
+              state.overlay = { type: 'progress', props: { message: 'Uploading…', pct: parseInt(progress) || 0, label: file.fileName } }
               emitter.emit('render')
             }
           )
@@ -1648,8 +1642,7 @@ async function store(state, emitter) {
     } catch (e) {
       await alertError(state, emitter, e, 'Upload failed')
     } finally {
-      state.transferringProgress = ''
-      state.isTransferring = false
+      state.overlay = null
       if (terminalRouter) terminalRouter.setOperation('repl-interactive')
       emitter.emit('refresh-files')
       emitter.emit('render')
@@ -1657,9 +1650,6 @@ async function store(state, emitter) {
   })
   emitter.on('download-files', async () => {
     // log('download-files')
-    state.isTransferring = true
-    emitter.emit('render')
-
     try {
       // Check which files will be overwritten on the disk
       const willOverwrite = await checkOverwrite({
@@ -1682,6 +1672,8 @@ async function store(state, emitter) {
       }
 
       if (terminalRouter) terminalRouter.setOperation('file-loading')
+      state.overlay = { type: 'progress', props: { message: 'Downloading…', pct: 0 } }
+      emitter.emit('render')
 
       for (let i in state.selectedFiles) {
         const file = state.selectedFiles[i]
@@ -1698,16 +1690,16 @@ async function store(state, emitter) {
         if (file.type == 'folder') {
           await downloadFolder(
             srcPath, destPath,
-            (e) => {
-              state.transferringProgress = e
+            (progress) => {
+              state.overlay = { type: 'progress', props: { message: 'Downloading…', pct: parseInt(progress) || 0, label: file.fileName } }
               emitter.emit('render')
             }
           )
         } else {
           await serialBridge.downloadFile(
             srcPath, destPath,
-            (e) => {
-              state.transferringProgress = e
+            (progress) => {
+              state.overlay = { type: 'progress', props: { message: 'Downloading…', pct: parseInt(progress) || 0, label: file.fileName } }
               emitter.emit('render')
             }
           )
@@ -1717,8 +1709,7 @@ async function store(state, emitter) {
     } catch (e) {
       await alertError(state, emitter, e, 'Download failed')
     } finally {
-      state.transferringProgress = ''
-      state.isTransferring = false
+      state.overlay = null
       if (terminalRouter) terminalRouter.setOperation('repl-interactive')
       emitter.emit('refresh-files')
       emitter.emit('render')
@@ -1782,7 +1773,7 @@ async function store(state, emitter) {
   }),
   
   win.onKeyboardShortcut((key) => {
-    if (state.overlay !== null || state.isTransferring || state.isRemoving) return
+    if (state.overlay !== null) return
     if (state.shortcutsDisabled) return
     if (key === shortcuts.CLOSE) {
       emitter.emit('close-tab', state.editingFile)

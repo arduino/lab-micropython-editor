@@ -179,5 +179,5 @@ function Overlay(state, emit) {
     }
   })
 
-  return html`<div id="overlay" class="open${interactive ? ' interactive' : ''}" tabindex="-1">${layout}</div>`
+  return html`<div id="overlay" class="open${interactive ? ' interactive' : ''}" tabindex="-1" role="dialog" aria-modal="true">${layout}</div>`
 }

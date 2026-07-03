@@ -4,7 +4,7 @@ function FileActions(state, emit, active = false) {
     selectedFiles
   } = state
   return html`
-  <div id="file-actions" class="${active ? 'active' : ''}">
+  <div id="file-actions" class="${active ? 'active' : ''}" aria-hidden="${!active}" inert=${!active}>
     ${Button({
       icon: 'arrow-left-white.svg',
       size: 'small',

@@ -478,7 +478,10 @@ async function store(state, emitter) {
   emitter.on('start-resizing-panel', () => {
     // log('start-resizing-panel')
     window.addEventListener('mousemove', state.resizePanel)
-    // Stop resizing when mouse leaves window or enters the tabs area
+    // Stop resizing when mouse button is released anywhere, leaves window, or enters the tabs area
+    window.addEventListener('mouseup', () => {
+      emitter.emit('stop-resizing-panel')
+    }, { once: true })
     document.body.addEventListener('mouseleave', () => {
       emitter.emit('stop-resizing-panel')
     }, { once: true })
@@ -1454,7 +1457,7 @@ async function store(state, emitter) {
             const fileContent = await serialBridge.loadFile(
               serialBridge.getFullPath(
                 state.boardNavigationRoot,
-                state.boardNavigationPath,
+                selectedFile.parentFolder,
                 selectedFile.fileName
               ),
               (progress) => {
@@ -1467,7 +1470,7 @@ async function store(state, emitter) {
             // we feed the Uint8Array to the TextDecoder
             const bytesToSource = new TextDecoder('utf-8').decode(contentArray);
             file = createFile({
-              parentFolder: state.boardNavigationPath,
+              parentFolder: selectedFile.parentFolder,
               fileName: selectedFile.fileName,
               source: selectedFile.source,
               content: bytesToSource
@@ -1480,12 +1483,12 @@ async function store(state, emitter) {
             const fileContent = await disk.loadFile(
               disk.getFullPath(
                 state.diskNavigationRoot,
-                state.diskNavigationPath,
+                selectedFile.parentFolder,
                 selectedFile.fileName
               )
             )
             file = createFile({
-              parentFolder: state.diskNavigationPath,
+              parentFolder: selectedFile.parentFolder,
               fileName: selectedFile.fileName,
               source: selectedFile.source,
               content: fileContent
@@ -1517,6 +1520,8 @@ async function store(state, emitter) {
       state.selectedFiles = []
       state.view = 'editor'
       updateMenu()
+    } catch (e) {
+      await alertError(state, emitter, e, 'Failed to open file')
     } finally {
       state.overlay = null
       state.isLoadingFiles = false
@@ -1609,7 +1614,7 @@ async function store(state, emitter) {
         const file = state.selectedFiles[i]
         const srcPath = disk.getFullPath(
           state.diskNavigationRoot,
-          state.diskNavigationPath,
+          file.parentFolder,
           file.fileName
         )
         const destPath = serialBridge.getFullPath(
@@ -1695,7 +1700,7 @@ async function store(state, emitter) {
         const file = state.selectedFiles[i]
         const srcPath = serialBridge.getFullPath(
           state.boardNavigationRoot,
-          state.boardNavigationPath,
+          file.parentFolder,
           file.fileName
         )
         const destPath = disk.getFullPath(
@@ -1746,6 +1751,7 @@ async function store(state, emitter) {
   })
   emitter.on('navigate-board-parent', () => {
     // log('navigate-board-parent')
+    if (terminalRouter) terminalRouter.setOperation('directory-navigation')
     state.boardNavigationPath = serialBridge.getNavigationPath(
       state.boardNavigationPath,
       '..'

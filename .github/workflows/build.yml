@@ -133,7 +133,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
-          path: dist
+          path: dist/*.zip
+          if-no-files-found: error
           overwrite: true
 
   artifacts:
@@ -206,6 +207,7 @@ jobs:
         with:
           pattern: build-artifacts-*
           path: artifacts
+          merge-multiple: true
 
       - name: List artifacts
         run: ls -R artifacts
@@ -241,7 +243,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           release_name: ${{ steps.release_info.outputs.TAG_NAME }}
-          file: artifacts/*/*.zip
+          file: artifacts/*.zip
           tag: ${{ steps.release_info.outputs.TAG_NAME }}
           file_glob: true
           overwrite: true

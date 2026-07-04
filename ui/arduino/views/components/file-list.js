@@ -46,11 +46,6 @@ function generateFileList(source) {
         f => f.fileName === item.fileName && f.source === source
       )
 
-      function renameItem(e) {
-        e.preventDefault()
-        emit('rename-file', source, item)
-        return false
-      }
       let clickTimer = null
       function handleClick(e) {
         clearTimeout(clickTimer)

@@ -21,25 +21,25 @@ function FileManagerView(state, emit) {
     const allowDelete = sourceSelected.length > 0
 
     const defaultButtons = html`
-      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)} data-tooltip="New folder">
+      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)} data-tooltip="New folder" aria-label="New folder">
         <img class="icon" src="media/new-folder.svg" />
       </button>
-      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-file', source)} data-tooltip="New file">
+      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-file', source)} data-tooltip="New file" aria-label="New file">
         <img class="icon" src="media/new-file.svg" />
       </button>
     `
 
     const selectionButtons = html`
-      <button disabled=${!allowOpen} onclick=${() => emit('open-selected-files')} data-tooltip="Open">
+      <button disabled=${!allowOpen} onclick=${() => emit('open-selected-files')} data-tooltip="Open" aria-label="Open">
         <img class="icon" src="media/open.svg" />
       </button>
-      <button disabled=${!allowRename} onclick=${() => emit('rename-file', source, sourceSelected[0])} data-tooltip="Rename">
+      <button disabled=${!allowRename} onclick=${() => emit('rename-file', source, sourceSelected[0])} data-tooltip="Rename" aria-label="Rename">
         <img class="icon" src="media/rename_v2.svg" />
       </button>
-      <button disabled=${!allowDelete} onclick=${() => emit('remove-files', source)} data-tooltip="Delete">
+      <button disabled=${!allowDelete} onclick=${() => emit('remove-files', source)} data-tooltip="Delete" aria-label="Delete">
         <img class="icon" src="media/delete.svg" />
       </button>
-      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all">
+      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all" aria-label="Deselect all">
         <img class="icon" src="media/clear-checked.svg" />
       </button>
     `

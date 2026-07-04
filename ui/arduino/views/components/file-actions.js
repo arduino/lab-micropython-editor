@@ -5,22 +5,22 @@ function FileActions(state, emit, active = false) {
   } = state
   return html`
   <div id="file-actions" class="${active ? 'active' : ''}" aria-hidden="${!active}">
-    ${Button({
+    ${active ? Button({
       icon: 'arrow-left-white.svg',
       size: 'small',
       background: 'inverted',
       active: true,
       disabled: !canUpload({ isConnected, selectedFiles }),
       onClick: () => emit('upload-files')
-    })}
-    ${Button({
+    }) : null}
+    ${active ? Button({
       icon: 'arrow-right-white.svg',
       size: 'small',
       background: 'inverted',
       active: true,
       disabled: !canDownload({ isConnected, selectedFiles }),
       onClick: () => emit('download-files')
-    })}
+    }) : null}
   </div>
   `
 }

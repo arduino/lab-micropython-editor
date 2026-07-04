@@ -9,10 +9,20 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
     inputs:
-      internal:
-        description: 'Mark as internal build (appends "(internal)" to version)'
-        type: boolean
-        default: false
+      channel:
+        description: 'Build channel (appends pre-release identifier to version)'
+        type: choice
+        options:
+          - stable
+          - beta
+          - alpha
+          - rc
+          - internal
+        default: stable
+      rc_number:
+        description: 'Release candidate number (only used when channel is rc)'
+        type: number
+        default: 1
   pull_request:
     branches:
       - develop
@@ -60,14 +70,18 @@ jobs:
         shell: bash
         env:
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
-          IS_INTERNAL: ${{ github.event.inputs.internal }}
+          CHANNEL: ${{ github.event.inputs.channel }}
+          RC_NUMBER: ${{ github.event.inputs.rc_number }}
         run: |
           if [ "$IS_RELEASE" = "true" ]; then
             TAG=${GITHUB_REF#refs/tags/}
             npm version "$TAG" --no-git-tag-version --allow-same-version
-          elif [ "$IS_INTERNAL" = "true" ]; then
+          elif [ "$CHANNEL" = "rc" ]; then
             CURRENT=$(node -p "require('./package.json').version")
-            npm version "${CURRENT}-internal" --no-git-tag-version --allow-same-version
+            npm version "${CURRENT}-rc.${RC_NUMBER}" --no-git-tag-version --allow-same-version
+          elif [ "$CHANNEL" = "beta" ] || [ "$CHANNEL" = "alpha" ] || [ "$CHANNEL" = "internal" ]; then
+            CURRENT=$(node -p "require('./package.json').version")
+            npm version "${CURRENT}-${CHANNEL}" --no-git-tag-version --allow-same-version
           fi
 
       - name: Package
@@ -176,7 +190,15 @@ jobs:
 
   release:
     needs: build
-    if: github.repository == 'arduino/lab-micropython-editor' && startsWith(github.ref, 'refs/tags/')
+    if: |
+      github.repository == 'arduino/lab-micropython-editor' && (
+        startsWith(github.ref, 'refs/tags/') ||
+        (github.event_name == 'workflow_dispatch' && (
+          github.event.inputs.channel == 'alpha' ||
+          github.event.inputs.channel == 'beta' ||
+          github.event.inputs.channel == 'rc'
+        ))
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -184,24 +206,46 @@ jobs:
         with:
           pattern: build-artifacts-*
           path: artifacts
-          
+
       - name: List artifacts
         run: ls -R artifacts
 
-      - name: Get Tag
-        id: tag_name
+      - name: Checkout (for pre-release version derivation)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+
+      - name: Derive release version
+        id: release_info
+        shell: bash
+        env:
+          CHANNEL: ${{ github.event.inputs.channel }}
+          RC_NUMBER: ${{ github.event.inputs.rc_number }}
         run: |
-          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
+            echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+          else
+            BASE=$(node -p "require('./package.json').version")
+            if [ "$CHANNEL" = "rc" ]; then
+              TAG="${BASE}-rc.${RC_NUMBER}"
+            else
+              TAG="${BASE}-${CHANNEL}"
+            fi
+            echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
+            echo "PRERELEASE=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish Release [GitHub]
         uses: svenstaro/upload-release-action@2.11.2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+          release_name: ${{ steps.release_info.outputs.TAG_NAME }}
           file: artifacts/**/*.zip
-          tag: ${{ github.ref }}
+          tag: ${{ steps.release_info.outputs.TAG_NAME }}
           file_glob: true
           overwrite: true
+          prerelease: ${{ steps.release_info.outputs.PRERELEASE }}
 
   clean:
     # This job must run after all jobs that use the transfer artifact.

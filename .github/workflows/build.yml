@@ -212,28 +212,21 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
 
-      - name: Checkout (for pre-release version derivation)
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/checkout@v4
-
       - name: Derive release version
         id: release_info
         shell: bash
-        env:
-          CHANNEL: ${{ github.event.inputs.channel }}
-          RC_NUMBER: ${{ github.event.inputs.rc_number }}
         run: |
           if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
             TAG=${GITHUB_REF#refs/tags/}
             echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
             echo "PRERELEASE=false" >> $GITHUB_OUTPUT
           else
-            BASE=$(node -p "require('./package.json').version")
-            if [ "$CHANNEL" = "rc" ]; then
-              TAG="${BASE}-rc.${RC_NUMBER}"
-            else
-              TAG="${BASE}-${CHANNEL}"
-            fi
+            FILE=$(ls artifacts/*.zip | head -1)
+            BASE=$(basename "$FILE" .zip)
+            # Strip OS/arch suffix (e.g. -mac_universal, -win_x64)
+            WITHOUT_SUFFIX=$(echo "$BASE" | sed 's/-[a-z][a-z_0-9]*$//')
+            # Strip product name (everything before first digit)
+            TAG=$(echo "$WITHOUT_SUFFIX" | sed 's/^[^0-9]*//')
             echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
             echo "PRERELEASE=true" >> $GITHUB_OUTPUT
           fi

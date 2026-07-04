@@ -241,7 +241,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           release_name: ${{ steps.release_info.outputs.TAG_NAME }}
-          file: artifacts/**/*.zip
+          file: artifacts/*/*.zip
           tag: ${{ steps.release_info.outputs.TAG_NAME }}
           file_glob: true
           overwrite: true

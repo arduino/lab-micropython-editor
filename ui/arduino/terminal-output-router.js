@@ -10,9 +10,10 @@
 //     router.write('\r\n--- Resetting board ---\r\n')
 //   })
 
+const _decoder = new TextDecoder()
 function toStr(data) {
   if (typeof data === 'string') return data
-  return new TextDecoder().decode(new Uint8Array(data))
+  return _decoder.decode(new Uint8Array(data))
 }
 
 // Named noise patterns for raw REPL protocol and MicroPython banner fragments.

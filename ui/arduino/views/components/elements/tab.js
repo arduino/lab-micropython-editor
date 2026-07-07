@@ -1,6 +1,7 @@
 function Tab(args) {
   const {
     text = 'undefined',
+    fullPath = '',
     icon = 'computer.svg',
     onSelectTab = () => false,
     onCloseTab = () => false,
@@ -40,7 +41,9 @@ function Tab(args) {
       `
     } else {
       return html`
-        <div class="tab active" tabindex="0">
+        <div class="tab active" tabindex="0"
+          onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget, e.clientX)}
+          onmouseleave=${() => Tooltip.hide()}>
           <img class="icon" src="media/${icon}" />
           <div class="text" ondblclick=${onStartRenaming}>
             ${hasChanges ? ' *' : ''} ${text}
@@ -66,7 +69,8 @@ function Tab(args) {
       class="tab"
       tabindex="1"
       onclick=${selectTab}
-      >
+      onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget, e.clientX)}
+      onmouseleave=${() => Tooltip.hide()}>
       <img class="icon" src="media/${icon}" />
       <div class="text">
         ${hasChanges ? '*' : ''} ${text}

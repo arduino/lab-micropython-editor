@@ -1770,7 +1770,17 @@ async function store(state, emitter) {
 
   win.onDisableShortcuts((disable) => {
     state.shortcutsDisabled = disable
-  }),
+  })
+
+  win.onSelectLine(() => {
+    const openFile = state.openFiles.find(f => f.id === state.editingFile)
+    if (openFile?.editor?.editor) window.editorCommands.selectCurrentLine(openFile.editor.editor)
+  })
+
+  win.onSelectFunction(() => {
+    const openFile = state.openFiles.find(f => f.id === state.editingFile)
+    if (openFile?.editor?.editor) window.editorCommands.selectFunction(openFile.editor.editor)
+  })
   
   win.onKeyboardShortcut((key) => {
     if (state.overlay !== null) return

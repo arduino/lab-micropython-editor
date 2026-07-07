@@ -86,6 +86,17 @@ module.exports = function registerMenu(win, state = {}) {
           { role: 'selectAll' },
           { type: 'separator' },
           {
+            label: 'Select Line',
+            accelerator: shortcuts.menu.SELECT_LINE,
+            click: () => win.webContents.send('select-line')
+          },
+          {
+            label: 'Select Function',
+            accelerator: shortcuts.menu.SELECT_FUNCTION,
+            click: () => win.webContents.send('select-function')
+          },
+          { type: 'separator' },
+          {
             label: 'Speech',
             submenu: [
               { role: 'startSpeaking' },
@@ -94,7 +105,18 @@ module.exports = function registerMenu(win, state = {}) {
           }
         ] : [
           { type: 'separator' },
-          { role: 'selectAll' }
+          { role: 'selectAll' },
+          { type: 'separator' },
+          {
+            label: 'Select Line',
+            accelerator: shortcuts.menu.SELECT_LINE,
+            click: () => win.webContents.send('select-line')
+          },
+          {
+            label: 'Select Function',
+            accelerator: shortcuts.menu.SELECT_FUNCTION,
+            click: () => win.webContents.send('select-function')
+          },
         ])
       ]
     },

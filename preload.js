@@ -70,6 +70,8 @@ const Window = {
   },
 
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
+  onSelectLine: (callback) => ipcRenderer.on('select-line', callback),
+  onSelectFunction: (callback) => ipcRenderer.on('select-function', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
   isPackaged: () => ipcRenderer.invoke('is-packaged'),
   openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt),

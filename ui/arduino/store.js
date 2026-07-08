@@ -647,6 +647,7 @@ async function store(state, emitter) {
       let response = await showConfirmOverlay(state, emitter, "Your file has unsaved changes.\nAre you sure you want to proceed?", "Cancel", "Yes")
       if (!response) return false
     }
+    currentTab.editor.destroy()
     state.openFiles = state.openFiles.filter(f => f.id !== id)
     // state.editingFile = null
 
@@ -1768,6 +1769,11 @@ async function store(state, emitter) {
     await win.confirmClose()
   })
 
+  win.onReady(() => {
+    const openFile = state.openFiles.find(f => f.id === state.editingFile)
+    if (openFile?.editor?.editor) openFile.editor.editor.focus()
+  })
+
   win.onDisableShortcuts((disable) => {
     state.shortcutsDisabled = disable
   })
@@ -1951,8 +1957,6 @@ async function store(state, emitter) {
       const confirmation = await showConfirmOverlay(state, emitter, `File ${newFile.fileName} already exists on ${source}. Please choose another name.`, 'OK')
       return false
     }
-    // LEAK > listeners keep getting added and not removed when tabs are closed
-    // additionally I found that closing a tab has actually added an extra listener
     newFile.editor.onChange = function() {
       newFile.hasChanges = true
       emitter.emit('render')

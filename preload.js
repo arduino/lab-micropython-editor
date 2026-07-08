@@ -69,6 +69,7 @@ const Window = {
     })
   },
 
+  onReady: (callback) => ipcRenderer.once('window-ready', callback),
   beforeClose: (callback) => ipcRenderer.on('check-before-close', callback),
   onSelectLine: (callback) => ipcRenderer.on('select-line', callback),
   onSelectFunction: (callback) => ipcRenderer.on('select-function', callback),

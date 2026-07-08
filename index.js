@@ -41,14 +41,16 @@ function createWindow () {
   splashTimestamp = Date.now()
 
   win.once('ready-to-show', () => {
+    win.show()
     if (Date.now()-splashTimestamp > 1000) {
       splash.destroy()
+      win.webContents.send('window-ready')
     } else {
       setTimeout(() => {
         splash.destroy()
+        win.webContents.send('window-ready')
       }, 500)
     }
-    win.show()
   })
 
   const initialMenuState = {

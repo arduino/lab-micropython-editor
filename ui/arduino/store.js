@@ -355,21 +355,23 @@ async function store(state, emitter) {
     const openFile = state.openFiles.find(f => f.id == state.editingFile)
     let code = openFile.editor.editor.state.doc.toString()
 
-    // If there is a selection, run only the selected code
-    const startIndex = openFile.editor.editor.state.selection.ranges[0].from
-    const endIndex = openFile.editor.editor.state.selection.ranges[0].to
-    if (endIndex - startIndex > 0 && onlySelected) {
-      const selectedCode = openFile.editor.editor.state.doc.toString().substring(startIndex, endIndex)
-      // Checking to see if the user accidentally double-clicked some whitespace
-      // While a random selection would yield an error when executed, 
-      // selecting only whitespace would not and the user would have no feedback.
-      // This check only replaces the full content of the currently selected tab
-      // with a text selection if the selection is not empty and contains only whitespace.
-      if (selectedCode.trim().length > 0) {
-        code = selectedCode
+    let savedSelection = null
+
+    if (onlySelected) {
+      const editor = openFile.editor.editor
+      savedSelection = editor.state.selection
+      if (savedSelection.ranges[0].from === savedSelection.ranges[0].to) {
+        window.editorCommands.selectFunction(editor)
       }
+      const selected = editor.state.selection.ranges[0]
+      const selectedCode = editor.state.doc.toString().substring(selected.from, selected.to)
+      if (selectedCode.trim().length === 0) {
+        editor.dispatch({ selection: savedSelection })
+        return
+      }
+      code = selectedCode
     }
-    
+
     emitter.emit('open-panel')
     emitter.emit('render')
 
@@ -382,13 +384,18 @@ async function store(state, emitter) {
       // with passThrough=true (user code), so enter_raw_repl/_checkRam bytes never
       // arrive here regardless of mode. The handler receives OK+stdout+\x04+stderr+\x04>.
       if (terminalRouter) terminalRouter.setOperation('code-execution')
-      await serialBridge.run(code)
+      await serialBridge.run(code, onlySelected ? {} : { checkRam: true })
     } catch(e) {
       await alertError(state, emitter, e)
     } finally {
       // Only reset to repl-interactive if stop/reset hasn't already taken over.
       if (terminalRouter && terminalRouter.currentOperation === 'code-execution') {
         terminalRouter.setOperation('repl-interactive')
+      }
+      if (savedSelection) {
+        const editor = openFile.editor.editor
+        editor.dispatch({ selection: savedSelection })
+        editor.focus()
       }
     }
     

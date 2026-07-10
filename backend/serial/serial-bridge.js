@@ -11,8 +11,8 @@ const SerialBridge = {
   disconnect: async () => {
     return await ipcRenderer.invoke('serial', 'disconnect')
   },
-  run: async (code) => {
-    return await ipcRenderer.invoke('serial', 'run', code)
+  run: async (code, options = {}) => {
+    return await ipcRenderer.invoke('serial', 'run', code, null, options)
   },
   execFile: async (path) => {
     return await ipcRenderer.invoke('serial', 'execFile', path)

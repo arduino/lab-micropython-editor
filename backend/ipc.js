@@ -15,7 +15,6 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   serial.win = win // Required to send callback messages to renderer
   
   ipcMain.handle('open-folder', async (event) => {
-    console.log('ipcMain', 'open-folder')
     const folder = await openFolderDialog(win)
     let files = []
     if (folder) {
@@ -25,31 +24,26 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   })
 
   ipcMain.handle('list-files', async (event, folder) => {
-    console.log('ipcMain', 'list-files', folder)
     if (!folder) return []
     return listFolder(folder)
   })
 
   ipcMain.handle('ilist-files', async (event, folder) => {
-    console.log('ipcMain', 'ilist-files', folder)
     if (!folder) return []
     return ilistFolder(folder)
   })
 
   ipcMain.handle('ilist-all-files', (event, folder) => {
-    console.log('ipcMain', 'ilist-all-files', folder)
     if (!folder) return []
     return getAllFiles(folder)
   })
 
   ipcMain.handle('load-file', (event, filePath) => {
-    console.log('ipcMain', 'load-file', filePath)
     let content = fs.readFileSync(filePath)
     return content
   })
 
   ipcMain.handle('save-file', (event, filePath, content) => {
-    console.log('ipcMain', 'save-file', filePath, content)
     const data = Buffer.from(content);
     fs.writeFileSync(filePath, data)
     return true
@@ -67,19 +61,16 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   // })
 
   ipcMain.handle('remove-file', (event, filePath) => {
-    console.log('ipcMain', 'remove-file', filePath)
     fs.unlinkSync(filePath)
     return true
   })
 
   ipcMain.handle('rename-file', (event, filePath, newFilePath) => {
-    console.log('ipcMain', 'rename-file', filePath, newFilePath)
     fs.renameSync(filePath, newFilePath)
     return true
   })
 
   ipcMain.handle('create-folder', (event, folderPath) => {
-    console.log('ipcMain', 'create-folder', folderPath)
     try {
       fs.mkdirSync(folderPath, { recursive: true })
     } catch(e) {
@@ -90,13 +81,11 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   })
 
   ipcMain.handle('remove-folder', (event, folderPath) => {
-    console.log('ipcMain', 'remove-folder', folderPath)
     fs.rmdirSync(folderPath, { recursive: true, force: true })
     return true
   })
 
   ipcMain.handle('file-exists', (event, filePath) => {
-    console.log('ipcMain', 'file-exists', filePath)
     try {
       fs.accessSync(filePath, fs.constants.F_OK)
       return true
@@ -107,17 +96,11 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   // WINDOW MANAGEMENT
 
   ipcMain.handle('set-window-size', (event, minWidth, minHeight) => {
-    console.log('ipcMain', 'set-window-size', minWidth, minHeight)
-    if (!win) {
-      console.log('No window defined')
-      return false
-    }
-
+    if (!win) return false
     win.setMinimumSize(minWidth, minHeight)
   })
 
   ipcMain.handle('confirm-close', () => {
-    console.log('ipcMain', 'confirm-close')
     app.exit()
   })
 
@@ -126,12 +109,10 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   })
 
   ipcMain.handle('get-app-path', () => {
-    console.log('ipcMain', 'get-app-path')
     return app.getAppPath()
   })
 
   ipcMain.handle('open-dialog', (event, opt) => {
-    console.log('ipcMain', 'open-dialog', opt)
     const response = dialog.showMessageBoxSync(win, opt)
     return response != opt.cancelId
   })
@@ -165,7 +146,6 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   });
 
   win.on('close', (event) => {
-    console.log('BrowserWindow', 'close')
     event.preventDefault()
     win.webContents.send('check-before-close')
   })

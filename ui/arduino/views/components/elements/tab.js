@@ -42,7 +42,7 @@ function Tab(args) {
     } else {
       return html`
         <div class="tab active" tabindex="0"
-          onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget, e.clientX)}
+          onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget)}
           onmouseleave=${() => Tooltip.hide()}>
           <img class="icon" src="media/${icon}" />
           <div class="text" ondblclick=${onStartRenaming}>
@@ -69,7 +69,7 @@ function Tab(args) {
       class="tab"
       tabindex="1"
       onclick=${selectTab}
-      onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget, e.clientX)}
+      onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget)}
       onmouseleave=${() => Tooltip.hide()}>
       <img class="icon" src="media/${icon}" />
       <div class="text">

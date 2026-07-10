@@ -11,7 +11,7 @@ const Tooltip = (() => {
     return el
   }
 
-  function show(text, anchor, mouseX) {
+  function show(text, anchor) {
     hide()
     if (!text) return
     timer = setTimeout(() => {
@@ -33,10 +33,8 @@ const Tooltip = (() => {
         top = rect.bottom + margin
       }
 
-      // Horizontal: anchor point within tooltip shifts with mouse position
-      // left edge at x=0, centered at x=vw/2, right edge at x=vw
-      const mx = mouseX ?? (rect.left + rect.width / 2)
-      let left = mx * (1 - tipRect.width / vw)
+      // Horizontal: center over the anchor, clamped to viewport
+      let left = rect.left + rect.width / 2 - tipRect.width / 2
       left = Math.max(margin, Math.min(vw - tipRect.width - margin, left))
 
       tip.style.top = `${top}px`

@@ -180,6 +180,18 @@ module.exports = function registerMenu(win, state = {}) {
           enabled: state.isConnected && state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
         },
+        {
+          label: 'Next Tab',
+          accelerator: shortcuts.menu.TAB_NEXT,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.TAB_NEXT)
+        },
+        {
+          label: 'Previous Tab',
+          accelerator: shortcuts.menu.TAB_PREV,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.TAB_PREV)
+        },
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },

@@ -2,6 +2,7 @@ let _emit = null
 let _containerWidth = 0
 let _dropdownOpen = false
 let _resizeObserver = null
+let _windowStart = 0
 
 // Each tab: 140px min-width + 20px padding + 6px gap = 166px slot
 const TAB_SLOT = 166
@@ -38,13 +39,19 @@ function Tabs(state, emit) {
     ? calcVisibleCount(_containerWidth, files.length)
     : files.length
 
-  // Slide window so active tab is always visible
-  let start = 0
-  let end = Math.min(visibleCount, files.length)
-  if (activeIndex >= end) {
-    end = activeIndex + 1
-    start = Math.max(0, end - visibleCount)
+  // Clamp _windowStart so it never leaves trailing empty slots after resize/close
+  _windowStart = Math.min(_windowStart, Math.max(0, files.length - visibleCount))
+  _windowStart = Math.max(0, _windowStart)
+
+  // Scroll only when active tab falls outside the current window
+  if (activeIndex < _windowStart) {
+    _windowStart = activeIndex
+  } else if (activeIndex >= _windowStart + visibleCount) {
+    _windowStart = activeIndex - visibleCount + 1
   }
+
+  const start = _windowStart
+  const end = Math.min(start + visibleCount, files.length)
 
   const visibleFiles = files.slice(start, end)
   const overflowFiles = [...files.slice(0, start), ...files.slice(end)]

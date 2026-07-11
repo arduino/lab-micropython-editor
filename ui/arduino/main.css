@@ -240,6 +240,7 @@ button.small .icon {
   background: #ECF1F1;
   font-size: 14px;
   position: relative;
+  border-bottom: 1px solid #008184;
 }
 
 .tab {
@@ -254,6 +255,9 @@ button.small .icon {
   background: #DAE3E3;
   overflow: hidden;
   transition: all 0.1s;
+  position: relative;
+  top: 1px
+  border-bottom: 1px solid #008184;;
 }
 
 .tab:hover {
@@ -262,6 +266,11 @@ button.small .icon {
 
 .tab.active {
   background: #FFF;
+  border-width: 1px 1px 0 1px;
+  border-color: #008184;;
+  border-style: solid;
+  position: relative;
+  bottom: -1px;
 }
 
 .tab .icon {

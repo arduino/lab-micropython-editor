@@ -1848,6 +1848,14 @@ async function store(state, emitter) {
       if (state.view != 'editor') return
       emitter.emit('change-view', 'file-manager')
     }
+    if (key === shortcuts.TAB_NEXT || key === shortcuts.TAB_PREV) {
+      if (state.view !== 'editor' || state.openFiles.length < 2) return
+      const idx = state.openFiles.findIndex(f => f.id === state.editingFile)
+      const next = key === shortcuts.TAB_NEXT
+        ? (idx + 1) % state.openFiles.length
+        : (idx - 1 + state.openFiles.length) % state.openFiles.length
+      emitter.emit('select-tab', state.openFiles[next].id)
+    }
     // if (key === shortcuts.ESC) {
     //   if (state.isConnectionDialogOpen) {
     //     emitter.emit('close-connection-dialog')

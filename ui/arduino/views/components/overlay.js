@@ -54,14 +54,14 @@ function InputLayout(props, emit) {
 
   let boardBtn = null
   if (props.isConnected) {
-    boardBtn = html`<button class="overlay-btn overlay-btn--secondary">Board</button>`
+    boardBtn = html`<button class="overlay-btn">Board</button>`
     boardBtn.addEventListener('click', () => {
       const fileName = input.value.trim() || input.placeholder
       emit('overlay-button-clicked', { device: 'board', fileName })
     })
     btnRow.appendChild(boardBtn)
   }
-  const diskBtn = html`<button class="overlay-btn overlay-btn--secondary">Computer</button>`
+  const diskBtn = html`<button class="overlay-btn">Computer</button>`
   diskBtn.addEventListener('click', () => {
     const fileName = input.value.trim() || input.placeholder
     emit('overlay-button-clicked', { device: 'disk', fileName })

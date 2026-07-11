@@ -1065,8 +1065,9 @@ button.small .icon {
   background: rgba(0, 0, 0, 0.08);
 }
 
-#overlay .overlay-btn--secondary:hover {
-  background: rgba(0, 0, 0, 0.15);
+#overlay .overlay-btn--secondary:hover,
+#overlay .overlay-btn--secondary:focus {
+  background: rgba(0, 129, 132, 0.8);
 }
 
 #overlay.open > .overlay-input-card {

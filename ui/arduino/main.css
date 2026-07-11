@@ -1105,7 +1105,8 @@ button.small .icon {
 }
 
 .overlay-input-btn-row .overlay-btn:hover,
-.overlay-input-btn-row .overlay-btn:focus {
+.overlay-input-btn-row .overlay-btn:focus,
+.overlay-input-btn-row .overlay-btn.overlay-btn--highlighted {
   background: rgba(0, 129, 132, 1);
   color: white;
   outline: none;

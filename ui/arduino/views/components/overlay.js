@@ -42,7 +42,7 @@ function ProgressLayout(props, emit) {
   return el
 }
 
-function InputLayout(props, emit) {
+function NewFileLayout(props, emit) {
   const el = html`<div class="overlay-input-card dismissable"></div>`
   el.appendChild(CloseButton(emit))
   const title = document.createElement('p')
@@ -69,6 +69,16 @@ function InputLayout(props, emit) {
   btnRow.appendChild(diskBtn)
   el.appendChild(btnRow)
 
+  function setHighlighted(btn) {
+    ;[boardBtn, diskBtn].filter(Boolean).forEach(b => b.classList.remove('overlay-btn--highlighted'))
+    if (btn) btn.classList.add('overlay-btn--highlighted')
+  }
+
+  setHighlighted(diskBtn)
+  input.addEventListener('focus', () => setHighlighted(diskBtn))
+  if (boardBtn) boardBtn.addEventListener('focus', () => setHighlighted(null))
+  diskBtn.addEventListener('focus', () => setHighlighted(null))
+
   const focusables = [input, ...(boardBtn ? [boardBtn] : []), diskBtn]
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
@@ -78,7 +88,7 @@ function InputLayout(props, emit) {
         ? focusables[(idx - 1 + focusables.length) % focusables.length]
         : focusables[(idx + 1) % focusables.length]
       next.focus()
-    } else if (e.key === 'Enter' && document.activeElement === input && !props.isConnected) {
+    } else if (e.key === 'Enter' && document.activeElement === input) {
       const fileName = input.value.trim() || input.placeholder
       emit('overlay-button-clicked', { device: 'disk', fileName })
     }
@@ -143,8 +153,8 @@ function Overlay(state, emit) {
     } else if (type === 'confirm' || type === 'alert') {
       layout = ConfirmLayout(props, emit)
       interactive = true
-    } else if (type === 'input') {
-      layout = InputLayout(props, emit)
+    } else if (type === 'new-file') {
+      layout = NewFileLayout(props, emit)
       interactive = true
     } else if (type === 'connection') {
       layout = ConnectionLayout(state.availablePorts, emit, props)

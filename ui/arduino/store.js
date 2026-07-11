@@ -51,7 +51,7 @@ function showInputOverlay(state, emitter, title, placeholder, isConnected) {
   }
   return new Promise((resolve) => {
     _overlayResolver = resolve
-    state.overlay = { type: 'input', props: { title, placeholder, isConnected } }
+    state.overlay = { type: 'new-file', props: { title, placeholder, isConnected } }
     emitter.emit('render')
   })
 }
@@ -1530,7 +1530,7 @@ async function store(state, emitter) {
     emitter.emit('open-selected-files')
   })
 
-  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'input', 'connection'])
+  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'new-file', 'connection'])
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && DISMISSABLE_OVERLAY_TYPES.has(state.overlay?.type)) {
       emitter.emit('overlay-button-clicked', null)
@@ -1929,7 +1929,7 @@ async function store(state, emitter) {
       fileName: fileName === null ? generateFileName() : fileName,
       parentFolder: parentFolder,
       source: source,
-      hasChanges: true
+      hasChanges: false
     })
     
     let fullPathExists = false

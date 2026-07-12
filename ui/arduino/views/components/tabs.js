@@ -97,7 +97,16 @@ function Tabs(state, emit) {
   ` : null
 
   const tabs = html`
-    <div id="tabs">
+    <div id="tabs" role="tablist" onkeydown=${(e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      const tabEls = Array.from(e.currentTarget.querySelectorAll('[role="tab"]'))
+      const idx = tabEls.indexOf(document.activeElement)
+      if (idx === -1) return
+      const next = e.key === 'ArrowRight'
+        ? tabEls[(idx + 1) % tabEls.length]
+        : tabEls[(idx - 1 + tabEls.length) % tabEls.length]
+      next.focus()
+    }}>
       ${visibleFiles.map((file) => {
         const fullPath = file.parentFolder ? `${file.parentFolder}/${file.fileName}` : file.fileName
         return Tab({

@@ -399,7 +399,7 @@ async function store(state, emitter) {
       }
     }
     
-    el = document.querySelector('.cm-content')
+    const el = document.querySelector('.cm-content')
     if (el) {
       el.focus()
     }

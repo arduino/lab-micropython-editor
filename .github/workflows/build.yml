@@ -8,6 +8,21 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
+    inputs:
+      channel:
+        description: 'Build channel (appends pre-release identifier to version)'
+        type: choice
+        options:
+          - stable
+          - beta
+          - alpha
+          - rc
+          - internal
+        default: stable
+      rc_number:
+        description: 'Release candidate number (only used when channel is rc)'
+        type: number
+        default: 1
   pull_request:
     branches:
       - develop
@@ -26,7 +41,7 @@ jobs:
           - os: macos-latest
             id: macos-universal
           - os: [self-hosted, windows-sign-pc]
-            id: windows
+            id: windows-x64
           - os: ubuntu-latest
             id: linux-x64
           - os: ubuntu-24.04-arm
@@ -51,6 +66,24 @@ jobs:
         with:
           python-version: '3.11.x'
 
+      - name: Set version
+        shell: bash
+        env:
+          IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
+          CHANNEL: ${{ github.event.inputs.channel }}
+          RC_NUMBER: ${{ github.event.inputs.rc_number }}
+        run: |
+          if [ "$IS_RELEASE" = "true" ]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            npm version "$TAG" --no-git-tag-version --allow-same-version
+          elif [ "$CHANNEL" = "rc" ]; then
+            CURRENT=$(node -p "require('./package.json').version")
+            npm version "${CURRENT}-rc.${RC_NUMBER}" --no-git-tag-version --allow-same-version
+          elif [ "$CHANNEL" = "beta" ] || [ "$CHANNEL" = "alpha" ] || [ "$CHANNEL" = "internal" ]; then
+            CURRENT=$(node -p "require('./package.json').version")
+            npm version "${CURRENT}-${CHANNEL}" --no-git-tag-version --allow-same-version
+          fi
+
       - name: Package
         shell: bash
         env:
@@ -70,7 +103,6 @@ jobs:
           IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
           IS_FORK: ${{ github.event.pull_request.head.repo.fork == true }}
           npm_config_target_arch: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
-          ELECTRON_BUILDER_ARCH: ${{ matrix.config.id == 'linux-arm64' && 'arm64' || '' }}
 
         run: |
             # See: https://www.electron.build/code-signing
@@ -101,7 +133,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
-          path: dist
+          path: dist/*.zip
+          if-no-files-found: error
           overwrite: true
 
   artifacts:
@@ -119,7 +152,7 @@ jobs:
             id: macos-universal
           - path: "*-win_x64.zip"
             name: Arduino.Lab.for.MicroPython-win_x64
-            id: windows
+            id: windows-x64
           - path: "*-linux_x64.zip"
             name: Arduino.Lab.for.MicroPython-linux_x64
             id: linux-x64
@@ -143,16 +176,30 @@ jobs:
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
+      - name: Derive artifact name from filename
+        shell: bash
+        run: |
+          FILE=$(ls ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }})
+          ARTIFACT_NAME=$(basename "$FILE" .zip | tr ' ' '.')
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
       - name: Upload tester build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact.name }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
           overwrite: true
 
   release:
     needs: build
-    if: github.repository == 'arduino/lab-micropython-editor' && startsWith(github.ref, 'refs/tags/')
+    if: |
+      github.repository == 'arduino/lab-micropython-editor' && (
+        startsWith(github.ref, 'refs/tags/') ||
+        (github.event_name == 'workflow_dispatch' && (
+          github.event.inputs.channel == 'alpha' ||
+          github.event.inputs.channel == 'beta' ||
+          github.event.inputs.channel == 'rc'
+        ))
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -160,24 +207,40 @@ jobs:
         with:
           pattern: build-artifacts-*
           path: artifacts
-          
+          merge-multiple: true
+
       - name: List artifacts
         run: ls -R artifacts
 
-      - name: Get Tag
-        id: tag_name
+      - name: Derive release version
+        id: release_info
+        shell: bash
         run: |
-          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
+            echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+          else
+            FILE=$(ls artifacts/*.zip | head -1)
+            BASE=$(basename "$FILE" .zip)
+            # Strip OS/arch suffix (e.g. -mac_universal, -win_x64)
+            WITHOUT_SUFFIX=$(echo "$BASE" | sed 's/-[a-z][a-z_0-9]*$//')
+            # Strip product name (everything before first digit)
+            TAG=$(echo "$WITHOUT_SUFFIX" | sed 's/^[^0-9]*//')
+            echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
+            echo "PRERELEASE=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish Release [GitHub]
         uses: svenstaro/upload-release-action@2.11.2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: ${{ steps.tag_name.outputs.TAG_NAME }}
-          file: artifacts/**/*.zip
-          tag: ${{ github.ref }}
+          release_name: ${{ steps.release_info.outputs.TAG_NAME }}
+          file: artifacts/*.zip
+          tag: ${{ steps.release_info.outputs.TAG_NAME }}
           file_glob: true
           overwrite: true
+          prerelease: ${{ steps.release_info.outputs.PRERELEASE }}
 
   clean:
     # This job must run after all jobs that use the transfer artifact.

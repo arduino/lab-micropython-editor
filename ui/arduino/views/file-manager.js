@@ -1,49 +1,84 @@
 function FileManagerView(state, emit) {
+  const { isConnected, selectedFiles } = state
+
+  const boardSelected = selectedFiles.filter(f => f.source === 'board')
+  const diskSelected  = selectedFiles.filter(f => f.source === 'disk')
+  const anySelected   = boardSelected.length > 0 || diskSelected.length > 0
+
   let boardFullPath = 'Connect to board'
   let diskFullPath = `${state.diskNavigationRoot}${state.diskNavigationPath}`
 
-  if (state.isConnected) {
+  if (isConnected) {
     boardFullPath = `${state.connectedPort}${state.boardNavigationPath}`
+  }
+
+  function DeviceHeader({ source, fullPath, pathAction, icon }) {
+    const sourceSelected = source === 'board' ? boardSelected : diskSelected
+    const selectionActive = sourceSelected.length > 0
+
+    const allowOpen   = canEdit({ selectedFiles: sourceSelected })
+    const allowRename = sourceSelected.length === 1
+    const allowDelete = sourceSelected.length > 0
+
+    const defaultButtons = html`
+      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)} data-tooltip="New folder" aria-label="New folder">
+        <img class="icon" src="media/new-folder.svg" />
+      </button>
+      <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-file', source)} data-tooltip="New file" aria-label="New file">
+        <img class="icon" src="media/new-file.svg" />
+      </button>
+    `
+
+    const selectionButtons = html`
+      <button disabled=${!allowOpen} onclick=${() => emit('open-selected-files')} data-tooltip="Open" aria-label="Open">
+        <img class="icon" src="media/open.svg" />
+      </button>
+      <button disabled=${!allowRename} onclick=${() => emit('rename-file', source, sourceSelected[0])} data-tooltip="Rename" aria-label="Rename">
+        <img class="icon" src="media/rename_v2.svg" />
+      </button>
+      <button disabled=${!allowDelete} onclick=${() => emit('remove-files', source)} data-tooltip="Delete" aria-label="Delete">
+        <img class="icon" src="media/delete.svg" />
+      </button>
+      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all" aria-label="Deselect all">
+        <img class="icon" src="media/clear-checked.svg" />
+      </button>
+    `
+
+    return html`
+      <div class="device-header ${selectionActive ? 'selection-active' : ''}">
+        <img class="icon" src="media/${icon}" />
+        <div class="text" onclick=${pathAction}>
+          <span>${fullPath}</span>
+        </div>
+        ${selectionActive ? selectionButtons : defaultButtons}
+      </div>
+    `
   }
 
   return html`
     <div class="working-area">
       ${Toolbar(state, emit)}
-      <div id="file-manager">
+      <div id="file-manager" class="${anySelected ? 'has-selection' : ''}">
         <div id="board-files">
-          <div class="device-header">
-            <img class="icon" src="media/${state.isConnected?'board':'disconnect'}.svg" />
-            <div onclick=${() => emit('connect')} class="text">
-              <span>${boardFullPath}</span>
-            </div>
-            <button disabled=${!state.isConnected} onclick=${() => emit('create-folder', 'board')}>
-              <img class="icon" src="media/new-folder.svg" />
-            </button>
-            <button disabled=${!state.isConnected} onclick=${() => emit('create-file', 'board')}>
-              <img class="icon" src="media/new-file.svg" />
-            </button>
-          </div>
+          ${DeviceHeader({
+            source: 'board',
+            fullPath: boardFullPath,
+            pathAction: () => emit('connect'),
+            icon: isConnected ? 'board.svg' : 'disconnect.svg'
+          })}
           ${BoardFileList(state, emit)}
         </div>
-        ${FileActions(state, emit)}
+        ${FileActions(state, emit, anySelected && isConnected)}
         <div id="disk-files">
-          <div class="device-header">
-            <img class="icon" src="media/computer.svg" />
-            <div class="text" onclick=${() => emit('select-disk-navigation-root')}>
-              <span>${diskFullPath}</span>
-            </div>
-            <button onclick=${() => emit('create-folder', 'disk')}>
-              <img class="icon" src="media/new-folder.svg" />
-            </button>
-            <button onclick=${() => emit('create-file', 'disk')}>
-              <img class="icon" src="media/new-file.svg" />
-            </button>
-          </div>
+          ${DeviceHeader({
+            source: 'disk',
+            fullPath: diskFullPath,
+            pathAction: () => emit('select-disk-navigation-root'),
+            icon: 'computer.svg'
+          })}
           ${DiskFileList(state, emit)}
         </div>
       </div>
     </div>
-    ${ConnectionDialog(state, emit)}
-    ${NewFileDialog(state, emit)}
   `
 }

@@ -22,8 +22,8 @@ class Serial {
         return await this.board.close()
     }
 
-    async run(code) {
-        return await this.board.run(code)
+    async run(code, data_consumer, options = {}) {
+      return await this.board.run(code, data_consumer, options)
     }
 
     async execFile(path) {
@@ -74,6 +74,7 @@ class Serial {
             if (!fired) {
                 this.win.webContents.send('serial-on-before-reset')
             }
+            throw e
         }
     }
 

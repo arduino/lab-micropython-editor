@@ -89,7 +89,7 @@ button.square {
 }
 button.inverted:hover,
 button.inverted.active {
-  background: var(--color-brand-80 !important);
+  background: var(--color-brand-80) !important;
 }
 button.inverted {
   background: rgba(0, 129, 132, 1) !important;

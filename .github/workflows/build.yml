@@ -172,6 +172,7 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
           overwrite: true
+          archive: false
 
   artifacts:
     name: ${{ matrix.artifact.name }} artifact
@@ -222,6 +223,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ env.ARTIFACT_NAME }}
+          archive: false
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
           overwrite: true
 

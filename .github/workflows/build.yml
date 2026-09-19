@@ -127,6 +127,32 @@ jobs:
             fi
 
             npm install
+
+            # electron-builder 23.x bug on macOS 15: set-key-partition-list is called
+            # with the cert password instead of the keychain password, which macOS 15
+            # now validates strictly. Patch importCerts to receive and use keychainPassword.
+            if [ "${{ runner.OS }}" = "macOS" ]; then
+              node -e "
+                const fs = require('fs');
+                const f = 'node_modules/app-builder-lib/out/codeSign/macCodeSign.js';
+                let s = fs.readFileSync(f, 'utf8');
+                s = s.replace(
+                  'return await importCerts(keychainFile, certPaths, [cscKeyPassword, cscIKeyPassword].filter(it => it != null));',
+                  'return await importCerts(keychainFile, certPaths, [cscKeyPassword, cscIKeyPassword].filter(it => it != null), keychainPassword);'
+                );
+                s = s.replace(
+                  'async function importCerts(keychainFile, paths, keyPasswords) {',
+                  'async function importCerts(keychainFile, paths, keyPasswords, keychainPwd) {'
+                );
+                s = s.replace(
+                  '[\"set-key-partition-list\", \"-S\", \"apple-tool:,apple:\", \"-s\", \"-k\", password, keychainFile]',
+                  '[\"set-key-partition-list\", \"-S\", \"apple-tool:,apple:\", \"-s\", \"-k\", keychainPwd || password, keychainFile]'
+                );
+                fs.writeFileSync(f, s);
+                console.log('Patched macCodeSign.js: keychainPassword now used for set-key-partition-list');
+              "
+            fi
+
             npm run build
 
       - name: Upload [GitHub Actions]

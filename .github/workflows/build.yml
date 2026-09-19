@@ -172,7 +172,6 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
           overwrite: true
-          archive: false
 
   artifacts:
     name: ${{ matrix.artifact.name }} artifact

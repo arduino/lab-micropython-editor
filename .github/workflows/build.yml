@@ -155,6 +155,16 @@ jobs:
 
             npm run build
 
+            # electron-builder creates zips with symlinks stored as Unix external
+            # attributes, which macOS Archive Utility rejects as "unsupported format".
+            # Replace the zip with one created by ditto, which Archive Utility handles correctly.
+            if [ "${{ runner.OS }}" = "macOS" ]; then
+              APP=$(ls dist/mac-universal/*.app)
+              ZIP=$(ls dist/*mac_universal.zip)
+              rm "$ZIP"
+              ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+            fi
+
       - name: Upload [GitHub Actions]
         uses: actions/upload-artifact@v4
         with:

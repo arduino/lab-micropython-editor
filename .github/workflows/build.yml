@@ -159,7 +159,7 @@ jobs:
             # attributes, which macOS Archive Utility rejects as "unsupported format".
             # Replace the zip with one created by ditto, which Archive Utility handles correctly.
             if [ "${{ runner.OS }}" = "macOS" ]; then
-              APP=$(ls dist/mac-universal/*.app)
+              APP=$(ls -d dist/mac-universal/*.app)
               ZIP=$(ls dist/*mac_universal.zip)
               rm "$ZIP"
               ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"

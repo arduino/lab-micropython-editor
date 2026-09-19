@@ -161,16 +161,12 @@ jobs:
             if [ "${{ runner.OS }}" = "macOS" ]; then
               APP=$(find dist/mac-universal -maxdepth 1 -name "*.app" -type d | head -1)
               ZIP=$(find dist -maxdepth 1 -name "*mac_universal.zip" | head -1)
-              echo "APP: $APP"
-              echo "ZIP: $ZIP"
-              ls dist/
-              ls dist/mac-universal/
               rm "$ZIP"
               ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
             fi
 
       - name: Upload [GitHub Actions]
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.config.id }}
           path: dist/*.zip
@@ -212,7 +208,7 @@ jobs:
 
     steps:
       - name: Download job transfer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           name: ${{ env.JOB_TRANSFER_ARTIFACT }}-${{ matrix.artifact.id }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}
@@ -223,7 +219,7 @@ jobs:
           ARTIFACT_NAME=$(basename "$FILE" .zip | tr ' ' '.')
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
       - name: Upload tester build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.JOB_TRANSFER_ARTIFACT }}/${{ matrix.artifact.path }}
@@ -243,7 +239,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           pattern: build-artifacts-*
           path: artifacts

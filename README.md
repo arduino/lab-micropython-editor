@@ -74,7 +74,7 @@ Some changes on the Electron code will require reopening the app but all UI chan
 ## Modifying CodeMirror's behaviour
 
 *CodeMirror.js* is built statically and loaded in the main page, same goes for *Choo.js*.
-While Choo won't need to possibly be changed ever, making changes to the CodeMirror configuration requires editing `ui/arduino/libs/build/build_codemirror.js and later building it again.
+While Choo won't need to possibly be changed ever, making changes to the CodeMirror configuration requires editing `static_libs/build_codemirror.js` and later building it again.
 In the repo root the file `build_static_libs.js` will generate static JavaScript files for both and copy them to their final paths.
 
 ```shell

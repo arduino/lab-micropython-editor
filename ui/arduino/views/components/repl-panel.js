@@ -10,7 +10,7 @@ function ReplPanel(state, emit) {
   // const pointerEventsClass = state.isNewFileDialogOpen || state.isDialogOpen ? 'open' : 'closed'
   const termOperationsVisibility = state.panelHeight > PANEL_TOO_SMALL ? 'visible' : 'hidden'
   let terminalDisabledClass = 'terminal-enabled'
-  if (!state.isConnected || state.isNewFileDialogOpen) {
+  if (!state.isConnected || state.overlay !== null) {
     terminalDisabledClass = 'terminal-disabled'
   }
   // const terminalDisabledClass = state.isConnected ? 'terminal-enabled' : 'terminal-disabled'
@@ -20,7 +20,7 @@ function ReplPanel(state, emit) {
       <div class="panel-bar">
         <div id="connection-status" style="visibility:${state.isConnected ? 'visible' : 'hidden'};">
           <img src="media/connect.svg" />
-          <div>${state.isConnected ? 'Connected to ' + state.connectedPort : ''}</div>
+          <div>${state.isConnected && state.boardInfo ? html`<span>${state.boardInfo.machine.split('with')[0].trim()} (<strong>${state.connectedPort}</strong>)</span>` : ''}</div>
         </div>
         <div class="spacer"></div>
         <div id="drag-handle"

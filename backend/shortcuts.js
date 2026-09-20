@@ -15,6 +15,10 @@ const shortcuts = {
     CLEAR_TERMINAL: 'CommandOrControl+L',
     EDITOR_VIEW: 'CommandOrControl+Alt+1',
     FILES_VIEW: 'CommandOrControl+Alt+2',
+    SELECT_FUNCTION: 'CommandOrControl+Alt+A',
+    SELECT_LINE: 'CommandOrControl+Alt+L',
+    TAB_NEXT: 'Control+Tab',
+    TAB_PREV: 'Control+Shift+Tab',
   },
   menu: {
     CLOSE: 'CmdOrCtrl+W',
@@ -29,7 +33,11 @@ const shortcuts = {
     SAVE: 'CmdOrCtrl+S',
     CLEAR_TERMINAL: 'CmdOrCtrl+L',
     EDITOR_VIEW: 'CmdOrCtrl+Alt+1',
-    FILES_VIEW: 'CmdOrCtrl+Alt+2'
+    FILES_VIEW: 'CmdOrCtrl+Alt+2',
+    SELECT_FUNCTION: 'CmdOrCtrl+Alt+A',
+    SELECT_LINE: 'CmdOrCtrl+Alt+L',
+    TAB_NEXT: 'Ctrl+Tab',
+    TAB_PREV: 'Ctrl+Shift+Tab',
   },
   // Shortcuts
 }

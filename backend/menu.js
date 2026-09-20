@@ -86,6 +86,17 @@ module.exports = function registerMenu(win, state = {}) {
           { role: 'selectAll' },
           { type: 'separator' },
           {
+            label: 'Select Line',
+            accelerator: shortcuts.menu.SELECT_LINE,
+            click: () => win.webContents.send('select-line')
+          },
+          {
+            label: 'Select Function',
+            accelerator: shortcuts.menu.SELECT_FUNCTION,
+            click: () => win.webContents.send('select-function')
+          },
+          { type: 'separator' },
+          {
             label: 'Speech',
             submenu: [
               { role: 'startSpeaking' },
@@ -94,7 +105,18 @@ module.exports = function registerMenu(win, state = {}) {
           }
         ] : [
           { type: 'separator' },
-          { role: 'selectAll' }
+          { role: 'selectAll' },
+          { type: 'separator' },
+          {
+            label: 'Select Line',
+            accelerator: shortcuts.menu.SELECT_LINE,
+            click: () => win.webContents.send('select-line')
+          },
+          {
+            label: 'Select Function',
+            accelerator: shortcuts.menu.SELECT_FUNCTION,
+            click: () => win.webContents.send('select-function')
+          },
         ])
       ]
     },
@@ -157,6 +179,18 @@ module.exports = function registerMenu(win, state = {}) {
           accelerator: shortcuts.menu.CLEAR_TERMINAL,
           enabled: state.isConnected && state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLEAR_TERMINAL)
+        },
+        {
+          label: 'Next Tab',
+          accelerator: shortcuts.menu.TAB_NEXT,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.TAB_NEXT)
+        },
+        {
+          label: 'Previous Tab',
+          accelerator: shortcuts.menu.TAB_PREV,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.TAB_PREV)
         },
         { type: 'separator' },
         { role: 'resetZoom' },

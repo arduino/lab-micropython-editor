@@ -1,9 +1,14 @@
+const Preferences = {
+  cursorAtEnd: true
+}
+
 class CodeMirrorEditor extends Component {
   constructor() {
     super()
     this.editor = null
     this.content = '# empty file'
     this.scrollTop = 0
+    this._scrollHandler = (e) => { this.scrollTop = e.target.scrollTop }
   }
 
   createElement(content) {
@@ -11,21 +16,28 @@ class CodeMirrorEditor extends Component {
     return html`<div id="code-editor"></div>`
   }
 
-
   load(el) {
-    const onCodeChange = (update) => {
-      this.content = update.state.doc.toString()
-      this.onChange()
+    if (!this.editor) {
+      const onCodeChange = (update) => {
+        this.content = update.state.doc.toString()
+        this.onChange()
+      }
+      this.editor = createEditor(this.content, el, onCodeChange)
+      this.editor.scrollDOM.addEventListener('scroll', this._scrollHandler)
+      if (Preferences.cursorAtEnd) {
+        const end = this.editor.state.doc.length
+        this.editor.dispatch({ selection: { anchor: end } })
+      }
+      this.editor.focus()
+    } else {
+      el.appendChild(this.editor.dom)
     }
-    this.editor = createEditor(this.content, el, onCodeChange)
-
-    setTimeout(() => {
-      this.editor.scrollDOM.addEventListener('scroll', this.updateScrollPosition.bind(this))
-      this.editor.scrollDOM.scrollTo({
-        top: this.scrollTop,
-        left: 0
-      })
-    }, 10)
+    requestAnimationFrame(() => {
+      if (this.editor) {
+        this.editor.scrollDOM.scrollTo({ top: this.scrollTop, left: 0 })
+        this.editor.focus()
+      }
+    })
   }
 
   update() {
@@ -33,11 +45,15 @@ class CodeMirrorEditor extends Component {
   }
 
   unload() {
-    this.editor.scrollDOM.removeEventListener('scroll', this.updateScrollPosition)
+    // intentionally empty — editor stays alive for re-activation
   }
 
-  updateScrollPosition(e) {
-    this.scrollTop = e.target.scrollTop
+  destroy() {
+    if (this.editor) {
+      this.editor.scrollDOM.removeEventListener('scroll', this._scrollHandler)
+      this.editor.destroy()
+      this.editor = null
+    }
   }
 
   onChange() {

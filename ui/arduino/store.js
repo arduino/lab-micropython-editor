@@ -229,6 +229,7 @@ async function store(state, emitter) {
       // (above) already shows the dialog; just bail out cleanly here.
       console.error('getPrompt failed:', e)
       clearTimeout(timeout_id)
+      emitter.emit('connection-timeout')
       return
     }
     clearTimeout(timeout_id)
@@ -787,13 +788,18 @@ async function store(state, emitter) {
           }
         }
         if (terminalRouter) terminalRouter.setOperation('file-saving')
+        state.overlay = { type: 'progress', props: { message: 'Saving…', pct: 0 } }
         await serialBridge.saveFileContentAtomic(
           serialBridge.getFullPath(
             state.boardNavigationRoot,
             state.boardNavigationPath,
             fileNameParameter
           ),
-          newFileContent
+          newFileContent,
+          (e) => {
+            state.overlay = { type: 'progress', props: { message: 'Saving…', pct: parseInt(e) || 0 } }
+            emitter.emit('render')
+          }
         )
         for (const tab of boardTabConflicts) {
           tab.editor.editor.dispatch({
@@ -905,6 +911,8 @@ async function store(state, emitter) {
             value
           )
         )
+      } catch (e) {
+         if (state.isConnected) await alertError(state, emitter, e, 'Create folder failed')
       } finally {
         if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       }
@@ -1263,6 +1271,9 @@ async function store(state, emitter) {
         }
       }
 
+      let saveOk = true
+      let renameOk = true
+
       if (fullPathExists) {
         // SAVE FILE CONTENTS
         if (openFile.hasChanges) {
@@ -1296,40 +1307,48 @@ async function store(state, emitter) {
               )
             }
           } catch (e) {
+            saveOk = false
             await alertError(state, emitter, e, 'Save failed')
           }
         }
         // RENAME FILE
-        try {
-          if (openFile.source == 'board') {
-            await serialBridge.renameFile(
-              serialBridge.getFullPath(
-                state.boardNavigationRoot,
-                openFile.parentFolder,
-                oldName
-              ),
-              serialBridge.getFullPath(
-                state.boardNavigationRoot,
-                openFile.parentFolder,
-                openFile.fileName
+        if (saveOk) {
+          try {
+            if (openFile.source == 'board') {
+              await serialBridge.renameFile(
+                serialBridge.getFullPath(
+                  state.boardNavigationRoot,
+                  openFile.parentFolder,
+                  oldName
+                ),
+                serialBridge.getFullPath(
+                  state.boardNavigationRoot,
+                  openFile.parentFolder,
+                  openFile.fileName
+                )
               )
-            )
-          } else if (openFile.source == 'disk') {
-            await disk.renameFile(
-              disk.getFullPath(
-                state.diskNavigationRoot,
-                openFile.parentFolder,
-                oldName
-              ),
-              disk.getFullPath(
-                state.diskNavigationRoot,
-                openFile.parentFolder,
-                openFile.fileName
+            } else if (openFile.source == 'disk') {
+              await disk.renameFile(
+                disk.getFullPath(
+                  state.diskNavigationRoot,
+                  openFile.parentFolder,
+                  oldName
+                ),
+                disk.getFullPath(
+                  state.diskNavigationRoot,
+                  openFile.parentFolder,
+                  openFile.fileName
+                )
               )
-            )
+            }
+          } catch(e) {
+            renameOk = false
+            openFile.fileName = oldName
+            await alertError(state, emitter, e, 'Rename failed')
           }
-        } catch(e) {
-          await alertError(state, emitter, e, 'Rename failed')
+        } else {
+          openFile.fileName = oldName
+          renameOk = false
         }
       } else if (!fullPathExists) {
         // SAVE FILE CONTENTS
@@ -1362,15 +1381,20 @@ async function store(state, emitter) {
             )
           }
         } catch (e) {
+          saveOk = false
+          openFile.fileName = oldName
+          openFile.parentFolder = oldParentFolder
           await alertError(state, emitter, e, 'Save failed')
         }
       }
 
-      openFile.hasChanges = false
-      state.renamingTab = null
-      saved = true
+      if (saveOk && renameOk) {
+        openFile.hasChanges = false
+        saved = true
+      }
     } finally {
       state.overlay = null
+      state.renamingTab = null
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       if (saved) emitter.emit('refresh-files')
       emitter.emit('render')

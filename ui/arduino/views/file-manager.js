@@ -17,7 +17,7 @@ function FileManagerView(state, emit) {
     const selectionActive = sourceSelected.length > 0
 
     const allowOpen   = canEdit({ selectedFiles: sourceSelected })
-    const allowRename = sourceSelected.length === 1
+    const allowRename = sourceSelected.length === 1 && selectedFiles.length === 1
     const allowDelete = sourceSelected.length > 0
 
     const defaultButtons = html`

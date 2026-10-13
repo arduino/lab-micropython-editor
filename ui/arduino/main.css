@@ -657,7 +657,7 @@ button.small .icon {
 
 #file-manager {
   display: flex;
-  padding: 16px 32px 24px 32px;
+  padding: 0 8px 8px;
   justify-content: center;
   align-items: center;
   gap: 8px;
@@ -711,7 +711,7 @@ button.small .icon {
 
 .device-header {
   display: flex;
-  padding: 10px 8px;
+  padding: 10px 8px 4px;
   align-items: flex-start;
   align-self: stretch;
   width: 100%;
@@ -806,6 +806,7 @@ button.small .icon {
   align-self: stretch;
   background: var(--color-bg-light);
   height: 100%;
+  border-radius: 8px;
   overflow-y: scroll;
 }
 
@@ -822,8 +823,9 @@ button.small .icon {
 .file-list .item {
   display: flex;
   height: 28px;
+  border-radius: 6px;
   min-height: 28px;
-  max-height: 28px;;
+  max-height: 28px;
   padding: 5px 0px;
   align-items: center;
   gap: 10px;
@@ -835,6 +837,16 @@ button.small .icon {
 .file-list .item.selected,
 .file-list .item:hover {
   background: #FFF;
+}
+
+@keyframes kb-highlight-flash {
+  0%   { background: var(--color-brand-20); }
+  60%  { background: var(--color-brand-20); }
+  100% { background: transparent; }
+}
+
+.file-list .item.kb-highlight {
+  animation: kb-highlight-flash 0.8s ease-out forwards;
 }
 
 .file-list .item .options {

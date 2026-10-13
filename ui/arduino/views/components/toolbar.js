@@ -74,7 +74,7 @@ function Toolbar(state, emit) {
 
         ${!window.BridgeWindow.isLinux() ? Button({
           icon: 'install-package.svg',
-          label: `Add Package`,          
+          label: `Libraries`,
           onClick: () => {
             if(state.isConnected) emit('disconnect') // Package installer requires exclusive access to the serial port
             emit('launch-app', 'micropython-package-installer://', 'https://github.com/arduino/lab-micropython-package-installer/releases/latest')          

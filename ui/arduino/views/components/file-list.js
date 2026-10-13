@@ -88,6 +88,8 @@ function generateFileList(source) {
         return html`
           <div
             class="item ${isChecked ? 'selected' : ''}"
+            data-filename="${item.fileName}"
+            data-type="folder"
             onclick=${handleClick}
             ondblclick=${navigateToFolder}
             >
@@ -100,6 +102,8 @@ function generateFileList(source) {
         return html`
           <div
             class="item ${isChecked ? 'selected' : ''}"
+            data-filename="${item.fileName}"
+            data-type="file"
             onclick=${handleClick}
             ondblclick=${openFile}
             >
@@ -155,6 +159,80 @@ function generateFileList(source) {
       }
     })
     observer.observe(list, { childList: true, subtree: true })
+
+    function flashItem(el) {
+      el.classList.remove('kb-highlight')
+      void el.offsetWidth
+      el.classList.add('kb-highlight')
+      el.addEventListener('animationend', () => el.classList.remove('kb-highlight'), { once: true })
+      el.scrollIntoView({ block: 'nearest' })
+    }
+
+    function buildMatchList(liveList, prefix) {
+      const items = Array.from(liveList.querySelectorAll('[data-filename][data-type]'))
+      const folders = items.filter(el => el.dataset.type === 'folder' && el.dataset.filename.toLowerCase().startsWith(prefix))
+      const fileItems = items.filter(el => el.dataset.type === 'file' && el.dataset.filename.toLowerCase().startsWith(prefix))
+      return [...folders, ...fileItems]
+    }
+
+    function onMouseEnter(e) {
+      const liveList = e.currentTarget
+      if (!liveList._kb) liveList._kb = { buffer: '', matchList: [], matchIndex: -1, bufferTimer: null, handler: null }
+      const kb = liveList._kb
+
+      function onKeyDown(ev) {
+        if (liveList.querySelector('input')) return
+
+        if (ev.key === 'Escape') {
+          clearTimeout(kb.bufferTimer)
+          kb.buffer = ''
+          kb.matchList = []
+          kb.matchIndex = -1
+          emit('clear-selection-by-source', source)
+          return
+        }
+        
+        if (ev.key === ' ') { 
+          ev.preventDefault();
+          return
+        }
+        
+        if (ev.key === 'Tab') {
+          ev.preventDefault()
+          if (kb.matchList.length === 0) return
+          kb.matchIndex = (kb.matchIndex + 1) % kb.matchList.length
+          flashItem(kb.matchList[kb.matchIndex])
+          return
+        }
+
+        if (ev.key.length !== 1) return
+
+        clearTimeout(kb.bufferTimer)
+        kb.buffer += ev.key.toLowerCase()
+        kb.matchList = buildMatchList(liveList, kb.buffer)
+        kb.matchIndex = 0
+
+        if (kb.matchList.length > 0) flashItem(kb.matchList[0])
+
+        kb.bufferTimer = setTimeout(() => { kb.buffer = '' }, 600)
+      }
+
+      if (kb.handler) document.removeEventListener('keydown', kb.handler)
+      kb.handler = onKeyDown
+      document.addEventListener('keydown', onKeyDown)
+    }
+
+    function onMouseLeave(e) {
+      const liveList = e.currentTarget
+      const kb = liveList._kb
+      if (kb && kb.handler) {
+        document.removeEventListener('keydown', kb.handler)
+        kb.handler = null
+      }
+    }
+
+    list.onmouseenter = onMouseEnter
+    list.onmouseleave = onMouseLeave
 
     return list
   }

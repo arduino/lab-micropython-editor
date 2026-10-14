@@ -60,6 +60,10 @@ body, html {
   overflow: hidden;
 }
 
+body.platform-darwin #navigation-bar {
+  padding-top: 16px;
+}
+
 img {
   max-width: 100%;
   max-height: 100%;
@@ -189,6 +193,12 @@ button.small .icon {
   width: 100%;
   background: var(--color-brand);
   justify-content: space-between;
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+#navigation-bar:active {
+  cursor: grabbing;
 }
 
 #toolbar {
@@ -198,6 +208,8 @@ button.small .icon {
   gap: 16px;
   align-self: stretch;
   background: var(--color-brand);
+  -webkit-app-region: no-drag;
+  cursor: default;
 }
 
 #app-views {
@@ -205,6 +217,8 @@ button.small .icon {
   padding: 16px 10px 10px 10px;
   width: 120px;
   /* gap: 16px; */
+  -webkit-app-region: no-drag;
+  cursor: default;
 }
 
 #app-views .button{
@@ -241,7 +255,7 @@ button.small .icon {
   position: relative;
   margin-left: 0.5em;
   margin-right: 0.5em;
-  height: 65%;
+  height: 80%;
 }
 
 #tabs {

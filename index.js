@@ -14,6 +14,7 @@ function createWindow () {
   win = new BrowserWindow({
     width: 820,
     height: 700,
+    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: false,
       webSecurity: true,

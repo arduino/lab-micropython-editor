@@ -80,8 +80,6 @@ function alertError(state, emitter, e, context = '') {
 // Store: state wrapper
 
 async function store(state, emitter) {
-  win.setWindowSize(720, 640)
-
   state.platform = window.BridgeWindow.getOS()
   state.view = 'editor'
   state.diskNavigationPath = '/'
@@ -115,7 +113,9 @@ async function store(state, emitter) {
   state.isTerminalBound = false
 
   state.shortcutsDisabled = false
-
+  win.setWindowSize(720, 640)
+  document.body.classList.add(`platform-${state.platform}`)
+  
   await createNewTab('disk')
   state.savedPanelHeight = PANEL_DEFAULT
   state.panelHeight = PANEL_CLOSED

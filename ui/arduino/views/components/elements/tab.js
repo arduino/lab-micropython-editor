@@ -1,6 +1,7 @@
 function Tab(args) {
   const {
     text = 'undefined',
+    fullPath = '',
     icon = 'computer.svg',
     onSelectTab = () => false,
     onCloseTab = () => false,
@@ -27,7 +28,7 @@ function Tab(args) {
         }
       }
       return html`
-        <div class="tab active" tabindex="0">
+        <div class="tab active" role="tab" aria-selected="true" tabindex="0">
           <img class="icon" src="media/${icon}" />
           <div class="text">
             <input type="text"
@@ -40,7 +41,9 @@ function Tab(args) {
       `
     } else {
       return html`
-        <div class="tab active" tabindex="0">
+        <div class="tab active" role="tab" aria-selected="true" tabindex="0"
+          onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget)}
+          onmouseleave=${() => Tooltip.hide()}>
           <img class="icon" src="media/${icon}" />
           <div class="text" ondblclick=${onStartRenaming}>
             ${hasChanges ? ' *' : ''} ${text}
@@ -64,9 +67,12 @@ function Tab(args) {
   return html`
     <div
       class="tab"
-      tabindex="1"
+      role="tab"
+      aria-selected="false"
+      tabindex="-1"
       onclick=${selectTab}
-      >
+      onmouseenter=${e => Tooltip.show(fullPath, e.currentTarget)}
+      onmouseleave=${() => Tooltip.hide()}>
       <img class="icon" src="media/${icon}" />
       <div class="text">
         ${hasChanges ? '*' : ''} ${text}

@@ -82,19 +82,26 @@ module.exports = function registerMenu(win, state = {}) {
         { role: 'cut' },
         { role: 'copy' },
         { role: 'paste' },
+        { type: 'separator' },
+        { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Select Line',
+          accelerator: shortcuts.menu.SELECT_LINE,
+          click: () => win.webContents.send('select-line')
+        },
+        {
+          label: 'Select Function',
+          accelerator: shortcuts.menu.SELECT_FUNCTION,
+          click: () => win.webContents.send('select-function')
+        },
+        { type: 'separator' },
+        {
+          label: `Re-indent: convert to ${state.indentSize === 2 ? 4 : 2} spaces`,
+          enabled: state.view === 'editor',
+          click: () => win.webContents.send('reindent-file')
+        },
         ...(isMac ? [
-          { role: 'selectAll' },
-          { type: 'separator' },
-          {
-            label: 'Select Line',
-            accelerator: shortcuts.menu.SELECT_LINE,
-            click: () => win.webContents.send('select-line')
-          },
-          {
-            label: 'Select Function',
-            accelerator: shortcuts.menu.SELECT_FUNCTION,
-            click: () => win.webContents.send('select-function')
-          },
           { type: 'separator' },
           {
             label: 'Speech',
@@ -103,21 +110,7 @@ module.exports = function registerMenu(win, state = {}) {
               { role: 'stopSpeaking' }
             ]
           }
-        ] : [
-          { type: 'separator' },
-          { role: 'selectAll' },
-          { type: 'separator' },
-          {
-            label: 'Select Line',
-            accelerator: shortcuts.menu.SELECT_LINE,
-            click: () => win.webContents.send('select-line')
-          },
-          {
-            label: 'Select Function',
-            accelerator: shortcuts.menu.SELECT_FUNCTION,
-            click: () => win.webContents.send('select-function')
-          },
-        ])
+        ] : [])
       ]
     },
     {

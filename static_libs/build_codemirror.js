@@ -4,7 +4,7 @@ import {
   drawSelection, dropCursor, crosshairCursor,
   rectangularSelection, highlightActiveLine
 } from "@codemirror/view"
-import { EditorState, EditorSelection } from "@codemirror/state"
+import { EditorState, EditorSelection, Compartment } from "@codemirror/state"
 import {
   history, defaultKeymap, historyKeymap,
   indentMore, indentLess
@@ -12,7 +12,7 @@ import {
 import {
   foldGutter, foldKeymap, bracketMatching,
   syntaxHighlighting, defaultHighlightStyle,
-  indentOnInput, syntaxTree
+  indentOnInput, syntaxTree, indentUnit
 } from "@codemirror/language"
 import {
   autocompletion, completionKeymap, closeBrackets,
@@ -141,7 +141,14 @@ function unescapeUnicode(str) {
   });
 }
 
+window.setEditorIndentUnit = (view, spaces) => {
+  view.dispatch({
+    effects: view._indentCompartment.reconfigure(indentUnit.of(' '.repeat(spaces)))
+  })
+}
+
 window.createEditor = (doc, el, onChange) => {
+  const indentCompartment = new Compartment()
   const customTabKeymap = keymap.of([
     {
       key: "Tab",
@@ -171,15 +178,18 @@ window.createEditor = (doc, el, onChange) => {
   ]);
   const unescapedDoc = unescapeUnicode(doc || '');
 
-  return new EditorView({
+  const view = new EditorView({
     doc: unescapedDoc,
     extensions: [
       customSetup,
       customTabKeymap,
       keymap.of([defaultKeymap]),
       python(),
+      indentCompartment.of(indentUnit.of('    ')),
       updateListenerExtension(onChange)
     ],
     parent: el
   });
+  view._indentCompartment = indentCompartment
+  return view
 };

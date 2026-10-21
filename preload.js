@@ -51,7 +51,11 @@ const Disk = {
   },
   getAppPath: () => {
     return ipcRenderer.invoke('get-app-path')
-  }
+  },
+  watchFile: (filePath) => ipcRenderer.invoke('watch-file', filePath),
+  unwatchFile: (filePath) => ipcRenderer.invoke('unwatch-file', filePath),
+  suppressFileWatch: (filePath) => ipcRenderer.invoke('suppress-file-watch', filePath),
+  onFileChanged: (callback) => ipcRenderer.on('file-changed', (event, filePath) => callback(filePath))
 }
 
 const Window = {

@@ -145,6 +145,25 @@ async function store(state, emitter) {
     })
   }
 
+  disk.onFileChanged(async (filePath) => {
+    const openFile = state.openFiles.find(f => f._watchedPath === filePath)
+    if (!openFile) return
+    if (openFile.hasChanges) {
+      const reload = await showConfirmOverlay(state, emitter,
+        `${openFile.fileName} was changed on disk.\nReload and discard your edits?`,
+        'Keep editing', 'Reload'
+      )
+      if (!reload) return
+    }
+    const newContent = await disk.loadFile(filePath)
+    openFile.editor.editor.dispatch({
+      changes: { from: 0, to: openFile.editor.editor.state.doc.length, insert: newContent }
+    })
+    openFile.editor.content = newContent
+    openFile.hasChanges = false
+    emitter.emit('render')
+  })
+
   // START AND BASIC ROUTING
   let terminalRouter = null
   emitter.on('select-disk-navigation-root', async () => {
@@ -616,14 +635,9 @@ async function store(state, emitter) {
           }
         )
       } else if (openFile.source == 'disk') {
-        await disk.saveFileContent(
-          disk.getFullPath(
-            state.diskNavigationRoot,
-            openFile.parentFolder,
-            openFile.fileName
-          ),
-          contents
-        )
+        const diskPath = disk.getFullPath(state.diskNavigationRoot, openFile.parentFolder, openFile.fileName)
+        await disk.suppressFileWatch(diskPath)
+        await disk.saveFileContent(diskPath, contents)
       }
 
       openFile.hasChanges = false
@@ -654,6 +668,9 @@ async function store(state, emitter) {
     if (currentTab.hasChanges) {
       let response = await showConfirmOverlay(state, emitter, "Your file has unsaved changes.\nAre you sure you want to proceed?", "Cancel", "Yes")
       if (!response) return false
+    }
+    if (currentTab._watchedPath) {
+      disk.unwatchFile(currentTab._watchedPath)
     }
     currentTab.editor.destroy()
     state.openFiles = state.openFiles.filter(f => f.id !== id)
@@ -1511,6 +1528,12 @@ async function store(state, emitter) {
               file.hasChanges = true
               emitter.emit('render')
             }
+            file._watchedPath = disk.getFullPath(
+              state.diskNavigationRoot,
+              selectedFile.parentFolder,
+              selectedFile.fileName
+            )
+            disk.watchFile(file._watchedPath)
           }
           filesToOpen.push(file)
         } else {

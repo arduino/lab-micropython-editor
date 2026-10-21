@@ -13,6 +13,35 @@ const {
 
 module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   serial.win = win // Required to send callback messages to renderer
+
+  const _fileWatchers = new Map() // filePath → { watcher, suppressUntil, debounceTimer }
+
+  ipcMain.handle('watch-file', (event, filePath) => {
+    if (_fileWatchers.has(filePath)) return
+    const entry = { watcher: null, suppressUntil: 0, debounceTimer: null }
+    entry.watcher = fs.watch(filePath, () => {
+      if (Date.now() < entry.suppressUntil) return
+      clearTimeout(entry.debounceTimer)
+      entry.debounceTimer = setTimeout(() => {
+        win.webContents.send('file-changed', filePath)
+      }, 200)
+    })
+    entry.watcher.on('error', () => { /* ignore — file may be deleted */ })
+    _fileWatchers.set(filePath, entry)
+  })
+
+  ipcMain.handle('unwatch-file', (event, filePath) => {
+    const entry = _fileWatchers.get(filePath)
+    if (!entry) return
+    clearTimeout(entry.debounceTimer)
+    entry.watcher.close()
+    _fileWatchers.delete(filePath)
+  })
+
+  ipcMain.handle('suppress-file-watch', (event, filePath) => {
+    const entry = _fileWatchers.get(filePath)
+    if (entry) entry.suppressUntil = Date.now() + 1000
+  })
   
   ipcMain.handle('open-folder', async (event) => {
     const folder = await openFolderDialog(win)

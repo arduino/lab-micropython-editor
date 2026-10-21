@@ -5,7 +5,7 @@ const { execSync } = require('child_process');
 // Building with esbuild would require more changes
 // to the source and it works well so far
 console.log('Building choo with browserify...');
-execSync('browserify static_libs/build_choo.js -o ui/arduino/libs/choo.js', { stdio: 'inherit' });
+execSync('npx browserify static_libs/build_choo.js -o ui/arduino/libs/choo.js', { stdio: 'inherit' });
 
 // Build codemirror with esbuild
 console.log('Building codemirror with esbuild...');

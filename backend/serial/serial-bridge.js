@@ -11,18 +11,27 @@ const SerialBridge = {
   disconnect: async () => {
     return await ipcRenderer.invoke('serial', 'disconnect')
   },
-  run: async (code) => {
-    return await ipcRenderer.invoke('serial', 'run', code)
+  run: async (code, options = {}) => {
+    return await ipcRenderer.invoke('serial', 'run', code, null, options)
   },
   execFile: async (path) => {
     return await ipcRenderer.invoke('serial', 'execFile', path)
   },
-  getPrompt: async () => {
-    return await ipcRenderer.invoke('serial', 'getPrompt')
+  getPrompt: async (captureInterrupt = false) => {
+    return await ipcRenderer.invoke('serial', 'getPrompt', captureInterrupt)
+  },
+  calibrateDelay: async () => {
+    return await ipcRenderer.invoke('serial', 'calibrateDelay')
   },
   keyboardInterrupt: async () => {
     await ipcRenderer.invoke('serial', 'keyboardInterrupt')
     return Promise.resolve()
+  },
+  prepareReset: async () => {
+    await ipcRenderer.invoke('serial', 'prepareReset')
+  },
+  doReset: async () => {
+    await ipcRenderer.invoke('serial', 'doReset')
   },
   reset: async () => {
     await ipcRenderer.invoke('serial', 'reset')
@@ -30,6 +39,14 @@ const SerialBridge = {
   },
   eval: (d) => {
     return ipcRenderer.invoke('serial', 'eval', d)
+  },
+  onBeforeReset: (callback) => {
+    if (ipcRenderer.listeners("serial-on-before-reset").length > 0) {
+      ipcRenderer.removeAllListeners("serial-on-before-reset")
+    }
+    ipcRenderer.once('serial-on-before-reset', () => {
+      callback()
+    })
   },
   onData: (callback) => {
     // Remove all previous listeners
@@ -46,20 +63,43 @@ const SerialBridge = {
   ilistFiles: async (folder) => {
     return await ipcRenderer.invoke('serial', 'ilistFiles', folder)
   },
-  loadFile: async (file) => {
-    return await ipcRenderer.invoke('serial', 'loadFile', file)
+  loadFile: async (file, dataConsumer) => {
+    if (dataConsumer) {
+      ipcRenderer.removeAllListeners("serial-on-load-progress")
+      ipcRenderer.on('serial-on-load-progress', (event, progress) => {
+        dataConsumer(progress)
+      })
+    }
+    try {
+      return await ipcRenderer.invoke('serial', 'loadFile', file)
+    } finally {
+      ipcRenderer.removeAllListeners("serial-on-load-progress")
+    }
   },
   removeFile: async (file) => {
     return await ipcRenderer.invoke('serial', 'removeFile', file)
   },
   saveFileContent: async (filename, content, dataConsumer) => {
-    if (ipcRenderer.listeners("serial-on-file-save-progress").length > 0) {
-      ipcRenderer.removeAllListeners("serial-on-file-save-progress")
-    }
+    ipcRenderer.removeAllListeners("serial-on-file-save-progress")
     ipcRenderer.on('serial-on-file-save-progress', (event, progress) => {
       dataConsumer(progress)
     })
-    return await ipcRenderer.invoke('serial', 'saveFileContent', filename, content)
+    try {
+      return await ipcRenderer.invoke('serial', 'saveFileContent', filename, content)
+    } finally {
+      ipcRenderer.removeAllListeners("serial-on-file-save-progress")
+    }
+  },
+  saveFileContentAtomic: async (filename, content, dataConsumer) => {
+    ipcRenderer.removeAllListeners("serial-on-file-save-progress")
+    ipcRenderer.on('serial-on-file-save-progress', (event, progress) => {
+      dataConsumer(progress)
+    })
+    try {
+      return await ipcRenderer.invoke('serial', 'saveFileContentAtomic', filename, content)
+    } finally {
+      ipcRenderer.removeAllListeners("serial-on-file-save-progress")
+    }
   },
   uploadFile: async (src, dest, dataConsumer) => {
     if (ipcRenderer.listeners("serial-on-upload-progress").length > 0) {
@@ -71,9 +111,19 @@ const SerialBridge = {
     })
     return await ipcRenderer.invoke('serial', 'uploadFile', src, dest)
   },
-  downloadFile: async (src, dest) => {
-    let contents = await ipcRenderer.invoke('serial', 'loadFile', src)
-    return ipcRenderer.invoke('save-file', dest, contents)
+  downloadFile: async (src, dest, dataConsumer) => {
+    if (dataConsumer) {
+      ipcRenderer.removeAllListeners("serial-on-load-progress")
+      ipcRenderer.on('serial-on-load-progress', (event, progress) => {
+        dataConsumer(progress)
+      })
+    }
+    try {
+      const contents = await ipcRenderer.invoke('serial', 'loadFile', src)
+      return ipcRenderer.invoke('save-file', dest, contents)
+    } finally {
+      ipcRenderer.removeAllListeners("serial-on-load-progress")
+    }
   },
   renameFile: async (oldName, newName) => {
     return await ipcRenderer.invoke('serial', 'renameFile', oldName, newName)

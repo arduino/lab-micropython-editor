@@ -14,6 +14,7 @@ function createWindow () {
   win = new BrowserWindow({
     width: 820,
     height: 700,
+    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: false,
       webSecurity: true,
@@ -24,6 +25,9 @@ function createWindow () {
   })
   // and load the index.html of the app.
   win.loadFile('ui/arduino/index.html')
+  win.webContents.on('did-finish-load', () => {
+    win.setTitle(`Arduino Lab for MicroPython - ${app.getVersion()}`)
+  })
 
   // If the app takes a while to open, show splash screen
   // Create the splash screen
@@ -38,14 +42,16 @@ function createWindow () {
   splashTimestamp = Date.now()
 
   win.once('ready-to-show', () => {
+    win.show()
     if (Date.now()-splashTimestamp > 1000) {
       splash.destroy()
+      win.webContents.send('window-ready')
     } else {
       setTimeout(() => {
         splash.destroy()
+        win.webContents.send('window-ready')
       }, 500)
     }
-    win.show()
   })
 
   const initialMenuState = {

@@ -11,6 +11,14 @@ def get_root():
 def is_directory(path):
   return True if os.stat(path)[0] == 0x4000 else False
 
+def get_board_info():
+  info = sys.implementation
+  version = '.'.join(str(v) for v in info.version if isinstance(v, int))
+  return json.dumps({
+    'version': version,
+    'machine': getattr(info, '_machine', '')
+  })
+
 def get_all_files(path, array_of_files = []):
     files = os.ilistdir(path)
     for file in files:
@@ -27,6 +35,9 @@ def get_all_files(path, array_of_files = []):
 
 def iget_root():
   print(get_root(), end='')
+
+def iget_board_info():
+  print(get_board_info(), end='')
 
 def ilist_all(path):
     print(json.dumps(get_all_files(path)))

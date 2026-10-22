@@ -802,9 +802,10 @@ button.small .icon {
 }
 
 
-.device-header .text--warning span {
-  color: var(--color-brand);
+.text--warning, .device-header .text--warning span {
+  color: #c07800 !important;
   font-style: italic;
+  font-weight: 600;
 }
 
 .device-header .text::before {
@@ -830,12 +831,16 @@ button.small .icon {
   overflow-y: scroll;
 }
 
+.file-list {
+  position: relative;
+}
+
 .file-list-cta {
+  position: absolute;
+  inset: 0;
   display: flex;
-  width: 100%;
   align-items: center;
   justify-content: center;
-  padding: 1.5em 1em;
 }
 
 .file-list-cta-btn {
@@ -847,7 +852,7 @@ button.small .icon {
   background: transparent;
   color: var(--color-brand);
   font-family: inherit;
-  font-size: 0.875em;
+  font-size: 1em;
   font-weight: 500;
   cursor: pointer;
   flex-direction: row;
@@ -1269,9 +1274,6 @@ button.file-list-cta-btn:hover {
   pointer-events: none;
 }
 
-.settings-section--highlight .settings-label {
-  color: var(--color-brand);
-}
 
 .settings-label {
   font-size: 0.75em;
@@ -1337,6 +1339,12 @@ button.settings-seg-btn--active:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.settings-path-value.text--warning {
+  color: #c07800;
+  font-style: italic;
+  font-weight: 600;
 }
 
 .settings-path-btn {

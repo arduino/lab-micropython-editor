@@ -1852,7 +1852,7 @@ async function store(state, emitter) {
     const openFile = state.openFiles.find(f => f.id === state.editingFile)
     if (openFile?.editor?.editor) openFile.editor.editor.focus()
     if (!state.diskNavigationRoot) {
-      state.overlay = { type: 'settings', props: { diskNavigationRoot: null, theme: 'dark', indentSize: state.settings.indentSize } }
+      state.overlay = { type: 'settings', props: { diskNavigationRoot: null, theme: state.settings.theme || 'system', indentSize: state.settings.indentSize } }
       emitter.emit('render')
     }
   })
@@ -1862,7 +1862,7 @@ async function store(state, emitter) {
   })
 
   function openSettings() {
-    state.overlay = { type: 'settings', props: { diskNavigationRoot: state.diskNavigationRoot, theme: 'dark', indentSize: state.settings.indentSize } }
+    state.overlay = { type: 'settings', props: { diskNavigationRoot: state.diskNavigationRoot, theme: state.settings.theme || 'system', indentSize: state.settings.indentSize } }
     emitter.emit('render')
   }
 
@@ -1872,10 +1872,9 @@ async function store(state, emitter) {
   emitter.on('settings-set', (patch) => {
     if (state.overlay?.type !== 'settings') return
     Object.assign(state.overlay.props, patch)
-    if (patch.indentSize !== undefined) {
-      state.settings.indentSize = patch.indentSize
-      saveSettings(state.settings)
-    }
+    if (patch.indentSize !== undefined) state.settings.indentSize = patch.indentSize
+    if (patch.theme !== undefined) state.settings.theme = patch.theme
+    if (patch.indentSize !== undefined || patch.theme !== undefined) saveSettings(state.settings)
     emitter.emit('render')
   })
 

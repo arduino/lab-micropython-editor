@@ -168,9 +168,9 @@ function SettingsLayout(props, emit) {
   // Sketches path
   const noPath = !props.diskNavigationRoot
   const pathSection = html`<div class="settings-section ${noPath ? 'settings-section--highlight' : ''}">
-    <label class="settings-label">Local sketches folder${noPath ? ' — please select a folder' : ''}</label>
+    <label class="settings-label">Local sketches folder${noPath ? '' : ''}</label>
     <div class="settings-path-row">
-      <span class="settings-path-value">${props.diskNavigationRoot || 'No folder selected'}</span>
+      <span class="settings-path-value${noPath ? ' text--warning' : ''}">${props.diskNavigationRoot || 'No folder selected'}</span>
       <button class="settings-path-btn">${noPath ? 'Select…' : 'Change…'}</button>
     </div>
   </div>`

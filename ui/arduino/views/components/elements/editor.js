@@ -32,6 +32,9 @@ class CodeMirrorEditor extends Component {
     } else {
       el.appendChild(this.editor.dom)
     }
+    if (this.indentSize && window.setEditorIndentUnit) {
+      window.setEditorIndentUnit(this.editor, this.indentSize)
+    }
     requestAnimationFrame(() => {
       if (this.editor) {
         this.editor.scrollDOM.scrollTo({ top: this.scrollTop, left: 0 })

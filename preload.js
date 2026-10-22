@@ -78,6 +78,7 @@ const Window = {
   onOpenSettings: (callback) => ipcRenderer.on('open-settings', callback),
   onSelectLine: (callback) => ipcRenderer.on('select-line', callback),
   onSelectFunction: (callback) => ipcRenderer.on('select-function', callback),
+  onReindentFile: (callback) => ipcRenderer.on('reindent-file', callback),
   confirmClose: () => ipcRenderer.invoke('confirm-close'),
   isPackaged: () => ipcRenderer.invoke('is-packaged'),
   openDialog: (opt) => ipcRenderer.invoke('open-dialog', opt),

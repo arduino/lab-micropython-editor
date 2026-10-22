@@ -15,6 +15,18 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function detectIndentSize(content) {
+  const lines = content.split('\n')
+  let min = Infinity
+  for (const line of lines.slice(0, 50)) {
+    if (!line.trim() || line.trimStart().startsWith('#')) continue
+    const n = line.length - line.trimStart().length
+    if (n > 0) min = Math.min(min, n)
+    if (min === 2) break
+  }
+  return min === Infinity ? 4 : min
+}
+
 // In-app overlay confirm/alert system.
 // Resolves with true (confirmed) or false (cancelled) when the user clicks a button.
 // Only one overlay can be pending at a time — safe because Choo event handlers are linear.
@@ -140,9 +152,11 @@ async function store(state, emitter) {
 
   // Menu management
   const updateMenu = () => {
+    const openFile = state.openFiles.find(f => f.id === state.editingFile)
     window.BridgeWindow.updateMenuState({
       isConnected: state.isConnected,
-      view: state.view
+      view: state.view,
+      indentSize: openFile?.editor?.indentSize || 4
     })
   }
 
@@ -668,6 +682,7 @@ async function store(state, emitter) {
   emitter.on('select-tab', (id) => {
     // log('select-tab', id)
     state.editingFile = id
+    updateMenu()
     emitter.emit('render')
   })
   emitter.on('close-tab', async (id) => {
@@ -1514,6 +1529,7 @@ async function store(state, emitter) {
               source: selectedFile.source,
               content: bytesToSource
             })
+            file.editor.indentSize = detectIndentSize(bytesToSource)
             file.editor.onChange = function() {
               file.hasChanges = true
               emitter.emit('render')
@@ -1532,6 +1548,7 @@ async function store(state, emitter) {
               source: selectedFile.source,
               content: fileContent
             })
+            file.editor.indentSize = detectIndentSize(fileContent)
             file.editor.onChange = function() {
               file.hasChanges = true
               emitter.emit('render')
@@ -1871,7 +1888,30 @@ async function store(state, emitter) {
     const openFile = state.openFiles.find(f => f.id === state.editingFile)
     if (openFile?.editor?.editor) window.editorCommands.selectFunction(openFile.editor.editor)
   })
-  
+
+  win.onReindentFile(() => {
+    const openFile = state.openFiles.find(f => f.id === state.editingFile)
+    if (!openFile?.editor?.editor) return
+    const view = openFile.editor.editor
+    const currentSize = openFile.editor.indentSize || 4
+    const newSize = currentSize === 2 ? 4 : 2
+    const content = view.state.doc.toString()
+    const reindented = content.split('\n').map(line => {
+      const match = line.match(/^( +)/)
+      if (!match) return line
+      const spaces = match[1].length
+      const levels = Math.round(spaces / currentSize)
+      return ' '.repeat(levels * newSize) + line.slice(spaces)
+    }).join('\n')
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: reindented }
+    })
+    openFile.editor.content = reindented
+    openFile.editor.indentSize = newSize
+    if (window.setEditorIndentUnit) window.setEditorIndentUnit(view, newSize)
+    updateMenu()
+  })
+
   win.onKeyboardShortcut((key) => {
     if (state.overlay !== null) return
     if (state.shortcutsDisabled) return

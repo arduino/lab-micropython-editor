@@ -10,8 +10,7 @@ function SettingsLayout(props, emit) {
   title.textContent = 'Settings'
   el.appendChild(title)
 
-  // Theme (not yet implemented — display only)
-  const themeSection = html`<div class="settings-section settings-section--disabled">
+  const themeSection = html`<div class="settings-section">
     <label class="settings-label">Theme</label>
     <div class="settings-segmented">
       <button class="settings-seg-btn ${theme === 'dark'   ? 'settings-seg-btn--active' : ''}">Dark</button>
@@ -19,6 +18,11 @@ function SettingsLayout(props, emit) {
       <button class="settings-seg-btn ${theme === 'system' ? 'settings-seg-btn--active' : ''}">System</button>
     </div>
   </div>`
+  const [darkBtn, lightBtn, systemBtn] = themeSection.querySelectorAll('.settings-seg-btn')
+  darkBtn.addEventListener('click',   (e) => { e.currentTarget.blur(); emit('settings-set', { theme: 'dark' }) })
+  lightBtn.addEventListener('click',  (e) => { e.currentTarget.blur(); emit('settings-set', { theme: 'light' }) })
+  systemBtn.addEventListener('click', (e) => { e.currentTarget.blur(); emit('settings-set', { theme: 'system' }) })
+  themeSection.querySelector('.settings-segmented').addEventListener('mouseup', () => emit('render'))
   el.appendChild(themeSection)
 
   el.appendChild(html`<div class="settings-divider"></div>`)

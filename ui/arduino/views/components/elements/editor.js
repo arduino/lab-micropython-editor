@@ -22,7 +22,8 @@ class CodeMirrorEditor extends Component {
         this.content = update.state.doc.toString()
         this.onChange()
       }
-      this.editor = createEditor(this.content, el, onCodeChange, this.indentSize || 4)
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      this.editor = createEditor(this.content, el, onCodeChange, this.indentSize || 4, isDark)
       this.editor.scrollDOM.addEventListener('scroll', this._scrollHandler)
       if (Preferences.cursorAtEnd) {
         const end = this.editor.state.doc.length
@@ -54,6 +55,7 @@ class CodeMirrorEditor extends Component {
   destroy() {
     if (this.editor) {
       this.editor.scrollDOM.removeEventListener('scroll', this._scrollHandler)
+      if (window._activeEditors) window._activeEditors.delete(this.editor)
       this.editor.destroy()
       this.editor = null
     }

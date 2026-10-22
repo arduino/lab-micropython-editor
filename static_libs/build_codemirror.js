@@ -21,6 +21,7 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search"
 import { lintKeymap } from "@codemirror/lint"
 import { python } from "@codemirror/lang-python"
+import { oneDark } from "@codemirror/theme-one-dark"
 
 function selectLine(view, pos) {
   const line = view.state.doc.lineAt(pos)
@@ -145,8 +146,22 @@ window.setEditorIndentUnit = (view, spaces) => {
   view.dispatch({ effects: view._indentCompartment.reconfigure(indentUnit.of(' '.repeat(spaces))) })
 }
 
-window.createEditor = (doc, el, onChange, indentSpaces = 4) => {
+const _activeEditors = new Set()
+window._activeEditors = _activeEditors
+
+window.setEditorTheme = (view, isDark) => {
+  view.dispatch({ effects: view._themeCompartment.reconfigure(isDark ? oneDark : []) })
+}
+
+window.applyThemeToAllEditors = (isDark) => {
+  for (const view of _activeEditors) {
+    window.setEditorTheme(view, isDark)
+  }
+}
+
+window.createEditor = (doc, el, onChange, indentSpaces = 4, isDark = false) => {
   const indentCompartment = new Compartment()
+  const themeCompartment = new Compartment()
   const customTabKeymap = keymap.of([
     {
       key: "Tab",
@@ -195,10 +210,13 @@ window.createEditor = (doc, el, onChange, indentSpaces = 4) => {
       keymap.of([defaultKeymap]),
       python(),
       indentCompartment.of(indentUnit.of(' '.repeat(indentSpaces))),
+      themeCompartment.of(isDark ? oneDark : []),
       updateListenerExtension(onChange)
     ],
     parent: el
   });
   view._indentCompartment = indentCompartment
+  view._themeCompartment = themeCompartment
+  _activeEditors.add(view)
   return view
 };

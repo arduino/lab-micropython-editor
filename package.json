@@ -48,12 +48,13 @@
   "license": "MIT",
   "dependencies": {
     "@codemirror/lang-python": "github:codemirror/lang-python",
+    "@codemirror/theme-one-dark": "^6.1.3",
     "about-window": "^1.15.2",
     "browserify": "^17.0.1",
     "choo": "^7.1.0",
     "codemirror": "^6.0.2",
-    "micropython.js": "github:arduino/micropython.js#v2.1.2",
-    "esbuild": "^0.25.9"
+    "esbuild": "^0.25.9",
+    "micropython.js": "github:arduino/micropython.js#v2.1.2"
   },
   "engines": {
     "node": ">=20"

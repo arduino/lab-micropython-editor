@@ -75,7 +75,7 @@
 
 :root[data-theme="dark"] {
   --color-surface:        #1a2233;
-  --color-surface-raised: #243044;
+  --color-surface-raised: #2d3e56;
   --color-bg-light:       #243044;
   --color-bg-medium:      #2e3d52;
   --color-bg-hover:       #2a3a50;
@@ -101,7 +101,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --color-surface:        #1a2233;
-    --color-surface-raised: #243044;
+    --color-surface-raised: #2d3e56;
     --color-bg-light:       #243044;
     --color-bg-medium:      #2e3d52;
     --color-bg-hover:       #2a3a50;
@@ -1130,6 +1130,7 @@ button.file-list-cta-btn:hover {
 
 #overlay.open > * {
   background: var(--color-surface-raised);
+  color: var(--color-text-primary);
   padding: 1em 1.5em;
   text-align: center;
   min-width: 220px;
@@ -1176,7 +1177,9 @@ button.file-list-cta-btn:hover {
   width: 1.5em;
   height: 1.5em;
   border-radius: 50%;
-  background: var(--color-border-subtle);
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1187,7 +1190,7 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-close:hover {
-  background: var(--color-border);
+  background: var(--color-bg-hover);
 }
 
 #overlay .cancel-btn {
@@ -1196,13 +1199,15 @@ button.file-list-cta-btn:hover {
   padding: 0.4em 1.2em;
   border-radius: 6px;
   margin: 0 auto;
-  background: var(--color-border-subtle);
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
   cursor: pointer !important;
   font-size: 0.9em;
 }
 
 #overlay .cancel-btn:hover {
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-bg-hover);
 }
 
 #overlay .overlay-btn-row {
@@ -1232,12 +1237,16 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-btn--secondary {
-  background: var(--color-border-subtle);
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
 }
 
 #overlay .overlay-btn--secondary:hover,
 #overlay .overlay-btn--secondary:focus {
   background: var(--color-brand-80);
+  color: var(--color-text-on-brand);
+  border-color: transparent;
 }
 
 #overlay.open > .overlay-input-card {

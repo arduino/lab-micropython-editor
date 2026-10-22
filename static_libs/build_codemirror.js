@@ -154,7 +154,18 @@ window.createEditor = (doc, el, onChange, indentSpaces = 4) => {
         if (completionStatus(view.state) === "active") {
           return acceptCompletion(view);
         }
-        return indentMore(view);
+        const { state } = view
+        const { from, to, empty } = state.selection.main
+        if (!empty) return indentMore(view)
+        const line = state.doc.lineAt(from)
+        const textBefore = line.text.slice(0, from - line.from)
+        if (/^\s*$/.test(textBefore)) return indentMore(view)
+        const unit = state.facet(indentUnit)
+        view.dispatch(state.update({
+          changes: { from, to, insert: unit },
+          selection: { anchor: from + unit.length }
+        }))
+        return true
       }
     },
     {

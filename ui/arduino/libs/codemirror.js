@@ -25595,7 +25595,18 @@
           if (completionStatus(view2.state) === "active") {
             return acceptCompletion(view2);
           }
-          return indentMore(view2);
+          const { state } = view2;
+          const { from, to, empty: empty2 } = state.selection.main;
+          if (!empty2) return indentMore(view2);
+          const line = state.doc.lineAt(from);
+          const textBefore = line.text.slice(0, from - line.from);
+          if (/^\s*$/.test(textBefore)) return indentMore(view2);
+          const unit = state.facet(indentUnit);
+          view2.dispatch(state.update({
+            changes: { from, to, insert: unit },
+            selection: { anchor: from + unit.length }
+          }));
+          return true;
         }
       },
       {

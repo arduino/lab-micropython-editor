@@ -44,6 +44,11 @@ module.exports = function registerMenu(win, state = {}) {
     ...(isMac ? [{
       label: app.name,
       submenu: [
+        {
+          label: '⚙️  Settings…',
+          accelerator: 'CmdOrCtrl+,',
+          click: () => win.webContents.send('open-settings')
+        },
         { type: 'separator' },
         { role: 'hide', accelerator: 'CmdOrCtrl+Shift+H' },
         { role: 'hideOthers' },
@@ -55,12 +60,12 @@ module.exports = function registerMenu(win, state = {}) {
     {
       label: 'File',
       submenu: [
-        { label: 'New', 
+        { label: 'New',
           accelerator: shortcuts.menu.NEW,
           enabled: state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.NEW)
         },
-        { label: 'Save', 
+        { label: 'Save',
           accelerator: shortcuts.menu.SAVE,
           enabled: state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.SAVE)
@@ -69,7 +74,16 @@ module.exports = function registerMenu(win, state = {}) {
           accelerator: 'CmdOrCtrl+W',
           enabled: state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.CLOSE)
-         },
+        },
+        ...(!isMac || !app.isPackaged ? [
+          { type: 'separator' },
+          {
+            label: '⚙️  Settings…',
+            accelerator: 'CmdOrCtrl+,',
+            click: () => win.webContents.send('open-settings')
+          }
+        ] : []),
+        { type: 'separator' },
         { role: 'quit' }
       ]
     },

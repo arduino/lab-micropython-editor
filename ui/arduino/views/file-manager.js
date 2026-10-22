@@ -5,8 +5,10 @@ function FileManagerView(state, emit) {
   const diskSelected  = selectedFiles.filter(f => f.source === 'disk')
   const anySelected   = boardSelected.length > 0 || diskSelected.length > 0
 
-  let boardFullPath = 'Connect to board'
-  let diskFullPath = `${state.diskNavigationRoot}${state.diskNavigationPath}`
+  let boardFullPath = 'No board connected'
+  let diskFullPath = state.diskNavigationRoot
+    ? `${state.diskNavigationRoot}${state.diskNavigationPath}`
+    : 'No default path selected'
 
   if (isConnected) {
     boardFullPath = `${state.connectedPort}${state.boardNavigationPath}`
@@ -47,7 +49,7 @@ function FileManagerView(state, emit) {
     return html`
       <div class="device-header ${selectionActive ? 'selection-active' : ''}">
         <img class="icon" src="media/${icon}" />
-        <div class="text" onclick=${pathAction}>
+        <div class="text${!pathAction && source === 'disk' && !state.diskNavigationRoot ? ' text--warning' : ''}" onclick=${pathAction || null} style="${pathAction ? '' : 'cursor: default'}">
           <span>${fullPath}</span>
         </div>
         ${selectionActive ? selectionButtons : defaultButtons}
@@ -73,7 +75,6 @@ function FileManagerView(state, emit) {
           ${DeviceHeader({
             source: 'disk',
             fullPath: diskFullPath,
-            pathAction: () => emit('select-disk-navigation-root'),
             icon: 'computer.svg'
           })}
           ${DiskFileList(state, emit)}

@@ -140,8 +140,21 @@ function generateFileList(source) {
       </div>
     `
 
+    const showDiskCta  = source === 'disk'  && !state.diskNavigationRoot
+    const showBoardCta = source === 'board' && !state.isConnected
+
     const list = html`
       <div class="file-list ${selectionMode ? 'selection-mode' : ''}">
+        ${showDiskCta ? html`
+          <div class="file-list-cta">
+            <button class="file-list-cta-btn" onclick=${() => emit('open-settings')}>Open Settings</button>
+          </div>
+        ` : ''}
+        ${showBoardCta ? html`
+          <div class="file-list-cta">
+            <button class="file-list-cta-btn" onclick=${() => emit('connect')}>Connect to board</button>
+          </div>
+        ` : ''}
         <div class="list">
           ${source === 'disk' && state.diskNavigationPath != '/' ? parentNavigationDots : ''}
           ${source === 'board' && state.boardNavigationPath != '/' ? parentNavigationDots : ''}

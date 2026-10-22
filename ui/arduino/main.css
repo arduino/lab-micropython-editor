@@ -802,6 +802,11 @@ button.small .icon {
 }
 
 
+.device-header .text--warning span {
+  color: var(--color-brand);
+  font-style: italic;
+}
+
 .device-header .text::before {
   content: '';
   position: absolute;
@@ -815,6 +820,7 @@ button.small .icon {
 
 .file-list {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   flex: 1 0 0;
   align-self: stretch;
@@ -822,6 +828,34 @@ button.small .icon {
   height: 100%;
   border-radius: 8px;
   overflow-y: scroll;
+}
+
+.file-list-cta {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5em 1em;
+}
+
+.file-list-cta-btn {
+  width: auto;
+  height: auto;
+  padding: 0.5em 1.25em;
+  border-radius: 6px;
+  border: 1px solid var(--color-brand);
+  background: transparent;
+  color: var(--color-brand);
+  font-family: inherit;
+  font-size: 0.875em;
+  font-weight: 500;
+  cursor: pointer;
+  flex-direction: row;
+}
+
+button.file-list-cta-btn:hover {
+  background: var(--color-brand);
+  color: white;
 }
 
 .file-list .list {
@@ -1209,4 +1243,113 @@ button.small .icon {
 
 #overlay .overlay-connection-refresh:hover {
   color: white;
+}
+
+/* Settings panel */
+#overlay.open > .overlay-settings-card {
+  min-width: 320px;
+  max-width: 400px;
+  text-align: left;
+}
+
+.overlay-settings-title {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0 0 1em;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-section--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.settings-section--highlight .settings-label {
+  color: var(--color-brand);
+}
+
+.settings-label {
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+}
+
+.settings-divider {
+  height: 1px;
+  background: rgba(0,0,0,0.12);
+  margin: 0.75em 0;
+}
+
+.settings-segmented {
+  display: flex;
+  border: 1px solid rgba(0,0,0,0.18);
+  border-radius: 7px;
+  overflow: hidden;
+  width: fit-content;
+  background: var(--color-bg-light);
+}
+
+.settings-seg-btn {
+  width: auto;
+  height: auto;
+  padding: 0.3em 1em;
+  font-size: 0.875em;
+  font-weight: 500;
+  font-family: inherit;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+  border-right: 1px solid rgba(0,0,0,0.18);
+  border-radius: 0;
+  color: #111;
+  flex-direction: row;
+}
+
+.settings-seg-btn:last-child {
+  border-right: none;
+}
+
+button.settings-seg-btn--active,
+button.settings-seg-btn--active:hover {
+  background: var(--color-brand);
+  color: white;
+  cursor: default;
+  pointer-events: none;
+}
+
+.settings-path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-path-value {
+  font-size: 0.85em;
+  color: #111;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-path-btn {
+  width: auto;
+  height: auto;
+  padding: 0.3em 0.75em;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #111;
+  font-size: 0.8em;
+  font-family: inherit;
+  flex-direction: row;
 }

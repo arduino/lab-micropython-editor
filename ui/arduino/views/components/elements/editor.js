@@ -22,7 +22,7 @@ class CodeMirrorEditor extends Component {
         this.content = update.state.doc.toString()
         this.onChange()
       }
-      this.editor = createEditor(this.content, el, onCodeChange)
+      this.editor = createEditor(this.content, el, onCodeChange, this.indentSize || 4)
       this.editor.scrollDOM.addEventListener('scroll', this._scrollHandler)
       if (Preferences.cursorAtEnd) {
         const end = this.editor.state.doc.length

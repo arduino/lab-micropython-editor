@@ -84,6 +84,7 @@ async function store(state, emitter) {
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
+  state.settings = { indentSize: 4, ...loadSettings() }
   state.diskFiles = []
   state.boardNavigationPath = '/'
   state.boardNavigationRoot = '/'
@@ -172,9 +173,16 @@ async function store(state, emitter) {
       saveDiskNavigationRootToStorage(folder)
       state.diskNavigationRoot = folder
       state.diskNavigationPath = '/'
+      if (state.overlay?.type === 'settings') {
+        state.overlay.props.diskNavigationRoot = folder
+      }
       emitter.emit('refresh-files')
     }
     emitter.emit('render')
+  })
+
+  emitter.on('settings-change-path', async () => {
+    emitter.emit('select-disk-navigation-root')
   })
 
   emitter.on('change-view', async (view) => {
@@ -1577,7 +1585,7 @@ async function store(state, emitter) {
     emitter.emit('open-selected-files')
   })
 
-  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'new-file', 'connection'])
+  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'new-file', 'connection', 'settings'])
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && DISMISSABLE_OVERLAY_TYPES.has(state.overlay?.type)) {
       emitter.emit('overlay-button-clicked', null)
@@ -1826,10 +1834,32 @@ async function store(state, emitter) {
   win.onReady(() => {
     const openFile = state.openFiles.find(f => f.id === state.editingFile)
     if (openFile?.editor?.editor) openFile.editor.editor.focus()
+    if (!state.diskNavigationRoot) {
+      state.overlay = { type: 'settings', props: { diskNavigationRoot: null, theme: 'dark', indentSize: state.settings.indentSize } }
+      emitter.emit('render')
+    }
   })
 
   win.onDisableShortcuts((disable) => {
     state.shortcutsDisabled = disable
+  })
+
+  function openSettings() {
+    state.overlay = { type: 'settings', props: { diskNavigationRoot: state.diskNavigationRoot, theme: 'dark', indentSize: state.settings.indentSize } }
+    emitter.emit('render')
+  }
+
+  win.onOpenSettings(openSettings)
+  emitter.on('open-settings', openSettings)
+
+  emitter.on('settings-set', (patch) => {
+    if (state.overlay?.type !== 'settings') return
+    Object.assign(state.overlay.props, patch)
+    if (patch.indentSize !== undefined) {
+      state.settings.indentSize = patch.indentSize
+      saveSettings(state.settings)
+    }
+    emitter.emit('render')
   })
 
   win.onSelectLine(() => {
@@ -1959,6 +1989,7 @@ async function store(state, emitter) {
     const id = generateHash()
     const editor = state.cache(CodeMirrorEditor, `editor_${id}`)
     editor.content = content
+    editor.indentSize = state.settings.indentSize
     return {
       id,
       source,
@@ -2045,6 +2076,19 @@ async function store(state, emitter) {
 
 }
 
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('micropython-editor-settings')
+    return raw ? JSON.parse(raw) : {}
+  } catch(e) { return {} }
+}
+
+function saveSettings(settings) {
+  try {
+    localStorage.setItem('micropython-editor-settings', JSON.stringify(settings))
+  } catch(e) {}
+}
 
 function getDiskNavigationRootFromStorage() {
   let diskNavigationRoot = localStorage.getItem('diskNavigationRoot')

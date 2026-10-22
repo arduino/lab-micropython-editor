@@ -3,22 +3,6 @@ const PANEL_TOO_SMALL = 65
 const PANEL_DEFAULT = 320
 
 function App(state, emit) {
-  if (state.diskNavigationRoot == null) {
-    return html`
-      <div
-        id="app"
-        onclick=${() => emit('select-disk-navigation-root')}
-        style="cursor: pointer;"
-        >
-        <p style="max-width: 420px">
-          In order to use <strong>Lab for MicroPython Editor</strong>
-          you must choose where to store your files. <br><br>
-          Click anywhere to select a folder on your computer.
-        </p>
-      </div>
-    `
-  }
-
   if (state.view == 'file-manager') {
     return html`
       <div id="app">

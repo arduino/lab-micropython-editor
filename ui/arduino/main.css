@@ -34,16 +34,95 @@
 }
 
 :root {
+  /* Brand */
   --color-brand:    #008184;
   --color-brand-80: rgba(0, 129, 132, 0.8);
   --color-brand-20: rgba(0, 129, 132, 0.2);
-  --color-bg-light:  #ECF1F1;
-  --color-bg-medium: #DAE3E3;
-  --color-bg-hover:  #e3eaea;
-  /* --color-bg-tabs:   #ebebeb; */
-  --color-bg-dark:   #0d1b2a;
-  --color-accent: #F4BA00;
-  --color-error:  #c0392b;
+
+  /* Surface */
+  --color-surface:        #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-bg-light:       #ECF1F1;
+  --color-bg-medium:      #DAE3E3;
+  --color-bg-hover:       #e3eaea;
+  --color-bg-dark:        #0d1b2a;
+
+  /* Text */
+  --color-text-primary:      #000000;
+  --color-text-secondary:    #555555;
+  --color-text-label:        #666666;
+  --color-text-dim:          #888888;
+  --color-text-on-brand:     #ffffff;
+  --color-text-on-dark:      rgba(255, 255, 255, 0.9);
+  --color-text-on-dark-dim:  rgba(255, 255, 255, 0.2);
+
+  /* Borders & dividers */
+  --color-border:         rgba(0, 0, 0, 0.18);
+  --color-border-medium:  rgba(0, 0, 0, 0.12);
+  --color-border-subtle:  rgba(0, 0, 0, 0.08);
+  --color-divider:        rgba(0, 0, 0, 0.1);
+
+  /* Overlays */
+  --color-overlay-bg:   rgba(255, 255, 255, 0.5);
+  --color-tooltip-bg:   rgba(0, 0, 0, 0.75);
+  --color-tooltip-text: #ffffff;
+
+  /* Status */
+  --color-warning: #c07800;
+  --color-accent:  #F4BA00;
+  --color-error:   #c0392b;
+}
+
+:root[data-theme="dark"] {
+  --color-surface:        #1a2233;
+  --color-surface-raised: #2d3e56;
+  --color-bg-light:       #243044;
+  --color-bg-medium:      #2e3d52;
+  --color-bg-hover:       #2a3a50;
+
+  --color-text-primary:     #e2e8f0;
+  --color-text-secondary:   #94a3b8;
+  --color-text-label:       #7a8fa8;
+  --color-text-dim:         #5c7080;
+  --color-text-on-brand:    #ffffff;
+  --color-text-on-dark:     rgba(255, 255, 255, 0.9);
+  --color-text-on-dark-dim: rgba(255, 255, 255, 0.2);
+
+  --color-border:        rgba(255, 255, 255, 0.12);
+  --color-border-medium: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-divider:       rgba(255, 255, 255, 0.07);
+
+  --color-overlay-bg:   rgba(0, 0, 0, 0.5);
+  --color-tooltip-bg:   rgba(255, 255, 255, 0.12);
+  --color-tooltip-text: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-surface:        #1a2233;
+    --color-surface-raised: #2d3e56;
+    --color-bg-light:       #243044;
+    --color-bg-medium:      #2e3d52;
+    --color-bg-hover:       #2a3a50;
+
+    --color-text-primary:     #e2e8f0;
+    --color-text-secondary:   #94a3b8;
+    --color-text-label:       #7a8fa8;
+    --color-text-dim:         #5c7080;
+    --color-text-on-brand:    #ffffff;
+    --color-text-on-dark:     rgba(255, 255, 255, 0.9);
+    --color-text-on-dark-dim: rgba(255, 255, 255, 0.2);
+
+    --color-border:        rgba(255, 255, 255, 0.12);
+    --color-border-medium: rgba(255, 255, 255, 0.08);
+    --color-border-subtle: rgba(255, 255, 255, 0.05);
+    --color-divider:       rgba(255, 255, 255, 0.07);
+
+    --color-overlay-bg:   rgba(0, 0, 0, 0.5);
+    --color-tooltip-bg:   rgba(255, 255, 255, 0.12);
+    --color-tooltip-text: #e2e8f0;
+  }
 }
 
 * {
@@ -79,7 +158,7 @@ button {
   align-items: center;
   border: none;
   border-radius: 45px;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--color-overlay-bg);
   cursor: pointer;
   transition: all 0.1s;
 }
@@ -96,7 +175,7 @@ button.inverted.active {
   background: var(--color-brand-80) !important;
 }
 button.inverted {
-  background: rgba(0, 129, 132, 1) !important;
+  background: var(--color-brand) !important;
 }
 
 button[disabled], button[disabled]:hover{
@@ -105,11 +184,11 @@ button[disabled], button[disabled]:hover{
 }
 
 button:not([disabled]):hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--color-surface);
 }
 
 button.active {
-  background: rgba(255, 255, 255);
+  background: var(--color-surface);
 }
 
 button .icon {
@@ -136,11 +215,11 @@ button.small .icon {
 }
 .button .label {
   text-align: center;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-on-dark-dim);
   font-family: "OpenSans", sans-serif;
 }
 .button .label.active {
-  color: rgba(255, 255, 255, .9);
+  color: var(--color-text-on-dark);
 }
 .button .tooltip {
   opacity: 0;
@@ -148,7 +227,7 @@ button.small .icon {
   top: 120%;
   left: 0;
   font-size: 10px;
-  background: #fff;
+  background: var(--color-surface);
   padding: 8px;
   z-index: 99;
   transition: all 0.1s;
@@ -157,7 +236,7 @@ button.small .icon {
   text-align: center;
   transform: translateY(-10px);
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.14),
-              0px 3px 1px -2px rgba(0, 0, 0, 0.12),
+              0px 3px 1px -2px var(--color-border-medium),
               0px 1px 5px 0px rgba(0, 0, 0, 0.20);
 }
 
@@ -250,7 +329,7 @@ button.small .icon {
   height: 100%;
   min-width: 1px;
   flex-basis: fit-content;
-  background: #fff;
+  background: var(--color-surface);
   opacity: 0.7;
   position: relative;
   margin-left: 0.5em;
@@ -293,7 +372,7 @@ button.small .icon {
 }
 
 .tab.active {
-  background: #FFF;
+  background: var(--color-surface);
   border-width: 1px 1px 0 1px;
   border-color: var(--color-brand);;
   border-style: solid;
@@ -305,7 +384,7 @@ button.small .icon {
   height: 16px;
 }
 .tab .text {
-  color: #000;
+  color: var(--color-text-primary);
   font-style: normal;
   font-weight: 400;
   line-height: 1.3em;
@@ -320,8 +399,8 @@ button.small .icon {
 #tooltip {
   display: none;
   position: fixed;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
+  background: var(--color-tooltip-bg);
+  color: var(--color-tooltip-text);
   font-size: 13px;
   white-space: nowrap;
   padding: 3px 7px;
@@ -351,7 +430,7 @@ button.small .icon {
   height: 100%;
 }
 .tab .options:hover button {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-overlay-bg);
 }
 
 .tab .text input {
@@ -360,7 +439,7 @@ button.small .icon {
   border-radius: none;
   height: 100%;
   width: 100%;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-overlay-bg);
   font-family: inherit;
   font-size: inherit;
   outline-color: var(--color-accent);
@@ -387,7 +466,7 @@ button.small .icon {
 }
 #tabs-overflow-btn .count {
   font-size: 11px;
-  color: #555;
+  color: var(--color-text-secondary);
   min-width: 12px;
 }
 
@@ -396,7 +475,7 @@ button.small .icon {
   top: 100%;
   right: 0;
   z-index: 1000;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-bg-medium);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   min-width: 200px;
@@ -410,7 +489,7 @@ button.small .icon {
   padding: 8px 12px;
   cursor: pointer;
   font-size: 13px;
-  color: #000;
+  color: var(--color-text-primary);
   white-space: nowrap;
 }
 .overflow-tab-item:hover {
@@ -519,7 +598,7 @@ button.small .icon {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: white;
+  color: var(--color-text-on-brand);
 }
 
 .panel-bar #connection-status img {
@@ -585,7 +664,7 @@ button.small .icon {
   font-size: 24px;
   font-style: normal;
   line-height: normal;
-  background: rgba(236, 241, 241, 0.50);
+  background: color-mix(in srgb, var(--color-bg-light) 50%, transparent);
 }
 
 .dialog.open {
@@ -604,9 +683,9 @@ button.small .icon {
   justify-content: center;
   align-items: center;
   gap: 18px;
-  background: #FFF;
+  background: var(--color-surface);
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.14),
-              0px 3px 1px -2px rgba(0, 0, 0, 0.12),
+              0px 3px 1px -2px var(--color-border-medium),
               0px 1px 5px 0px rgba(0, 0, 0, 0.20);
   transform: translateY(20px);
   transition: transform 0.15s;
@@ -639,7 +718,7 @@ button.small .icon {
 
 .dialog .dialog-content .item:hover {
   background: var(--color-brand);
-  color: #ffffff;
+  color: var(--color-text-on-brand);
 }
 
 .dialog .buttons-horizontal {
@@ -652,7 +731,7 @@ button.small .icon {
 .dialog .buttons-horizontal .item {
   flex-basis: 50%;
   align-items: center;
-  background-color: #eee;;
+  background-color: var(--color-bg-light);
 }
 
 .dialog-title{
@@ -666,7 +745,7 @@ button.small .icon {
   font-size: 0.6em;
   align-self: stretch;
   padding: 0.5em;
-  background: #eee;
+  background: var(--color-bg-light);
 }
 
 #file-manager {
@@ -677,6 +756,7 @@ button.small .icon {
   gap: 8px;
   flex: 1 0 0;
   align-self: stretch;
+  background: var(--color-bg-medium)
 }
 
 #board-files,
@@ -731,6 +811,7 @@ button.small .icon {
   width: 100%;
   gap: 6px;
   box-sizing: border-box;
+  background: var(--color-bg-medium);
 }
 
 .device-header button {
@@ -750,8 +831,8 @@ button.small .icon {
   bottom: calc(100% + 2px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
+  background: var(--color-tooltip-bg);
+  color: var(--color-tooltip-text);
   font-size: 11px;
   white-space: nowrap;
   padding: 3px 7px;
@@ -782,7 +863,7 @@ button.small .icon {
   height: 1.8em;
   position: relative;
   cursor: pointer;
-  color: #000;
+  color: var(--color-text-primary);
   font-family: "CodeFont", monospace;
   font-size: 14px;
   font-style: normal;
@@ -803,7 +884,7 @@ button.small .icon {
 
 
 .text--warning, .device-header .text--warning span {
-  color: #c07800 !important;
+  color: var(--color-warning) !important;
   font-style: italic;
   font-weight: 600;
 }
@@ -815,7 +896,7 @@ button.small .icon {
   left: 0;
   width: 30px;
   height: 100%;
-  background: linear-gradient(0.25turn, white 25%, rgba(0, 0, 0, 0));
+  background: linear-gradient(0.25turn, var(--color-bg-medium) 25%, rgba(0, 0, 0, 0));
   z-index: 98;
 }
 
@@ -860,7 +941,7 @@ button.small .icon {
 
 button.file-list-cta-btn:hover {
   background: var(--color-brand);
-  color: white;
+  color: var(--color-text-on-brand);
 }
 
 .file-list .list {
@@ -870,7 +951,7 @@ button.file-list-cta-btn:hover {
   align-items: flex-start;
   flex: 1 0 0;
   align-self: stretch;
-  width: calc(100% - 40px);
+  /* width: calc(100% - 40px); */
 }
 
 .file-list .item {
@@ -889,7 +970,7 @@ button.file-list-cta-btn:hover {
 
 .file-list .item.selected,
 .file-list .item:hover {
-  background: #FFF;
+  background: var(--color-surface);
 }
 
 @keyframes kb-highlight-flash {
@@ -920,7 +1001,7 @@ button.file-list-cta-btn:hover {
   height: 32px;
 }
 .file-list .item .text {
-  color: #000;
+  color: var(--color-text-primary);
   font-family: "CodeFont", monospace;
   font-size: 14px;
   font-style: normal;
@@ -959,7 +1040,7 @@ button.file-list-cta-btn:hover {
   border-radius: none;
   height: 100%;
   width: 100%;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-overlay-bg);
   font-family: inherit;
   font-size: inherit;
   outline-color: var(--color-accent);
@@ -999,7 +1080,7 @@ button.file-list-cta-btn:hover {
   padding: 0 10px;
   border: none;
   width: 100%;
-  background: rgba(255, 255, 255, 1.0);
+  background: var(--color-surface);
   font-family: inherit;
   font-size: 14px;
   outline-style: none;
@@ -1021,7 +1102,7 @@ button.file-list-cta-btn:hover {
 #overlay {
   position: fixed;
   display: flex;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-overlay-bg);
   align-items: center;
   justify-content: center;
   transition: all 0.25s;
@@ -1048,25 +1129,27 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay.open > * {
-  background: white;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
   padding: 1em 1.5em;
   text-align: center;
   min-width: 220px;
   max-width: 320px;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 #overlay .overlay-pct {
   display: block;
   font-size: 0.85em;
-  color: #888;
+  color: var(--color-text-dim);
   margin-bottom: 0.3em;
 }
 
 #overlay .overlay-progress {
   height: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--color-divider);
   border-radius: 3px;
   overflow: hidden;
   margin-bottom: 0.75em;
@@ -1074,7 +1157,7 @@ button.file-list-cta-btn:hover {
 
 #overlay .overlay-progress-fill {
   height: 100%;
-  background: rgba(0, 129, 132, 1);
+  background: var(--color-brand);
   border-radius: 3px;
   transition: width 0.15s;
 }
@@ -1094,7 +1177,9 @@ button.file-list-cta-btn:hover {
   width: 1.5em;
   height: 1.5em;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1105,7 +1190,7 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-close:hover {
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--color-bg-hover);
 }
 
 #overlay .cancel-btn {
@@ -1114,13 +1199,15 @@ button.file-list-cta-btn:hover {
   padding: 0.4em 1.2em;
   border-radius: 6px;
   margin: 0 auto;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
   cursor: pointer !important;
   font-size: 0.9em;
 }
 
 #overlay .cancel-btn:hover {
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-bg-hover);
 }
 
 #overlay .overlay-btn-row {
@@ -1141,8 +1228,8 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-btn--primary {
-  background: rgba(0, 129, 132, 1);
-  color: white;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
 }
 
 #overlay .overlay-btn--primary:hover {
@@ -1150,12 +1237,16 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-btn--secondary {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
 }
 
 #overlay .overlay-btn--secondary:hover,
 #overlay .overlay-btn--secondary:focus {
   background: var(--color-brand-80);
+  color: var(--color-text-on-brand);
+  border-color: transparent;
 }
 
 #overlay.open > .overlay-input-card {
@@ -1175,7 +1266,7 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-input:focus {
-  border-color: rgba(0, 129, 132, 1);
+  border-color: var(--color-brand);
   box-shadow: 0 0 0 2px rgba(0, 129, 132, 0.2);
 }
 
@@ -1195,8 +1286,8 @@ button.file-list-cta-btn:hover {
 .overlay-input-btn-row .overlay-btn:hover,
 .overlay-input-btn-row .overlay-btn:focus,
 .overlay-input-btn-row .overlay-btn.overlay-btn--highlighted {
-  background: rgba(0, 129, 132, 1);
-  color: white;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
   outline: none;
 }
 
@@ -1227,8 +1318,8 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-connection-item:hover {
-  background: rgba(0, 129, 132, 1);
-  color: white;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
 }
 
 #overlay .overlay-connection-error {
@@ -1240,14 +1331,14 @@ button.file-list-cta-btn:hover {
 
 #overlay .overlay-connection-refresh {
   margin-top: 4px;
-  color: rgba(0, 129, 132, 1);
-  /* border-top: 1px solid rgba(0, 0, 0, 0.08); */
+  color: var(--color-brand);
+  /* border-top: 1px solid var(--color-border-subtle); */
   border-radius: 6px;
   padding-top: 0.6em;
 }
 
 #overlay .overlay-connection-refresh:hover {
-  color: white;
+  color: var(--color-text-on-brand);
 }
 
 /* Settings panel */
@@ -1280,18 +1371,18 @@ button.file-list-cta-btn:hover {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #666;
+  color: var(--color-text-label);
 }
 
 .settings-divider {
   height: 1px;
-  background: rgba(0,0,0,0.12);
+  background: var(--color-border-medium);
   margin: 0.75em 0;
 }
 
 .settings-segmented {
   display: flex;
-  border: 1px solid rgba(0,0,0,0.18);
+  border: 1px solid var(--color-border);
   border-radius: 7px;
   overflow: hidden;
   width: fit-content;
@@ -1308,9 +1399,9 @@ button.file-list-cta-btn:hover {
   background: transparent;
   cursor: pointer;
   border: none;
-  border-right: 1px solid rgba(0,0,0,0.18);
+  border-right: 1px solid var(--color-border);
   border-radius: 0;
-  color: #111;
+  color: var(--color-text-primary);
   flex-direction: row;
 }
 
@@ -1321,7 +1412,7 @@ button.file-list-cta-btn:hover {
 button.settings-seg-btn--active,
 button.settings-seg-btn--active:hover {
   background: var(--color-brand);
-  color: white;
+  color: var(--color-text-on-brand);
   cursor: default;
   pointer-events: none;
 }
@@ -1334,7 +1425,7 @@ button.settings-seg-btn--active:hover {
 
 .settings-path-value {
   font-size: 0.85em;
-  color: #111;
+  color: var(--color-text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1342,7 +1433,7 @@ button.settings-seg-btn--active:hover {
 }
 
 .settings-path-value.text--warning {
-  color: #c07800;
+  color: var(--color-warning);
   font-style: italic;
   font-weight: 600;
 }
@@ -1352,12 +1443,69 @@ button.settings-seg-btn--active:hover {
   height: auto;
   padding: 0.3em 0.75em;
   border-radius: 6px;
-  border: 1px solid rgba(0,0,0,0.18);
+  border: 1px solid var(--color-border);
   background: transparent;
   cursor: pointer;
   white-space: nowrap;
-  color: #111;
+  color: var(--color-text-primary);
   font-size: 0.8em;
   font-family: inherit;
   flex-direction: row;
+}
+
+/* ── Dark theme overrides ─────────────────────────────── */
+[data-theme="dark"] .icon { filter: brightness(0) invert(1); }
+
+/* Toolbar: lighter circles on teal */
+[data-theme="dark"] #toolbar button,
+[data-theme="dark"] #app-views button {
+  background: rgba(255, 255, 255, 0.14);
+}
+[data-theme="dark"] #toolbar button:not([disabled]):hover,
+[data-theme="dark"] #app-views button:not([disabled]):hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+[data-theme="dark"] #toolbar button.active,
+[data-theme="dark"] #app-views button.active {
+  background: rgba(255, 255, 255, 0.3);
+}
+[data-theme="dark"] .separator {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Overlay backdrop: darker in dark mode so cards pop */
+[data-theme="dark"] #overlay {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* Device header: flat transparent buttons, icons already white from filter */
+[data-theme="dark"] .device-header button {
+  background: transparent;
+}
+[data-theme="dark"] .device-header button:not([disabled]):hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon { filter: brightness(0) invert(1); }
+  :root:not([data-theme="light"]) #toolbar button,
+  :root:not([data-theme="light"]) #app-views button {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  :root:not([data-theme="light"]) #toolbar button:not([disabled]):hover,
+  :root:not([data-theme="light"]) #app-views button:not([disabled]):hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
+  :root:not([data-theme="light"]) .separator {
+    background: rgba(255, 255, 255, 0.35);
+  }
+  :root:not([data-theme="light"]) #overlay {
+    background: rgba(0, 0, 0, 0.65);
+  }
+  :root:not([data-theme="light"]) .device-header button {
+    background: transparent;
+  }
+  :root:not([data-theme="light"]) .device-header button:not([disabled]):hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }

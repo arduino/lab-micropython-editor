@@ -96,7 +96,9 @@ async function store(state, emitter) {
   state.view = 'editor'
   state.diskNavigationPath = '/'
   state.diskNavigationRoot = getDiskNavigationRootFromStorage()
-  state.settings = { indentSize: 4, ...loadSettings() }
+  state.settings = { indentSize: 4, theme: 'system', ...loadSettings() }
+  _currentTheme = state.settings.theme
+  applyTheme(state.settings.theme)
   state.diskFiles = []
   state.boardNavigationPath = '/'
   state.boardNavigationRoot = '/'
@@ -1873,7 +1875,11 @@ async function store(state, emitter) {
     if (state.overlay?.type !== 'settings') return
     Object.assign(state.overlay.props, patch)
     if (patch.indentSize !== undefined) state.settings.indentSize = patch.indentSize
-    if (patch.theme !== undefined) state.settings.theme = patch.theme
+    if (patch.theme !== undefined) {
+      state.settings.theme = patch.theme
+      _currentTheme = patch.theme
+      applyTheme(patch.theme)
+    }
     if (patch.indentSize !== undefined || patch.theme !== undefined) saveSettings(state.settings)
     emitter.emit('render')
   })
@@ -2128,6 +2134,33 @@ function saveSettings(settings) {
     localStorage.setItem('micropython-editor-settings', JSON.stringify(settings))
   } catch(e) {}
 }
+
+const _systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)')
+
+function resolveIsDark(theme) {
+  if (theme === 'dark')  return true
+  if (theme === 'light') return false
+  return _systemDarkMQ.matches
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement
+  if (theme === 'dark')       root.setAttribute('data-theme', 'dark')
+  else if (theme === 'light') root.setAttribute('data-theme', 'light')
+  else                        root.removeAttribute('data-theme')
+
+  if (window.applyThemeToAllEditors) {
+    window.applyThemeToAllEditors(resolveIsDark(theme))
+  }
+}
+
+// Track current theme so the OS listener can reference it
+let _currentTheme = 'system'
+_systemDarkMQ.addEventListener('change', () => {
+  if (_currentTheme === 'system' && window.applyThemeToAllEditors) {
+    window.applyThemeToAllEditors(_systemDarkMQ.matches)
+  }
+})
 
 function getDiskNavigationRootFromStorage() {
   let diskNavigationRoot = localStorage.getItem('diskNavigationRoot')

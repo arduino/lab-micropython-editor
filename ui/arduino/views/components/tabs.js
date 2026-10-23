@@ -108,7 +108,13 @@ function Tabs(state, emit) {
       next.focus()
     }}>
       ${visibleFiles.map((file) => {
-        const fullPath = file.parentFolder ? `${file.parentFolder}/${file.fileName}` : file.fileName
+        const rawFolder = file.parentFolder || ''
+        const folder = file.source === 'disk'
+          ? rawFolder.replace(/^\/+/, '').replace(/\/+$/, '')
+          : rawFolder
+        const fullPath = folder && folder !== '/'
+          ? `${folder}/${file.fileName}`
+          : file.source === 'board' ? `/${file.fileName}` : file.fileName
         return Tab({
           text: file.fileName,
           fullPath,

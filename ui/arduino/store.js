@@ -158,13 +158,33 @@ async function store(state, emitter) {
     window.BridgeWindow.updateMenuState({
       isConnected: state.isConnected,
       view: state.view,
-      indentSize: openFile?.editor?.indentSize || 4
+      indentSize: openFile?.editor?.indentSize || 4,
+      hasOverlay: !!state.overlay
     })
   }
 
   disk.onFileChanged(async (filePath) => {
     const openFile = state.openFiles.find(f => f._watchedPath === filePath)
     if (!openFile) return
+
+    const exists = await disk.fileExists(filePath)
+    if (!exists) {
+      const save = await showConfirmOverlay(state, emitter,
+        `**${openFile.fileName}** was renamed or deleted from disk.\nSave the open copy back to disk, or close the tab?`,
+        'Close tab', 'Save'
+      )
+      if (save) {
+        await disk.saveFileContent(filePath, openFile.editor.content)
+        await disk.unwatchFile(filePath)
+        await disk.watchFile(filePath)
+        openFile.hasChanges = false
+        emitter.emit('render')
+      } else {
+        emitter.emit('close-tab', openFile.id)
+      }
+      return
+    }
+
     if (openFile.hasChanges) {
       const reload = await showConfirmOverlay(state, emitter,
         `${openFile.fileName} was changed on disk.\nReload and discard your edits?`,
@@ -662,6 +682,10 @@ async function store(state, emitter) {
         const diskPath = disk.getFullPath(state.diskNavigationRoot, openFile.parentFolder, openFile.fileName)
         await disk.suppressFileWatch(diskPath)
         await disk.saveFileContent(diskPath, contents)
+        if (!openFile._watchedPath) {
+          openFile._watchedPath = diskPath
+          disk.watchFile(diskPath)
+        }
       }
 
       openFile.hasChanges = false
@@ -1178,18 +1202,24 @@ async function store(state, emitter) {
             )
           )
         } else {
-          await disk.renameFile(
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              state.diskNavigationPath,
-              file.fileName
-            ),
-            disk.getFullPath(
-              state.diskNavigationRoot,
-              state.diskNavigationPath,
-              value
-            )
+          const oldDiskPath = disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            file.fileName
           )
+          const newDiskPath = disk.getFullPath(
+            state.diskNavigationRoot,
+            state.diskNavigationPath,
+            value
+          )
+          await disk.unwatchFile(oldDiskPath)
+          await disk.renameFile(oldDiskPath, newDiskPath)
+          // Update watcher and tab state if a matching open tab exists
+          const tabToRenameIndex = state.openFiles.findIndex(f => f.fileName === file.fileName && f.source === file.source && f.parentFolder === file.parentFolder)
+          if (tabToRenameIndex > -1) {
+            state.openFiles[tabToRenameIndex]._watchedPath = newDiskPath
+            await disk.watchFile(newDiskPath)
+          }
         }
         // Update tab if renaming successful
         const tabToRenameIndex = state.openFiles.findIndex(f => f.fileName === file.fileName && f.source === file.source && f.parentFolder === file.parentFolder)
@@ -1370,18 +1400,23 @@ async function store(state, emitter) {
                 )
               )
             } else if (openFile.source == 'disk') {
+              const oldWatchedPath = openFile._watchedPath
+              const newWatchedPath = disk.getFullPath(
+                state.diskNavigationRoot,
+                openFile.parentFolder,
+                openFile.fileName
+              )
+              if (oldWatchedPath) await disk.unwatchFile(oldWatchedPath)
               await disk.renameFile(
                 disk.getFullPath(
                   state.diskNavigationRoot,
                   openFile.parentFolder,
                   oldName
                 ),
-                disk.getFullPath(
-                  state.diskNavigationRoot,
-                  openFile.parentFolder,
-                  openFile.fileName
-                )
+                newWatchedPath
               )
+              openFile._watchedPath = newWatchedPath
+              await disk.watchFile(newWatchedPath)
             }
           } catch(e) {
             renameOk = false
@@ -1616,6 +1651,7 @@ async function store(state, emitter) {
     state.overlay = null
     const fn = _overlayResolver
     _overlayResolver = null
+    updateMenu()
     emitter.emit('render')
     if (fn) fn(result)
     if (terminalRouter) terminalRouter.terminal.focus()
@@ -1864,7 +1900,9 @@ async function store(state, emitter) {
   })
 
   function openSettings() {
+    if (state.overlay) return
     state.overlay = { type: 'settings', props: { diskNavigationRoot: state.diskNavigationRoot, theme: state.settings.theme || 'system', indentSize: state.settings.indentSize } }
+    updateMenu()
     emitter.emit('render')
   }
 

@@ -47,6 +47,7 @@ module.exports = function registerMenu(win, state = {}) {
         {
           label: '⚙️  Settings…',
           accelerator: 'CmdOrCtrl+,',
+          enabled: !state.hasOverlay,
           click: () => win.webContents.send('open-settings')
         },
         { type: 'separator' },
@@ -80,6 +81,7 @@ module.exports = function registerMenu(win, state = {}) {
           {
             label: '⚙️  Settings…',
             accelerator: 'CmdOrCtrl+,',
+            enabled: !state.hasOverlay,
             click: () => win.webContents.send('open-settings')
           }
         ] : []),

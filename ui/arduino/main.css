@@ -439,7 +439,8 @@ button.small .icon {
   border-radius: none;
   height: 100%;
   width: 100%;
-  background: var(--color-overlay-bg);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: inherit;
   outline-color: var(--color-accent);
@@ -1040,7 +1041,8 @@ button.file-list-cta-btn:hover {
   border-radius: none;
   height: 100%;
   width: 100%;
-  background: var(--color-overlay-bg);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: inherit;
   outline-color: var(--color-accent);

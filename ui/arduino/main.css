@@ -94,8 +94,8 @@
   --color-divider:       rgba(255, 255, 255, 0.07);
 
   --color-overlay-bg:   rgba(0, 0, 0, 0.5);
-  --color-tooltip-bg:   rgba(255, 255, 255, 0.12);
-  --color-tooltip-text: #e2e8f0;
+  --color-tooltip-bg:   #dde4ed;
+  --color-tooltip-text: #1a2233;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -120,8 +120,8 @@
     --color-divider:       rgba(255, 255, 255, 0.07);
 
     --color-overlay-bg:   rgba(0, 0, 0, 0.5);
-    --color-tooltip-bg:   rgba(255, 255, 255, 0.12);
-    --color-tooltip-text: #e2e8f0;
+    --color-tooltip-bg:   #dde4ed;
+    --color-tooltip-text: #1a2233;
   }
 }
 

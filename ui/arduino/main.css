@@ -1459,7 +1459,7 @@ button.settings-seg-btn--active:hover {
 /* Toolbar: lighter circles on teal */
 [data-theme="dark"] #toolbar button,
 [data-theme="dark"] #app-views button {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.4);
 }
 [data-theme="dark"] #toolbar button:not([disabled]):hover,
 [data-theme="dark"] #app-views button:not([disabled]):hover {
@@ -1475,7 +1475,7 @@ button.settings-seg-btn--active:hover {
 
 /* Overlay backdrop: darker in dark mode so cards pop */
 [data-theme="dark"] #overlay {
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* Device header: flat transparent buttons, icons already white from filter */

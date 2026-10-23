@@ -1486,8 +1486,8 @@
       return new _EditorSelection(ranges, mainIndex);
     }
   };
-  function checkSelection(selection2, docLength) {
-    for (let range of selection2.ranges)
+  function checkSelection(selection, docLength) {
+    for (let range of selection.ranges)
       if (range.to > docLength)
         throw new RangeError("Selection points outside of document");
   }
@@ -2056,25 +2056,25 @@
   StateEffect.reconfigure = /* @__PURE__ */ StateEffect.define();
   StateEffect.appendConfig = /* @__PURE__ */ StateEffect.define();
   var Transaction = class _Transaction {
-    constructor(startState, changes, selection2, effects, annotations, scrollIntoView3) {
+    constructor(startState, changes, selection, effects, annotations, scrollIntoView3) {
       this.startState = startState;
       this.changes = changes;
-      this.selection = selection2;
+      this.selection = selection;
       this.effects = effects;
       this.annotations = annotations;
       this.scrollIntoView = scrollIntoView3;
       this._doc = null;
       this._state = null;
-      if (selection2)
-        checkSelection(selection2, changes.newLength);
+      if (selection)
+        checkSelection(selection, changes.newLength);
       if (!annotations.some((a) => a.type == _Transaction.time))
         this.annotations = annotations.concat(_Transaction.time.of(Date.now()));
     }
     /**
     @internal
     */
-    static create(startState, changes, selection2, effects, annotations, scrollIntoView3) {
-      return new _Transaction(startState, changes, selection2, effects, annotations, scrollIntoView3);
+    static create(startState, changes, selection, effects, annotations, scrollIntoView3) {
+      return new _Transaction(startState, changes, selection, effects, annotations, scrollIntoView3);
     }
     /**
     The new document produced by the transaction. Contrary to
@@ -2294,10 +2294,10 @@
     };
   }
   var EditorState = class _EditorState {
-    constructor(config2, doc2, selection2, values, computeSlot, tr) {
+    constructor(config2, doc2, selection, values, computeSlot, tr) {
       this.config = config2;
       this.doc = doc2;
-      this.selection = selection2;
+      this.selection = selection;
       this.values = values;
       this.status = config2.statusTemplate.slice();
       this.computeSlot = computeSlot;
@@ -2364,8 +2364,8 @@
       } else {
         startValues = tr.startState.values.slice();
       }
-      let selection2 = tr.startState.facet(allowMultipleSelections) ? tr.newSelection : tr.newSelection.asSingle();
-      new _EditorState(conf, tr.newDoc, selection2, startValues, (state, slot) => slot.update(state, tr), tr);
+      let selection = tr.startState.facet(allowMultipleSelections) ? tr.newSelection : tr.newSelection.asSingle();
+      new _EditorState(conf, tr.newDoc, selection, startValues, (state, slot) => slot.update(state, tr), tr);
     }
     /**
     Create a [transaction spec](https://codemirror.net/6/docs/ref/#state.TransactionSpec) that
@@ -2495,11 +2495,11 @@
     static create(config2 = {}) {
       let configuration = Configuration.resolve(config2.extensions || [], /* @__PURE__ */ new Map());
       let doc2 = config2.doc instanceof Text ? config2.doc : Text.of((config2.doc || "").split(configuration.staticFacet(_EditorState.lineSeparator) || DefaultSplit));
-      let selection2 = !config2.selection ? EditorSelection.single(0) : config2.selection instanceof EditorSelection ? config2.selection : EditorSelection.single(config2.selection.anchor, config2.selection.head);
-      checkSelection(selection2, doc2.length);
+      let selection = !config2.selection ? EditorSelection.single(0) : config2.selection instanceof EditorSelection ? config2.selection : EditorSelection.single(config2.selection.anchor, config2.selection.head);
+      checkSelection(selection, doc2.length);
       if (!configuration.staticFacet(allowMultipleSelections))
-        selection2 = selection2.asSingle();
-      return new _EditorState(configuration, doc2, selection2, configuration.dynamicSlots.map(() => null), (state, slot) => slot.create(state), null);
+        selection = selection.asSingle();
+      return new _EditorState(configuration, doc2, selection, configuration.dynamicSlots.map(() => null), (state, slot) => slot.create(state), null);
     }
     /**
     The size (in columns) of a tab in the document, determined by
@@ -2962,23 +2962,23 @@
     of the iteration.
     */
     static spans(sets, from, to, iterator, minPointSize = -1) {
-      let cursor2 = new SpanCursor(sets, null, minPointSize).goto(from), pos = from;
-      let openRanges = cursor2.openStart;
+      let cursor = new SpanCursor(sets, null, minPointSize).goto(from), pos = from;
+      let openRanges = cursor.openStart;
       for (; ; ) {
-        let curTo = Math.min(cursor2.to, to);
-        if (cursor2.point) {
-          let active = cursor2.activeForPoint(cursor2.to);
-          let openCount = cursor2.pointFrom < from ? active.length + 1 : cursor2.point.startSide < 0 ? active.length : Math.min(active.length, openRanges);
-          iterator.point(pos, curTo, cursor2.point, active, openCount, cursor2.pointRank);
-          openRanges = Math.min(cursor2.openEnd(curTo), active.length);
+        let curTo = Math.min(cursor.to, to);
+        if (cursor.point) {
+          let active = cursor.activeForPoint(cursor.to);
+          let openCount = cursor.pointFrom < from ? active.length + 1 : cursor.point.startSide < 0 ? active.length : Math.min(active.length, openRanges);
+          iterator.point(pos, curTo, cursor.point, active, openCount, cursor.pointRank);
+          openRanges = Math.min(cursor.openEnd(curTo), active.length);
         } else if (curTo > pos) {
-          iterator.span(pos, curTo, cursor2.active, openRanges);
-          openRanges = cursor2.openEnd(curTo);
+          iterator.span(pos, curTo, cursor.active, openRanges);
+          openRanges = cursor.openEnd(curTo);
         }
-        if (cursor2.to > to)
-          return openRanges + (cursor2.point && cursor2.to > to ? 1 : 0);
-        pos = cursor2.to;
-        cursor2.next();
+        if (cursor.to > to)
+          return openRanges + (cursor.point && cursor.to > to ? 1 : 0);
+        pos = cursor.to;
+        cursor.next();
       }
     }
     /**
@@ -4138,11 +4138,11 @@
   function contains(dom, node) {
     return node ? dom == node || dom.contains(node.nodeType != 1 ? node.parentNode : node) : false;
   }
-  function hasSelection(dom, selection2) {
-    if (!selection2.anchorNode)
+  function hasSelection(dom, selection) {
+    if (!selection.anchorNode)
       return false;
     try {
-      return contains(dom, selection2.anchorNode);
+      return contains(dom, selection.anchorNode);
     } catch (_) {
       return false;
     }
@@ -4426,9 +4426,9 @@
     }
     return null;
   }
-  function atElementStart(doc2, selection2) {
-    let node = selection2.focusNode, offset = selection2.focusOffset;
-    if (!node || selection2.anchorNode != node || selection2.anchorOffset != offset)
+  function atElementStart(doc2, selection) {
+    let node = selection.focusNode, offset = selection.focusOffset;
+    if (!node || selection.anchorNode != node || selection.anchorOffset != offset)
       return false;
     offset = Math.min(offset, maxOffset(node));
     for (; ; ) {
@@ -6608,32 +6608,32 @@
     // If a zero-length widget is inserted next to the cursor during
     // composition, avoid moving it across it and disrupting the
     // composition.
-    suppressWidgetCursorChange(sel, cursor2) {
-      return this.hasComposition && cursor2.empty && isEquivalentPosition(sel.focusNode, sel.focusOffset, sel.anchorNode, sel.anchorOffset) && this.posFromDOM(sel.focusNode, sel.focusOffset) == cursor2.head;
+    suppressWidgetCursorChange(sel, cursor) {
+      return this.hasComposition && cursor.empty && isEquivalentPosition(sel.focusNode, sel.focusOffset, sel.anchorNode, sel.anchorOffset) && this.posFromDOM(sel.focusNode, sel.focusOffset) == cursor.head;
     }
     enforceCursorAssoc() {
       if (this.hasComposition)
         return;
-      let { view } = this, cursor2 = view.state.selection.main;
+      let { view } = this, cursor = view.state.selection.main;
       let sel = getSelection(view.root);
       let { anchorNode, anchorOffset } = view.observer.selectionRange;
-      if (!sel || !cursor2.empty || !cursor2.assoc || !sel.modify)
+      if (!sel || !cursor.empty || !cursor.assoc || !sel.modify)
         return;
-      let line = this.lineAt(cursor2.head, cursor2.assoc);
+      let line = this.lineAt(cursor.head, cursor.assoc);
       if (!line)
         return;
       let lineStart = line.posAtStart;
-      if (cursor2.head == lineStart || cursor2.head == lineStart + line.length)
+      if (cursor.head == lineStart || cursor.head == lineStart + line.length)
         return;
-      let before = this.coordsAt(cursor2.head, -1), after = this.coordsAt(cursor2.head, 1);
+      let before = this.coordsAt(cursor.head, -1), after = this.coordsAt(cursor.head, 1);
       if (!before || !after || before.bottom > after.top)
         return;
-      let dom = this.domAtPos(cursor2.head + cursor2.assoc, cursor2.assoc);
+      let dom = this.domAtPos(cursor.head + cursor.assoc, cursor.assoc);
       sel.collapse(dom.node, dom.offset);
-      sel.modify("move", cursor2.assoc < 0 ? "forward" : "backward", "lineboundary");
+      sel.modify("move", cursor.assoc < 0 ? "forward" : "backward", "lineboundary");
       view.observer.readSelectionRange();
       let newRange = view.observer.selectionRange;
-      if (view.docView.posFromDOM(newRange.anchorNode, newRange.anchorOffset) != cursor2.from)
+      if (view.docView.posFromDOM(newRange.anchorNode, newRange.anchorOffset) != cursor.from)
         sel.collapse(anchorNode, anchorOffset);
     }
     posFromDOM(node, offset) {
@@ -7856,8 +7856,8 @@
     let anchor = points[0].pos, head = points.length == 2 ? points[1].pos : anchor;
     return anchor > -1 && head > -1 ? EditorSelection.single(anchor + base2, head + base2) : null;
   }
-  function sameSelPos(selection2, range) {
-    return range.head == selection2.main.head && range.anchor == selection2.main.anchor;
+  function sameSelPos(selection, range) {
+    return range.head == selection.main.head && range.anchor == selection.main.anchor;
   }
   var InputState = class {
     setSelectionOrigin(origin) {
@@ -8145,10 +8145,10 @@
         this.select(this.lastEvent);
     }
     select(event) {
-      let { view } = this, selection2 = skipAtomsForSelection(this.atoms, this.style.get(event, this.extend, this.multiple));
-      if (this.mustSelect || !selection2.eq(view.state.selection, this.dragging === false))
+      let { view } = this, selection = skipAtomsForSelection(this.atoms, this.style.get(event, this.extend, this.multiple));
+      if (this.mustSelect || !selection.eq(view.state.selection, this.dragging === false))
         this.view.dispatch({
-          selection: selection2,
+          selection,
           userEvent: "select.pointer"
         });
       this.mustSelect = false;
@@ -10445,10 +10445,10 @@
     }
     readSelectionRange() {
       let { view } = this;
-      let selection2 = getSelection(view.root);
-      if (!selection2)
+      let selection = getSelection(view.root);
+      if (!selection)
         return false;
-      let range = browser.safari && view.root.nodeType == 11 && view.root.activeElement == this.dom && safariSelectionRangeHack(this.view, selection2) || selection2;
+      let range = browser.safari && view.root.nodeType == 11 && view.root.activeElement == this.dom && safariSelectionRangeHack(this.view, selection) || selection;
       if (!range || this.selectionRange.eq(range))
         return false;
       let local = hasSelection(this.dom, range);
@@ -10732,9 +10732,9 @@
       [anchorNode, anchorOffset, focusNode, focusOffset] = [focusNode, focusOffset, anchorNode, anchorOffset];
     return { anchorNode, anchorOffset, focusNode, focusOffset };
   }
-  function safariSelectionRangeHack(view, selection2) {
-    if (selection2.getComposedRanges) {
-      let range = selection2.getComposedRanges(view.root)[0];
+  function safariSelectionRangeHack(view, selection) {
+    if (selection.getComposedRanges) {
+      let range = selection.getComposedRanges(view.root)[0];
       if (range)
         return buildSelectionRangeFromRange(view, range);
     }
@@ -12405,8 +12405,8 @@
         let prim = r == state.selection.main;
         if (r.empty || conf.drawRangeCursor && !(prim && browser.ios && conf.iosSelectionHandles)) {
           let className = prim ? "cm-cursor cm-cursor-primary" : "cm-cursor cm-cursor-secondary";
-          let cursor2 = r.empty ? r : EditorSelection.cursor(r.head, r.assoc);
-          for (let piece of RectangleMarker.forRange(view, className, cursor2))
+          let cursor = r.empty ? r : EditorSelection.cursor(r.head, r.assoc);
+          for (let piece of RectangleMarker.forRange(view, className, cursor))
             cursors.push(piece);
         }
       }
@@ -12559,9 +12559,9 @@
   }
   function iterMatches(doc2, re, from, to, f) {
     re.lastIndex = 0;
-    for (let cursor2 = doc2.iterRange(from, to), pos = from, m; !cursor2.next().done; pos += cursor2.value.length) {
-      if (!cursor2.lineBreak)
-        while (m = re.exec(cursor2.value))
+    for (let cursor = doc2.iterRange(from, to), pos = from, m; !cursor.next().done; pos += cursor.value.length) {
+      if (!cursor.lineBreak)
+        while (m = re.exec(cursor.value))
           f(pos + m.index, m);
     }
   }
@@ -14111,11 +14111,11 @@
   function asArray2(val) {
     return Array.isArray(val) ? val : [val];
   }
-  function advanceCursor(cursor2, collect, pos) {
-    while (cursor2.value && cursor2.from <= pos) {
-      if (cursor2.from == pos)
-        collect.push(cursor2.value);
-      cursor2.next();
+  function advanceCursor(cursor, collect, pos) {
+    while (cursor.value && cursor.from <= pos) {
+      if (cursor.from == pos)
+        collect.push(cursor.value);
+      cursor.next();
     }
   }
   var UpdateContext = class {
@@ -14647,10 +14647,10 @@
     */
     cursorAt(pos, side = 0, mode = 0) {
       let scope = CachedNode.get(this) || this.topNode;
-      let cursor2 = new TreeCursor(scope);
-      cursor2.moveTo(pos, side);
-      CachedNode.set(this, cursor2._tree);
-      return cursor2;
+      let cursor = new TreeCursor(scope);
+      cursor.moveTo(pos, side);
+      CachedNode.set(this, cursor._tree);
+      return cursor;
     }
     /**
     Get a [syntax node](#common.SyntaxNode) object for the top of the
@@ -15627,14 +15627,14 @@
   function buildTree(data) {
     var _a2;
     let { buffer, nodeSet, maxBufferLength = DefaultBufferLength, reused = [], minRepeatType = nodeSet.types.length } = data;
-    let cursor2 = Array.isArray(buffer) ? new FlatBufferCursor(buffer, buffer.length) : buffer;
+    let cursor = Array.isArray(buffer) ? new FlatBufferCursor(buffer, buffer.length) : buffer;
     let types2 = nodeSet.types;
     let contextHash = 0, lookAhead = 0;
     function takeNode(parentStart, minPos, children2, positions2, inRepeat, depth) {
-      let { id: id2, start, end, size } = cursor2;
+      let { id: id2, start, end, size } = cursor;
       let lookAheadAtStart = lookAhead, contextAtStart = contextHash;
       if (size < 0) {
-        cursor2.next();
+        cursor.next();
         if (size == -1) {
           let node2 = reused[id2];
           children2.push(node2);
@@ -15652,27 +15652,27 @@
       }
       let type = types2[id2], node, buffer2;
       let startPos = start - parentStart;
-      if (end - start <= maxBufferLength && (buffer2 = findBufferSize(cursor2.pos - minPos, inRepeat))) {
+      if (end - start <= maxBufferLength && (buffer2 = findBufferSize(cursor.pos - minPos, inRepeat))) {
         let data2 = new Uint16Array(buffer2.size - buffer2.skip);
-        let endPos = cursor2.pos - buffer2.size, index = data2.length;
-        while (cursor2.pos > endPos)
+        let endPos = cursor.pos - buffer2.size, index = data2.length;
+        while (cursor.pos > endPos)
           index = copyToBuffer(buffer2.start, data2, index);
         node = new TreeBuffer(data2, end - buffer2.start, nodeSet);
         startPos = buffer2.start - parentStart;
       } else {
-        let endPos = cursor2.pos - size;
-        cursor2.next();
+        let endPos = cursor.pos - size;
+        cursor.next();
         let localChildren = [], localPositions = [];
         let localInRepeat = id2 >= minRepeatType ? id2 : -1;
         let lastGroup = 0, lastEnd = end;
-        while (cursor2.pos > endPos) {
-          if (localInRepeat >= 0 && cursor2.id == localInRepeat && cursor2.size >= 0) {
-            if (cursor2.end <= lastEnd - maxBufferLength) {
-              makeRepeatLeaf(localChildren, localPositions, start, lastGroup, cursor2.end, lastEnd, localInRepeat, lookAheadAtStart, contextAtStart);
+        while (cursor.pos > endPos) {
+          if (localInRepeat >= 0 && cursor.id == localInRepeat && cursor.size >= 0) {
+            if (cursor.end <= lastEnd - maxBufferLength) {
+              makeRepeatLeaf(localChildren, localPositions, start, lastGroup, cursor.end, lastEnd, localInRepeat, lookAheadAtStart, contextAtStart);
               lastGroup = localChildren.length;
-              lastEnd = cursor2.end;
+              lastEnd = cursor.end;
             }
-            cursor2.next();
+            cursor.next();
           } else if (depth > 2500) {
             takeFlatNode(start, endPos, localChildren, localPositions);
           } else {
@@ -15696,10 +15696,10 @@
     function takeFlatNode(parentStart, minPos, children2, positions2) {
       let nodes = [];
       let nodeCount = 0, stopAt = -1;
-      while (cursor2.pos > minPos) {
-        let { id: id2, start, end, size } = cursor2;
+      while (cursor.pos > minPos) {
+        let { id: id2, start, end, size } = cursor;
         if (size > 4) {
-          cursor2.next();
+          cursor.next();
         } else if (stopAt > -1 && start < stopAt) {
           break;
         } else {
@@ -15707,7 +15707,7 @@
             stopAt = end - maxBufferLength;
           nodes.push(id2, start, end);
           nodeCount++;
-          cursor2.next();
+          cursor.next();
         }
       }
       if (nodeCount) {
@@ -15756,7 +15756,7 @@
       return new Tree(type, children2, positions2, length2, props);
     }
     function findBufferSize(maxSize, inRepeat) {
-      let fork = cursor2.fork();
+      let fork = cursor.fork();
       let size = 0, start = 0, skip = 0, minStart = fork.end - maxBufferLength;
       let result = { size: 0, start: 0, skip: 0 };
       scan: for (let minPos = fork.pos - maxSize; fork.pos > minPos; ) {
@@ -15799,13 +15799,13 @@
       return result.size > 4 ? result : void 0;
     }
     function copyToBuffer(bufferStart, buffer2, index) {
-      let { id: id2, start, end, size } = cursor2;
-      cursor2.next();
+      let { id: id2, start, end, size } = cursor;
+      cursor.next();
       if (size >= 0 && id2 < minRepeatType) {
         let startIndex = index;
         if (size > 4) {
-          let endPos = cursor2.pos - (size - 4);
-          while (cursor2.pos > endPos)
+          let endPos = cursor.pos - (size - 4);
+          while (cursor.pos > endPos)
             index = copyToBuffer(bufferStart, buffer2, index);
         }
         buffer2[--index] = startIndex;
@@ -15820,7 +15820,7 @@
       return index;
     }
     let children = [], positions = [];
-    while (cursor2.pos > 0)
+    while (cursor.pos > 0)
       takeNode(data.start || 0, data.bufferStart || 0, children, positions, -1, 0);
     let length = (_a2 = data.length) !== null && _a2 !== void 0 ? _a2 : children.length ? positions[0] + children[0].length : 0;
     return new Tree(types2[data.topID], children.reverse(), positions.reverse(), length);
@@ -15911,18 +15911,18 @@
     /**
     Set the value for the node that a cursor currently points to.
     */
-    cursorSet(cursor2, value) {
-      if (cursor2.buffer)
-        this.setBuffer(cursor2.buffer.buffer, cursor2.index, value);
+    cursorSet(cursor, value) {
+      if (cursor.buffer)
+        this.setBuffer(cursor.buffer.buffer, cursor.index, value);
       else
-        this.map.set(cursor2.tree, value);
+        this.map.set(cursor.tree, value);
     }
     /**
     Retrieve the value for the node that a cursor currently points
     to.
     */
-    cursorGet(cursor2) {
-      return cursor2.buffer ? this.getBuffer(cursor2.buffer.buffer, cursor2.index) : this.map.get(cursor2.tree);
+    cursorGet(cursor) {
+      return cursor.buffer ? this.getBuffer(cursor.buffer.buffer, cursor.index) : this.map.get(cursor.tree);
     }
   };
   var TreeFragment = class _TreeFragment {
@@ -16290,14 +16290,14 @@
       if (to > this.at && this.class)
         this.span(this.at, to, this.class);
     }
-    highlightRange(cursor2, from, to, inheritedClass, highlighters) {
-      let { type, from: start, to: end } = cursor2;
+    highlightRange(cursor, from, to, inheritedClass, highlighters) {
+      let { type, from: start, to: end } = cursor;
       if (start >= to || end <= from)
         return;
       if (type.isTop)
         highlighters = this.highlighters.filter((h) => !h.scope || h.scope(type));
       let cls = inheritedClass;
-      let rule = getStyleTags(cursor2) || Rule.empty;
+      let rule = getStyleTags(cursor) || Rule.empty;
       let tagCls = highlightTags(highlighters, rule.tags);
       if (tagCls) {
         if (cls)
@@ -16309,20 +16309,20 @@
       this.startSpan(Math.max(from, start), cls);
       if (rule.opaque)
         return;
-      let mounted = cursor2.tree && cursor2.tree.prop(NodeProp.mounted);
+      let mounted = cursor.tree && cursor.tree.prop(NodeProp.mounted);
       if (mounted && mounted.overlay) {
-        let inner = cursor2.node.enter(mounted.overlay[0].from + start, 1);
+        let inner = cursor.node.enter(mounted.overlay[0].from + start, 1);
         let innerHighlighters = this.highlighters.filter((h) => !h.scope || h.scope(mounted.tree.type));
-        let hasChild2 = cursor2.firstChild();
+        let hasChild2 = cursor.firstChild();
         for (let i = 0, pos = start; ; i++) {
           let next = i < mounted.overlay.length ? mounted.overlay[i] : null;
           let nextPos = next ? next.from + start : end;
           let rangeFrom2 = Math.max(from, pos), rangeTo2 = Math.min(to, nextPos);
           if (rangeFrom2 < rangeTo2 && hasChild2) {
-            while (cursor2.from < rangeTo2) {
-              this.highlightRange(cursor2, rangeFrom2, rangeTo2, inheritedClass, highlighters);
-              this.startSpan(Math.min(rangeTo2, cursor2.to), cls);
-              if (cursor2.to >= nextPos || !cursor2.nextSibling())
+            while (cursor.from < rangeTo2) {
+              this.highlightRange(cursor, rangeFrom2, rangeTo2, inheritedClass, highlighters);
+              this.startSpan(Math.min(rangeTo2, cursor.to), cls);
+              if (cursor.to >= nextPos || !cursor.nextSibling())
                 break;
             }
           }
@@ -16335,19 +16335,19 @@
           }
         }
         if (hasChild2)
-          cursor2.parent();
-      } else if (cursor2.firstChild()) {
+          cursor.parent();
+      } else if (cursor.firstChild()) {
         if (mounted)
           inheritedClass = "";
         do {
-          if (cursor2.to <= from)
+          if (cursor.to <= from)
             continue;
-          if (cursor2.from >= to)
+          if (cursor.from >= to)
             break;
-          this.highlightRange(cursor2, from, to, inheritedClass, highlighters);
-          this.startSpan(Math.min(to, cursor2.to), cls);
-        } while (cursor2.nextSibling());
-        cursor2.parent();
+          this.highlightRange(cursor, from, to, inheritedClass, highlighters);
+          this.startSpan(Math.min(to, cursor.to), cls);
+        } while (cursor.nextSibling());
+        cursor.parent();
       }
     }
   };
@@ -18215,18 +18215,18 @@
   }
   function matchMarkedBrackets(_state, _pos, dir, token, handle, matching, brackets) {
     let parent = token.parent, firstToken = { from: handle.from, to: handle.to };
-    let depth = 0, cursor2 = parent === null || parent === void 0 ? void 0 : parent.cursor();
-    if (cursor2 && (dir < 0 ? cursor2.childBefore(token.from) : cursor2.childAfter(token.to)))
+    let depth = 0, cursor = parent === null || parent === void 0 ? void 0 : parent.cursor();
+    if (cursor && (dir < 0 ? cursor.childBefore(token.from) : cursor.childAfter(token.to)))
       do {
-        if (dir < 0 ? cursor2.to <= token.from : cursor2.from >= token.to) {
-          if (depth == 0 && matching.indexOf(cursor2.type.name) > -1 && cursor2.from < cursor2.to) {
-            let endHandle = findHandle(cursor2);
+        if (dir < 0 ? cursor.to <= token.from : cursor.from >= token.to) {
+          if (depth == 0 && matching.indexOf(cursor.type.name) > -1 && cursor.from < cursor.to) {
+            let endHandle = findHandle(cursor);
             return { start: firstToken, end: endHandle ? { from: endHandle.from, to: endHandle.to } : void 0, matched: true };
-          } else if (matchingNodes(cursor2.type, dir, brackets)) {
+          } else if (matchingNodes(cursor.type, dir, brackets)) {
             depth++;
-          } else if (matchingNodes(cursor2.type, -dir, brackets)) {
+          } else if (matchingNodes(cursor.type, -dir, brackets)) {
             if (depth == 0) {
-              let endHandle = findHandle(cursor2);
+              let endHandle = findHandle(cursor);
               return {
                 start: firstToken,
                 end: endHandle && endHandle.from < endHandle.to ? { from: endHandle.from, to: endHandle.to } : void 0,
@@ -18236,7 +18236,7 @@
             depth--;
           }
         }
-      } while (dir < 0 ? cursor2.prevSibling() : cursor2.nextSibling());
+      } while (dir < 0 ? cursor.prevSibling() : cursor.nextSibling());
     return { start: firstToken, matched: false };
   }
   function matchPlainBrackets(state, pos, dir, tree, tokenType, maxScanDistance, brackets) {
@@ -18566,14 +18566,14 @@
       })
     ];
   }
-  function cmd(side, selection2) {
+  function cmd(side, selection) {
     return function({ state, dispatch }) {
-      if (!selection2 && state.readOnly)
+      if (!selection && state.readOnly)
         return false;
       let historyState = state.field(historyField_, false);
       if (!historyState)
         return false;
-      let tr = historyState.pop(side, state, selection2);
+      let tr = historyState.pop(side, state, selection);
       if (!tr)
         return false;
       dispatch(tr);
@@ -18610,7 +18610,7 @@
     // This does not check `addToHistory` and such, it assumes the
     // transaction needs to be converted to an item. Returns null when
     // there are no changes or effects in the transaction.
-    static fromTransaction(tr, selection2) {
+    static fromTransaction(tr, selection) {
       let effects = none2;
       for (let invert of tr.startState.facet(invertedEffects)) {
         let result = invert(tr);
@@ -18619,7 +18619,7 @@
       }
       if (!effects.length && tr.changes.empty)
         return null;
-      return new _HistEvent(tr.changes.invert(tr.startState.doc), effects, void 0, selection2 || tr.startState.selection, none2);
+      return new _HistEvent(tr.changes.invert(tr.startState.doc), effects, void 0, selection || tr.startState.selection, none2);
     }
     static selection(selections) {
       return new _HistEvent(void 0, none2, void 0, void 0, selections);
@@ -18651,15 +18651,15 @@
   }
   var none2 = [];
   var MaxSelectionsPerEvent = 200;
-  function addSelection(branch, selection2) {
+  function addSelection(branch, selection) {
     if (!branch.length) {
-      return [HistEvent.selection([selection2])];
+      return [HistEvent.selection([selection])];
     } else {
       let lastEvent = branch[branch.length - 1];
       let sels = lastEvent.selectionsAfter.slice(Math.max(0, lastEvent.selectionsAfter.length - MaxSelectionsPerEvent));
-      if (sels.length && sels[sels.length - 1].eq(selection2))
+      if (sels.length && sels[sels.length - 1].eq(selection))
         return branch;
-      sels.push(selection2);
+      sels.push(selection);
       return updateBranch(branch, branch.length - 1, 1e9, lastEvent.setSelAfter(sels));
     }
   }
@@ -18716,11 +18716,11 @@
       }
       return new _HistoryState(done, none2, time, userEvent);
     }
-    addSelection(selection2, time, userEvent, newGroupDelay) {
+    addSelection(selection, time, userEvent, newGroupDelay) {
       let last2 = this.done.length ? this.done[this.done.length - 1].selectionsAfter : none2;
-      if (last2.length > 0 && time - this.prevTime < newGroupDelay && userEvent == this.prevUserEvent && userEvent && /^select($|\.)/.test(userEvent) && eqSelectionShape(last2[last2.length - 1], selection2))
+      if (last2.length > 0 && time - this.prevTime < newGroupDelay && userEvent == this.prevUserEvent && userEvent && /^select($|\.)/.test(userEvent) && eqSelectionShape(last2[last2.length - 1], selection))
         return this;
-      return new _HistoryState(addSelection(this.done, selection2), this.undone, time, userEvent);
+      return new _HistoryState(addSelection(this.done, selection), this.undone, time, userEvent);
     }
     addMapping(mapping) {
       return new _HistoryState(addMappingToBranch(this.done, mapping), addMappingToBranch(this.undone, mapping), this.prevTime, this.prevUserEvent);
@@ -18729,11 +18729,11 @@
       let branch = side == 0 ? this.done : this.undone;
       if (branch.length == 0)
         return null;
-      let event = branch[branch.length - 1], selection2 = event.selectionsAfter[0] || (event.startSelection ? event.startSelection.map(event.changes.invertedDesc, 1) : state.selection);
+      let event = branch[branch.length - 1], selection = event.selectionsAfter[0] || (event.startSelection ? event.startSelection.map(event.changes.invertedDesc, 1) : state.selection);
       if (onlySelection && event.selectionsAfter.length) {
         return state.update({
           selection: event.selectionsAfter[event.selectionsAfter.length - 1],
-          annotations: fromHistory.of({ side, rest: popSelection(branch), selection: selection2 }),
+          annotations: fromHistory.of({ side, rest: popSelection(branch), selection }),
           userEvent: side == 0 ? "select.undo" : "select.redo",
           scrollIntoView: true
         });
@@ -18747,7 +18747,7 @@
           changes: event.changes,
           selection: event.startSelection,
           effects: event.effects,
-          annotations: fromHistory.of({ side, rest, selection: selection2 }),
+          annotations: fromHistory.of({ side, rest, selection }),
           filter: false,
           userEvent: side == 0 ? "undo" : "redo",
           scrollIntoView: true
@@ -18766,14 +18766,14 @@
   function updateSel(sel, by) {
     return EditorSelection.create(sel.ranges.map(by), sel.mainIndex);
   }
-  function setSel(state, selection2) {
-    return state.update({ selection: selection2, scrollIntoView: true, userEvent: "select" });
+  function setSel(state, selection) {
+    return state.update({ selection, scrollIntoView: true, userEvent: "select" });
   }
   function moveSel({ state, dispatch }, how) {
-    let selection2 = updateSel(state.selection, how);
-    if (selection2.eq(state.selection, true))
+    let selection = updateSel(state.selection, how);
+    if (selection.eq(state.selection, true))
       return false;
-    dispatch(setSel(state, selection2));
+    dispatch(setSel(state, selection));
     return true;
   }
   function rangeEnd(range, forward) {
@@ -18854,10 +18854,10 @@
   }
   function cursorByPage(view, forward) {
     let page = pageInfo(view);
-    let { state } = view, selection2 = updateSel(state.selection, (range) => {
+    let { state } = view, selection = updateSel(state.selection, (range) => {
       return range.empty ? view.moveVertically(range, forward, page.height) : rangeEnd(range, forward);
     });
-    if (selection2.eq(state.selection))
+    if (selection.eq(state.selection))
       return false;
     let effect;
     if (page.selfScroll) {
@@ -18865,9 +18865,9 @@
       let scrollRect = view.scrollDOM.getBoundingClientRect();
       let scrollTop = scrollRect.top + page.marginTop, scrollBottom = scrollRect.bottom - page.marginBottom;
       if (startPos && startPos.top > scrollTop && startPos.bottom < scrollBottom)
-        effect = EditorView.scrollIntoView(selection2.main.head, { y: "start", yMargin: startPos.top - scrollTop });
+        effect = EditorView.scrollIntoView(selection.main.head, { y: "start", yMargin: startPos.top - scrollTop });
     }
-    view.dispatch(setSel(state, selection2), { effects: effect });
+    view.dispatch(setSel(state, selection), { effects: effect });
     return true;
   }
   var cursorPageUp = (view) => cursorByPage(view, false);
@@ -18890,7 +18890,7 @@
   var cursorLineStart = (view) => moveSel(view, (range) => view.moveToLineBoundary(range, false, false));
   var cursorLineEnd = (view) => moveSel(view, (range) => view.moveToLineBoundary(range, true, false));
   function toMatchingBracket(state, dispatch, extend) {
-    let found = false, selection2 = updateSel(state.selection, (range) => {
+    let found = false, selection = updateSel(state.selection, (range) => {
       let matching = matchBrackets(state, range.head, -1) || matchBrackets(state, range.head, 1) || range.head > 0 && matchBrackets(state, range.head - 1, 1) || range.head < state.doc.length && matchBrackets(state, range.head + 1, -1);
       if (!matching || !matching.end)
         return range;
@@ -18900,20 +18900,20 @@
     });
     if (!found)
       return false;
-    dispatch(setSel(state, selection2));
+    dispatch(setSel(state, selection));
     return true;
   }
   var cursorMatchingBracket = ({ state, dispatch }) => toMatchingBracket(state, dispatch, false);
   function extendSel(target, forward, how) {
-    let selection2 = updateSel(target.state.selection, (range) => {
+    let selection = updateSel(target.state.selection, (range) => {
       if (range.undirectional && range.head >= range.anchor != forward)
         range = EditorSelection.range(range.head, range.anchor);
       let head = how(range);
       return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || void 0, head.assoc);
     });
-    if (selection2.eq(target.state.selection))
+    if (selection.eq(target.state.selection))
       return false;
-    target.dispatch(setSel(target.state, selection2));
+    target.dispatch(setSel(target.state, selection));
     return true;
   }
   function selectByChar(view, forward) {
@@ -18982,7 +18982,7 @@
     return true;
   };
   var selectParentSyntax = ({ state, dispatch }) => {
-    let selection2 = updateSel(state.selection, (range) => {
+    let selection = updateSel(state.selection, (range) => {
       let tree = syntaxTree(state), stack = tree.resolveStack(range.from, 1);
       if (range.empty) {
         let stackBefore = tree.resolveStack(range.from, -1);
@@ -18996,9 +18996,9 @@
       }
       return range;
     });
-    if (selection2.eq(state.selection))
+    if (selection.eq(state.selection))
       return false;
-    dispatch(setSel(state, selection2));
+    dispatch(setSel(state, selection));
     return true;
   };
   function addCursorVertically(view, forward) {
@@ -19027,14 +19027,14 @@
   var addCursorAbove = (view) => addCursorVertically(view, false);
   var addCursorBelow = (view) => addCursorVertically(view, true);
   var simplifySelection = ({ state, dispatch }) => {
-    let cur2 = state.selection, selection2 = null;
+    let cur2 = state.selection, selection = null;
     if (cur2.ranges.length > 1)
-      selection2 = EditorSelection.create([cur2.main]);
+      selection = EditorSelection.create([cur2.main]);
     else if (!cur2.main.empty)
-      selection2 = EditorSelection.create([EditorSelection.cursor(cur2.main.head)]);
-    if (!selection2)
+      selection = EditorSelection.create([EditorSelection.cursor(cur2.main.head)]);
+    if (!selection)
       return false;
-    dispatch(setSel(state, selection2));
+    dispatch(setSel(state, selection));
     return true;
   };
   function deleteBy(target, by) {
@@ -19242,7 +19242,7 @@
         to++;
       return { from, to };
     }));
-    let selection2 = updateSel(state.selection, (range) => {
+    let selection = updateSel(state.selection, (range) => {
       let dist2 = void 0;
       if (view.lineWrapping) {
         let block = view.lineBlockAt(range.head), pos = view.coordsAtPos(range.head, range.assoc || 1);
@@ -19251,7 +19251,7 @@
       }
       return view.moveVertically(range, true, dist2);
     }).map(changes);
-    view.dispatch({ changes, selection: selection2, scrollIntoView: true, userEvent: "delete.line" });
+    view.dispatch({ changes, selection, scrollIntoView: true, userEvent: "delete.line" });
     return true;
   };
   function isBetweenBrackets(state, pos) {
@@ -21567,10 +21567,10 @@
         line2 = line2 * (sign == "-" ? -1 : 1) + startLine.number;
       }
       let docLine = state.doc.line(Math.max(1, Math.min(state.doc.lines, line2)));
-      let selection2 = EditorSelection.cursor(docLine.from + Math.max(0, Math.min(col, docLine.length)));
+      let selection = EditorSelection.cursor(docLine.from + Math.max(0, Math.min(col, docLine.length)));
       view.dispatch({
-        effects: [close, EditorView.scrollIntoView(selection2.from, { y: "center" })],
-        selection: selection2
+        effects: [close, EditorView.scrollIntoView(selection.from, { y: "center" })],
+        selection
       });
     });
     return true;
@@ -21643,9 +21643,9 @@
       }
       let deco = [];
       for (let part of view.visibleRanges) {
-        let cursor2 = new SearchCursor(state.doc, query, part.from, part.to);
-        while (!cursor2.next().done) {
-          let { from, to } = cursor2.value;
+        let cursor = new SearchCursor(state.doc, query, part.from, part.to);
+        while (!cursor.next().done) {
+          let { from, to } = cursor.value;
           if (!check || insideWordBoundaries(check, state, from, to)) {
             if (range.empty && from <= range.from && to >= range.to)
               deco.push(mainMatchDeco.range(from, to));
@@ -21666,9 +21666,9 @@
     ".cm-searchMatch .cm-selectionMatch": { backgroundColor: "transparent" }
   });
   var selectWord = ({ state, dispatch }) => {
-    let { selection: selection2 } = state;
-    let newSel = EditorSelection.create(selection2.ranges.map((range) => state.wordAt(range.head) || EditorSelection.cursor(range.head)), selection2.mainIndex);
-    if (newSel.eq(selection2))
+    let { selection } = state;
+    let newSel = EditorSelection.create(selection.ranges.map((range) => state.wordAt(range.head) || EditorSelection.cursor(range.head)), selection.mainIndex);
+    if (newSel.eq(selection))
       return false;
     dispatch(state.update({ selection: newSel }));
     return true;
@@ -21676,22 +21676,22 @@
   function findNextOccurrence(state, query) {
     let { main, ranges } = state.selection;
     let word = state.wordAt(main.head), fullWord = word && word.from == main.from && word.to == main.to;
-    for (let cycled = false, cursor2 = new SearchCursor(state.doc, query, ranges[ranges.length - 1].to); ; ) {
-      cursor2.next();
-      if (cursor2.done) {
+    for (let cycled = false, cursor = new SearchCursor(state.doc, query, ranges[ranges.length - 1].to); ; ) {
+      cursor.next();
+      if (cursor.done) {
         if (cycled)
           return null;
-        cursor2 = new SearchCursor(state.doc, query, 0, Math.max(0, ranges[ranges.length - 1].from - 1));
+        cursor = new SearchCursor(state.doc, query, 0, Math.max(0, ranges[ranges.length - 1].from - 1));
         cycled = true;
       } else {
-        if (cycled && ranges.some((r) => r.from == cursor2.value.from))
+        if (cycled && ranges.some((r) => r.from == cursor.value.from))
           continue;
         if (fullWord) {
-          let word2 = state.wordAt(cursor2.value.from);
-          if (!word2 || word2.from != cursor2.value.from || word2.to != cursor2.value.to)
+          let word2 = state.wordAt(cursor.value.from);
+          if (!word2 || word2.from != cursor.value.from || word2.to != cursor.value.to)
             continue;
         }
-        return cursor2.value;
+        return cursor.value;
       }
     }
   }
@@ -21803,21 +21803,21 @@
       super(spec);
     }
     nextMatch(state, curFrom, curTo) {
-      let cursor2 = stringCursor(this.spec, state, curTo, state.doc.length).nextOverlapping();
-      if (cursor2.done) {
+      let cursor = stringCursor(this.spec, state, curTo, state.doc.length).nextOverlapping();
+      if (cursor.done) {
         let end = Math.min(state.doc.length, curFrom + this.spec.unquoted.length);
-        cursor2 = stringCursor(this.spec, state, 0, end).nextOverlapping();
+        cursor = stringCursor(this.spec, state, 0, end).nextOverlapping();
       }
-      return cursor2.done || cursor2.value.from == curFrom && cursor2.value.to == curTo ? null : cursor2.value;
+      return cursor.done || cursor.value.from == curFrom && cursor.value.to == curTo ? null : cursor.value;
     }
     // Searching in reverse is, rather than implementing an inverted search
     // cursor, done by scanning chunk after chunk forward.
     prevMatchInRange(state, from, to) {
       for (let pos = to; ; ) {
         let start = Math.max(from, pos - 1e4 - this.spec.unquoted.length);
-        let cursor2 = stringCursor(this.spec, state, start, pos), range = null;
-        while (!cursor2.nextOverlapping().done)
-          range = cursor2.value;
+        let cursor = stringCursor(this.spec, state, start, pos), range = null;
+        while (!cursor.nextOverlapping().done)
+          range = cursor.value;
         if (range)
           return range;
         if (start == from)
@@ -21835,18 +21835,18 @@
       return this.spec.unquote(this.spec.replace);
     }
     matchAll(state, limit) {
-      let cursor2 = stringCursor(this.spec, state, 0, state.doc.length), ranges = [];
-      while (!cursor2.next().done) {
+      let cursor = stringCursor(this.spec, state, 0, state.doc.length), ranges = [];
+      while (!cursor.next().done) {
         if (ranges.length >= limit)
           return null;
-        ranges.push(cursor2.value);
+        ranges.push(cursor.value);
       }
       return ranges;
     }
     highlight(state, from, to, add2) {
-      let cursor2 = stringCursor(this.spec, state, Math.max(0, from - this.spec.unquoted.length), Math.min(to + this.spec.unquoted.length, state.doc.length));
-      while (!cursor2.next().done)
-        add2(cursor2.value.from, cursor2.value.to);
+      let cursor = stringCursor(this.spec, state, Math.max(0, from - this.spec.unquoted.length), Math.min(to + this.spec.unquoted.length, state.doc.length));
+      while (!cursor.next().done)
+        add2(cursor.value.from, cursor.value.to);
     }
   };
   function wrapRegexpTest(test, state, inner) {
@@ -21873,10 +21873,10 @@
   }
   var RegExpQuery = class extends QueryType2 {
     nextMatch(state, curFrom, curTo) {
-      let cursor2 = regexpCursor(this.spec, state, curTo, state.doc.length).next();
-      if (cursor2.done)
-        cursor2 = regexpCursor(this.spec, state, 0, curFrom).next();
-      return cursor2.done ? null : cursor2.value;
+      let cursor = regexpCursor(this.spec, state, curTo, state.doc.length).next();
+      if (cursor.done)
+        cursor = regexpCursor(this.spec, state, 0, curFrom).next();
+      return cursor.done ? null : cursor.value;
     }
     prevMatchInRange(state, from, to) {
       for (let size = 1; ; size++) {
@@ -21885,9 +21885,9 @@
           to - size * 1e4
           /* FindPrev.ChunkSize */
         );
-        let cursor2 = regexpCursor(this.spec, state, start, to), range = null;
-        while (!cursor2.next().done)
-          range = cursor2.value;
+        let cursor = regexpCursor(this.spec, state, start, to), range = null;
+        while (!cursor.next().done)
+          range = cursor.value;
         if (range && (start == from || range.from > start + 10))
           return range;
         if (start == from)
@@ -21912,22 +21912,22 @@
       });
     }
     matchAll(state, limit) {
-      let cursor2 = regexpCursor(this.spec, state, 0, state.doc.length), ranges = [];
-      while (!cursor2.next().done) {
+      let cursor = regexpCursor(this.spec, state, 0, state.doc.length), ranges = [];
+      while (!cursor.next().done) {
         if (ranges.length >= limit)
           return null;
-        ranges.push(cursor2.value);
+        ranges.push(cursor.value);
       }
       return ranges;
     }
     highlight(state, from, to, add2) {
-      let cursor2 = regexpCursor(this.spec, state, Math.max(
+      let cursor = regexpCursor(this.spec, state, Math.max(
         0,
         from - 250
         /* RegExp.HighlightMargin */
       ), Math.min(to + 250, state.doc.length));
-      while (!cursor2.next().done)
-        add2(cursor2.value.from, cursor2.value.to);
+      while (!cursor.next().done)
+        add2(cursor.value.from, cursor.value.to);
     }
   };
   var setSearchQuery = /* @__PURE__ */ StateEffect.define();
@@ -21995,11 +21995,11 @@
     let next = query.nextMatch(view.state, to, to);
     if (!next)
       return false;
-    let selection2 = EditorSelection.single(next.from, next.to);
+    let selection = EditorSelection.single(next.from, next.to);
     let config2 = view.state.facet(searchConfigFacet);
     view.dispatch({
-      selection: selection2,
-      effects: [announceMatch(view, next), config2.scrollToMatch(selection2.main, view)],
+      selection,
+      effects: [announceMatch(view, next), config2.scrollToMatch(selection.main, view)],
       userEvent: "select.search"
     });
     selectSearchInput(view);
@@ -22010,11 +22010,11 @@
     let prev = query.prevMatch(state, from, from);
     if (!prev)
       return false;
-    let selection2 = EditorSelection.single(prev.from, prev.to);
+    let selection = EditorSelection.single(prev.from, prev.to);
     let config2 = view.state.facet(searchConfigFacet);
     view.dispatch({
-      selection: selection2,
-      effects: [announceMatch(view, prev), config2.scrollToMatch(selection2.main, view)],
+      selection,
+      effects: [announceMatch(view, prev), config2.scrollToMatch(selection.main, view)],
       userEvent: "select.search"
     });
     selectSearchInput(view);
@@ -22057,7 +22057,7 @@
     if (!match)
       return false;
     let next = match;
-    let changes = [], selection2, replacement;
+    let changes = [], selection, replacement;
     let effects = [];
     if (!next.precise) {
       next = query.nextMatch(state, next.from, next.to);
@@ -22069,13 +22069,13 @@
     }
     let changeSet = view.state.changes(changes);
     if (next) {
-      selection2 = EditorSelection.single(next.from, next.to).map(changeSet);
+      selection = EditorSelection.single(next.from, next.to).map(changeSet);
       effects.push(announceMatch(view, next));
-      effects.push(state.facet(searchConfigFacet).scrollToMatch(selection2.main, view));
+      effects.push(state.facet(searchConfigFacet).scrollToMatch(selection.main, view));
     }
     view.dispatch({
       changes: changeSet,
-      selection: selection2,
+      selection,
       effects,
       userEvent: "input.replace"
     });
@@ -22813,13 +22813,13 @@
       if (this.selectedIndex < 0)
         return;
       let field = this.view.state.field(lintState);
-      let selection2 = findDiagnostic(field.diagnostics, this.items[selectedIndex].diagnostic);
-      if (!selection2)
+      let selection = findDiagnostic(field.diagnostics, this.items[selectedIndex].diagnostic);
+      if (!selection)
         return;
       this.view.dispatch({
-        selection: { anchor: selection2.from, head: selection2.to },
+        selection: { anchor: selection.from, head: selection.to },
         scrollIntoView: true,
-        effects: movePanelSelection.of(selection2)
+        effects: movePanelSelection.of(selection)
       });
     }
     static open(view) {
@@ -23863,24 +23863,24 @@
   var verbose = typeof process != "undefined" && process.env && /\bparse\b/.test(process.env.LOG);
   var stackIDs = null;
   function cutAt(tree, pos, side) {
-    let cursor2 = tree.cursor(IterMode.IncludeAnonymous);
-    cursor2.moveTo(pos);
+    let cursor = tree.cursor(IterMode.IncludeAnonymous);
+    cursor.moveTo(pos);
     for (; ; ) {
-      if (!(side < 0 ? cursor2.childBefore(pos) : cursor2.childAfter(pos)))
+      if (!(side < 0 ? cursor.childBefore(pos) : cursor.childAfter(pos)))
         for (; ; ) {
-          if ((side < 0 ? cursor2.to < pos : cursor2.from > pos) && !cursor2.type.isError)
+          if ((side < 0 ? cursor.to < pos : cursor.from > pos) && !cursor.type.isError)
             return side < 0 ? Math.max(0, Math.min(
-              cursor2.to - 1,
+              cursor.to - 1,
               pos - 25
               /* Lookahead.Margin */
             )) : Math.min(tree.length, Math.max(
-              cursor2.from + 1,
+              cursor.from + 1,
               pos + 25
               /* Lookahead.Margin */
             ));
-          if (side < 0 ? cursor2.prevSibling() : cursor2.nextSibling())
+          if (side < 0 ? cursor.prevSibling() : cursor.nextSibling())
             break;
-          if (!cursor2.parent())
+          if (!cursor.parent())
             return side < 0 ? 0 : tree.length;
         }
     }
@@ -25474,149 +25474,1023 @@
     ]);
   }
 
-  // node_modules/@codemirror/theme-one-dark/dist/index.js
-  var chalky = "#e5c07b";
-  var coral = "#e06c75";
-  var cyan = "#56b6c2";
-  var invalid = "#ffffff";
-  var ivory = "#abb2bf";
-  var stone = "#7d8799";
-  var malibu = "#61afef";
-  var sage = "#98c379";
-  var whiskey = "#d19a66";
-  var violet = "#c678dd";
-  var darkBackground = "#21252b";
-  var highlightBackground = "#2c313a";
-  var background = "#282c34";
-  var tooltipBackground = "#353a42";
-  var selection = "#3E4451";
-  var cursor = "#528bff";
-  var oneDarkTheme = /* @__PURE__ */ EditorView.theme({
-    "&": {
-      color: ivory,
-      backgroundColor: background
-    },
-    ".cm-content": {
-      caretColor: cursor
-    },
-    ".cm-cursor, .cm-dropCursor": { borderLeftColor: cursor },
-    "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": { backgroundColor: selection },
-    ".cm-panels": { backgroundColor: darkBackground, color: ivory },
-    ".cm-panels.cm-panels-top": { borderBottom: "2px solid black" },
-    ".cm-panels.cm-panels-bottom": { borderTop: "2px solid black" },
-    ".cm-searchMatch": {
-      backgroundColor: "#72a1ff59",
-      outline: "1px solid #457dff"
-    },
-    ".cm-searchMatch.cm-searchMatch-selected": {
-      backgroundColor: "#6199ff2f"
-    },
-    ".cm-activeLine": { backgroundColor: "#6699ff0b" },
-    ".cm-selectionMatch": { backgroundColor: "#aafe661a" },
-    "&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket": {
-      backgroundColor: "#bad0f847"
-    },
-    ".cm-gutters": {
-      backgroundColor: background,
-      color: stone,
-      border: "none"
-    },
-    ".cm-activeLineGutter": {
-      backgroundColor: highlightBackground
-    },
-    ".cm-foldPlaceholder": {
-      backgroundColor: "transparent",
-      border: "none",
-      color: "#ddd"
-    },
-    ".cm-tooltip": {
-      border: "none",
-      backgroundColor: tooltipBackground
-    },
-    ".cm-tooltip .cm-tooltip-arrow:before": {
-      borderTopColor: "transparent",
-      borderBottomColor: "transparent"
-    },
-    ".cm-tooltip .cm-tooltip-arrow:after": {
-      borderTopColor: tooltipBackground,
-      borderBottomColor: tooltipBackground
-    },
-    ".cm-tooltip-autocomplete": {
-      "& > ul > li[aria-selected]": {
-        backgroundColor: highlightBackground,
-        color: ivory
+  // node_modules/thememirror/dist/create-theme.js
+  var createTheme = ({ variant, settings, styles }) => {
+    const theme2 = EditorView.theme({
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      "&": {
+        backgroundColor: settings.background,
+        color: settings.foreground
+      },
+      ".cm-content": {
+        caretColor: settings.caret
+      },
+      ".cm-cursor, .cm-dropCursor": {
+        borderLeftColor: settings.caret
+      },
+      "&.cm-focused .cm-selectionBackgroundm .cm-selectionBackground, .cm-content ::selection": {
+        backgroundColor: settings.selection
+      },
+      ".cm-activeLine": {
+        backgroundColor: settings.lineHighlight
+      },
+      ".cm-gutters": {
+        backgroundColor: settings.gutterBackground,
+        color: settings.gutterForeground
+      },
+      ".cm-activeLineGutter": {
+        backgroundColor: settings.lineHighlight
       }
-    }
-  }, { dark: true });
-  var oneDarkHighlightStyle = /* @__PURE__ */ HighlightStyle.define([
-    {
-      tag: tags.keyword,
-      color: violet
+    }, {
+      dark: variant === "dark"
+    });
+    const highlightStyle = HighlightStyle.define(styles);
+    const extension = [theme2, syntaxHighlighting(highlightStyle)];
+    return extension;
+  };
+  var create_theme_default = createTheme;
+
+  // node_modules/thememirror/dist/themes/amy.js
+  var amy = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#200020",
+      foreground: "#D0D0FF",
+      caret: "#7070FF",
+      selection: "#80000080",
+      gutterBackground: "#200020",
+      gutterForeground: "#C080C0",
+      lineHighlight: "#80000040"
     },
-    {
-      tag: [tags.name, tags.deleted, tags.character, tags.propertyName, tags.macroName],
-      color: coral
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#404080"
+      },
+      {
+        tag: [tags.string, tags.regexp],
+        color: "#999999"
+      },
+      {
+        tag: tags.number,
+        color: "#7090B0"
+      },
+      {
+        tag: [tags.bool, tags.null],
+        color: "#8080A0"
+      },
+      {
+        tag: [tags.punctuation, tags.derefOperator],
+        color: "#805080"
+      },
+      {
+        tag: tags.keyword,
+        color: "#60B0FF"
+      },
+      {
+        tag: tags.definitionKeyword,
+        color: "#B0FFF0"
+      },
+      {
+        tag: tags.moduleKeyword,
+        color: "#60B0FF"
+      },
+      {
+        tag: tags.operator,
+        color: "#A0A0FF"
+      },
+      {
+        tag: [tags.variableName, tags.self],
+        color: "#008080"
+      },
+      {
+        tag: tags.operatorKeyword,
+        color: "#A0A0FF"
+      },
+      {
+        tag: tags.controlKeyword,
+        color: "#80A0FF"
+      },
+      {
+        tag: tags.className,
+        color: "#70E080"
+      },
+      {
+        tag: [tags.function(tags.propertyName), tags.propertyName],
+        color: "#50A0A0"
+      },
+      {
+        tag: tags.tagName,
+        color: "#009090"
+      },
+      {
+        tag: tags.modifier,
+        color: "#B0FFF0"
+      },
+      {
+        tag: [tags.squareBracket, tags.attributeName],
+        color: "#D0D0FF"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/ayu-light.js
+  var ayuLight = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#fcfcfc",
+      foreground: "#5c6166",
+      caret: "#ffaa33",
+      selection: "#036dd626",
+      gutterBackground: "#fcfcfc",
+      gutterForeground: "#8a919966",
+      lineHighlight: "#8a91991a"
     },
-    {
-      tag: [/* @__PURE__ */ tags.function(tags.variableName), tags.labelName],
-      color: malibu
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#787b8099"
+      },
+      {
+        tag: tags.string,
+        color: "#86b300"
+      },
+      {
+        tag: tags.regexp,
+        color: "#4cbf99"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null],
+        color: "#ffaa33"
+      },
+      {
+        tag: tags.variableName,
+        color: "#5c6166"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#fa8d3e"
+      },
+      {
+        tag: [tags.keyword, tags.special(tags.brace)],
+        color: "#fa8d3e"
+      },
+      {
+        tag: tags.operator,
+        color: "#ed9366"
+      },
+      {
+        tag: tags.separator,
+        color: "#5c6166b3"
+      },
+      {
+        tag: tags.punctuation,
+        color: "#5c6166"
+      },
+      {
+        tag: [tags.definition(tags.propertyName), tags.function(tags.variableName)],
+        color: "#f2ae49"
+      },
+      {
+        tag: [tags.className, tags.definition(tags.typeName)],
+        color: "#22a4e6"
+      },
+      {
+        tag: [tags.tagName, tags.typeName, tags.self, tags.labelName],
+        color: "#55b4d4"
+      },
+      {
+        tag: tags.angleBracket,
+        color: "#55b4d480"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#f2ae49"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/barf.js
+  var barf = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#15191EFA",
+      foreground: "#EEF2F7",
+      caret: "#C4C4C4",
+      selection: "#90B2D557",
+      gutterBackground: "#15191EFA",
+      gutterForeground: "#aaaaaa95",
+      lineHighlight: "#57575712"
     },
-    {
-      tag: [tags.color, /* @__PURE__ */ tags.constant(tags.name), /* @__PURE__ */ tags.standard(tags.name)],
-      color: whiskey
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#6E6E6E"
+      },
+      {
+        tag: [tags.string, tags.regexp, tags.special(tags.brace)],
+        color: "#5C81B3"
+      },
+      {
+        tag: tags.number,
+        color: "#C1E1B8"
+      },
+      {
+        tag: tags.bool,
+        color: "#53667D"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier, tags.function(tags.propertyName)],
+        color: "#A3D295",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.keyword, tags.moduleKeyword, tags.operatorKeyword, tags.operator],
+        color: "#697A8E",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.variableName, tags.attributeName],
+        color: "#708E67"
+      },
+      {
+        tag: [
+          tags.function(tags.variableName),
+          tags.definition(tags.propertyName),
+          tags.derefOperator
+        ],
+        color: "#fff"
+      },
+      {
+        tag: tags.tagName,
+        color: "#A3D295"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/bespin.js
+  var bespin = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#2e241d",
+      foreground: "#BAAE9E",
+      caret: "#A7A7A7",
+      selection: "#DDF0FF33",
+      gutterBackground: "#28211C",
+      gutterForeground: "#BAAE9E90",
+      lineHighlight: "#FFFFFF08"
     },
-    {
-      tag: [/* @__PURE__ */ tags.definition(tags.name), tags.separator],
-      color: ivory
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#666666"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace)],
+        color: "#54BE0D"
+      },
+      {
+        tag: tags.regexp,
+        color: "#E9C062"
+      },
+      {
+        tag: tags.number,
+        color: "#CF6A4C"
+      },
+      {
+        tag: [tags.keyword, tags.operator],
+        color: "#5EA6EA"
+      },
+      {
+        tag: tags.variableName,
+        color: "#7587A6"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#F9EE98"
+      },
+      {
+        tag: [tags.propertyName, tags.function(tags.variableName)],
+        color: "#937121"
+      },
+      {
+        tag: [tags.typeName, tags.angleBracket, tags.tagName],
+        color: "#9B859D"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/birds-of-paradise.js
+  var birdsOfParadise = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#3b2627",
+      foreground: "#E6E1C4",
+      caret: "#E6E1C4",
+      selection: "#16120E",
+      gutterBackground: "#3b2627",
+      gutterForeground: "#E6E1C490",
+      lineHighlight: "#1F1611"
     },
-    {
-      tag: [tags.typeName, tags.className, tags.number, tags.changed, tags.annotation, tags.modifier, tags.self, tags.namespace],
-      color: chalky
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#6B4E32"
+      },
+      {
+        tag: [tags.keyword, tags.operator, tags.derefOperator],
+        color: "#EF5D32"
+      },
+      {
+        tag: tags.className,
+        color: "#EFAC32",
+        fontWeight: "bold"
+      },
+      {
+        tag: [
+          tags.typeName,
+          tags.propertyName,
+          tags.function(tags.variableName),
+          tags.definition(tags.variableName)
+        ],
+        color: "#EFAC32"
+      },
+      {
+        tag: tags.definition(tags.typeName),
+        color: "#EFAC32",
+        fontWeight: "bold"
+      },
+      {
+        tag: tags.labelName,
+        color: "#EFAC32",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.number, tags.bool],
+        color: "#6C99BB"
+      },
+      {
+        tag: [tags.variableName, tags.self],
+        color: "#7DAF9C"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace), tags.regexp],
+        color: "#D9D762"
+      },
+      {
+        tag: [tags.angleBracket, tags.tagName, tags.attributeName],
+        color: "#EFCB43"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/boys-and-girls.js
+  var boysAndGirls = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#000205",
+      foreground: "#FFFFFF",
+      caret: "#E60065",
+      selection: "#E60C6559",
+      gutterBackground: "#000205",
+      gutterForeground: "#ffffff90",
+      lineHighlight: "#4DD7FC1A"
     },
-    {
-      tag: [tags.operator, tags.operatorKeyword, tags.url, tags.escape, tags.regexp, tags.link, /* @__PURE__ */ tags.special(tags.string)],
-      color: cyan
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#404040"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace), tags.regexp],
+        color: "#00D8FF"
+      },
+      {
+        tag: tags.number,
+        color: "#E62286"
+      },
+      {
+        tag: [tags.variableName, tags.attributeName, tags.self],
+        color: "#E62286",
+        fontWeight: "bold"
+      },
+      {
+        tag: tags.function(tags.variableName),
+        color: "#fff",
+        fontWeight: "bold"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/clouds.js
+  var clouds = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#fff",
+      foreground: "#000",
+      caret: "#000",
+      selection: "#BDD5FC",
+      gutterBackground: "#fff",
+      gutterForeground: "#00000070",
+      lineHighlight: "#FFFBD1"
     },
-    {
-      tag: [tags.meta, tags.comment],
-      color: stone
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#BCC8BA"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace), tags.regexp],
+        color: "#5D90CD"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null],
+        color: "#46A609"
+      },
+      {
+        tag: tags.keyword,
+        color: "#AF956F"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#C52727"
+      },
+      {
+        tag: [tags.angleBracket, tags.tagName, tags.attributeName],
+        color: "#606060"
+      },
+      {
+        tag: tags.self,
+        color: "#000"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/cobalt.js
+  var cobalt = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#00254b",
+      foreground: "#FFFFFF",
+      caret: "#FFFFFF",
+      selection: "#B36539BF",
+      gutterBackground: "#00254b",
+      gutterForeground: "#FFFFFF70",
+      lineHighlight: "#00000059"
     },
-    {
-      tag: tags.strong,
-      fontWeight: "bold"
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#0088FF"
+      },
+      {
+        tag: tags.string,
+        color: "#3AD900"
+      },
+      {
+        tag: tags.regexp,
+        color: "#80FFC2"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null],
+        color: "#FF628C"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#FFEE80"
+      },
+      {
+        tag: tags.variableName,
+        color: "#CCCCCC"
+      },
+      {
+        tag: tags.self,
+        color: "#FF80E1"
+      },
+      {
+        tag: [
+          tags.className,
+          tags.definition(tags.propertyName),
+          tags.function(tags.variableName),
+          tags.definition(tags.typeName),
+          tags.labelName
+        ],
+        color: "#FFDD00"
+      },
+      {
+        tag: [tags.keyword, tags.operator],
+        color: "#FF9D00"
+      },
+      {
+        tag: [tags.propertyName, tags.typeName],
+        color: "#80FFBB"
+      },
+      {
+        tag: tags.special(tags.brace),
+        color: "#EDEF7D"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#9EFFFF"
+      },
+      {
+        tag: tags.derefOperator,
+        color: "#fff"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/cool-glow.js
+  var coolGlow = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#060521",
+      foreground: "#E0E0E0",
+      caret: "#FFFFFFA6",
+      selection: "#122BBB",
+      gutterBackground: "#060521",
+      gutterForeground: "#E0E0E090",
+      lineHighlight: "#FFFFFF0F"
     },
-    {
-      tag: tags.emphasis,
-      fontStyle: "italic"
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#AEAEAE"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace), tags.regexp],
+        color: "#8DFF8E"
+      },
+      {
+        tag: [
+          tags.className,
+          tags.definition(tags.propertyName),
+          tags.function(tags.variableName),
+          tags.function(tags.definition(tags.variableName)),
+          tags.definition(tags.typeName)
+        ],
+        color: "#A3EBFF"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null],
+        color: "#62E9BD"
+      },
+      {
+        tag: [tags.keyword, tags.operator],
+        color: "#2BF1DC"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#F8FBB1"
+      },
+      {
+        tag: [tags.variableName, tags.self],
+        color: "#B683CA"
+      },
+      {
+        tag: [tags.angleBracket, tags.tagName, tags.typeName, tags.propertyName],
+        color: "#60A4F1"
+      },
+      {
+        tag: tags.derefOperator,
+        color: "#E0E0E0"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#7BACCA"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/dracula.js
+  var dracula = create_theme_default({
+    variant: "dark",
+    settings: {
+      background: "#2d2f3f",
+      foreground: "#f8f8f2",
+      caret: "#f8f8f0",
+      selection: "#44475a",
+      gutterBackground: "#282a36",
+      gutterForeground: "rgb(144, 145, 148)",
+      lineHighlight: "#44475a"
     },
-    {
-      tag: tags.strikethrough,
-      textDecoration: "line-through"
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#6272a4"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace)],
+        color: "#f1fa8c"
+      },
+      {
+        tag: [tags.number, tags.self, tags.bool, tags.null],
+        color: "#bd93f9"
+      },
+      {
+        tag: [tags.keyword, tags.operator],
+        color: "#ff79c6"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.typeName],
+        color: "#8be9fd"
+      },
+      {
+        tag: tags.definition(tags.typeName),
+        color: "#f8f8f2"
+      },
+      {
+        tag: [
+          tags.className,
+          tags.definition(tags.propertyName),
+          tags.function(tags.variableName),
+          tags.attributeName
+        ],
+        color: "#50fa7b"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/espresso.js
+  var espresso = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#FFFFFF",
+      foreground: "#000000",
+      caret: "#000000",
+      selection: "#80C7FF",
+      gutterBackground: "#FFFFFF",
+      gutterForeground: "#00000070",
+      lineHighlight: "#C1E2F8"
     },
-    {
-      tag: tags.link,
-      color: stone,
-      textDecoration: "underline"
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#AAAAAA"
+      },
+      {
+        tag: [tags.keyword, tags.operator, tags.typeName, tags.tagName, tags.propertyName],
+        color: "#2F6F9F",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.attributeName, tags.definition(tags.propertyName)],
+        color: "#4F9FD0"
+      },
+      {
+        tag: [tags.className, tags.string, tags.special(tags.brace)],
+        color: "#CF4F5F"
+      },
+      {
+        tag: tags.number,
+        color: "#CF4F5F",
+        fontWeight: "bold"
+      },
+      {
+        tag: tags.variableName,
+        fontWeight: "bold"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/noctis-lilac.js
+  var noctisLilac = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#f2f1f8",
+      foreground: "#0c006b",
+      caret: "#5c49e9",
+      selection: "#d5d1f2",
+      gutterBackground: "#f2f1f8",
+      gutterForeground: "#0c006b70",
+      lineHighlight: "#e1def3"
     },
-    {
-      tag: tags.heading,
-      fontWeight: "bold",
-      color: coral
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#9995b7"
+      },
+      {
+        tag: tags.keyword,
+        color: "#ff5792",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#ff5792"
+      },
+      {
+        tag: [tags.className, tags.tagName, tags.definition(tags.typeName)],
+        color: "#0094f0"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null, tags.special(tags.brace)],
+        color: "#5842ff"
+      },
+      {
+        tag: [tags.definition(tags.propertyName), tags.function(tags.variableName)],
+        color: "#0095a8"
+      },
+      {
+        tag: tags.typeName,
+        color: "#b3694d"
+      },
+      {
+        tag: [tags.propertyName, tags.variableName],
+        color: "#fa8900"
+      },
+      {
+        tag: tags.operator,
+        color: "#ff5792"
+      },
+      {
+        tag: tags.self,
+        color: "#e64100"
+      },
+      {
+        tag: [tags.string, tags.regexp],
+        color: "#00b368"
+      },
+      {
+        tag: [tags.paren, tags.bracket],
+        color: "#0431fa"
+      },
+      {
+        tag: tags.labelName,
+        color: "#00bdd6"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#e64100"
+      },
+      {
+        tag: tags.angleBracket,
+        color: "#9995b7"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/rose-pine-dawn.js
+  var rosePineDawn = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#faf4ed",
+      foreground: "#575279",
+      caret: "#575279",
+      selection: "#6e6a8614",
+      gutterBackground: "#faf4ed",
+      gutterForeground: "#57527970",
+      lineHighlight: "#6e6a860d"
     },
-    {
-      tag: [tags.atom, tags.bool, /* @__PURE__ */ tags.special(tags.variableName)],
-      color: whiskey
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#9893a5"
+      },
+      {
+        tag: [tags.bool, tags.null],
+        color: "#286983"
+      },
+      {
+        tag: tags.number,
+        color: "#d7827e"
+      },
+      {
+        tag: tags.className,
+        color: "#d7827e"
+      },
+      {
+        tag: [tags.angleBracket, tags.tagName, tags.typeName],
+        color: "#56949f"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#907aa9"
+      },
+      {
+        tag: tags.punctuation,
+        color: "#797593"
+      },
+      {
+        tag: [tags.keyword, tags.modifier],
+        color: "#286983"
+      },
+      {
+        tag: [tags.string, tags.regexp],
+        color: "#ea9d34"
+      },
+      {
+        tag: tags.variableName,
+        color: "#d7827e"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/smoothy.js
+  var smoothy = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#FFFFFF",
+      foreground: "#000000",
+      caret: "#000000",
+      selection: "#FFFD0054",
+      gutterBackground: "#FFFFFF",
+      gutterForeground: "#00000070",
+      lineHighlight: "#00000008"
     },
-    {
-      tag: [tags.processingInstruction, tags.string, tags.inserted],
-      color: sage
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#CFCFCF"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null],
+        color: "#E66C29"
+      },
+      {
+        tag: [
+          tags.className,
+          tags.definition(tags.propertyName),
+          tags.function(tags.variableName),
+          tags.labelName,
+          tags.definition(tags.typeName)
+        ],
+        color: "#2EB43B"
+      },
+      {
+        tag: tags.keyword,
+        color: "#D8B229"
+      },
+      {
+        tag: tags.operator,
+        color: "#4EA44E",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#925A47"
+      },
+      {
+        tag: tags.string,
+        color: "#704D3D"
+      },
+      {
+        tag: tags.typeName,
+        color: "#2F8996"
+      },
+      {
+        tag: [tags.variableName, tags.propertyName],
+        color: "#77ACB0"
+      },
+      {
+        tag: tags.self,
+        color: "#77ACB0",
+        fontWeight: "bold"
+      },
+      {
+        tag: tags.regexp,
+        color: "#E3965E"
+      },
+      {
+        tag: [tags.tagName, tags.angleBracket],
+        color: "#BAA827"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#B06520"
+      },
+      {
+        tag: tags.derefOperator,
+        color: "#000"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/solarized-light.js
+  var solarizedLight = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#fef7e5",
+      foreground: "#586E75",
+      caret: "#000000",
+      selection: "#073642",
+      gutterBackground: "#fef7e5",
+      gutterForeground: "#586E7580",
+      lineHighlight: "#EEE8D5"
     },
-    {
-      tag: tags.invalid,
-      color: invalid
-    }
-  ]);
-  var oneDark = [oneDarkTheme, /* @__PURE__ */ syntaxHighlighting(oneDarkHighlightStyle)];
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#93A1A1"
+      },
+      {
+        tag: tags.string,
+        color: "#2AA198"
+      },
+      {
+        tag: tags.regexp,
+        color: "#D30102"
+      },
+      {
+        tag: tags.number,
+        color: "#D33682"
+      },
+      {
+        tag: tags.variableName,
+        color: "#268BD2"
+      },
+      {
+        tag: [tags.keyword, tags.operator, tags.punctuation],
+        color: "#859900"
+      },
+      {
+        tag: [tags.definitionKeyword, tags.modifier],
+        color: "#073642",
+        fontWeight: "bold"
+      },
+      {
+        tag: [tags.className, tags.self, tags.definition(tags.propertyName)],
+        color: "#268BD2"
+      },
+      {
+        tag: tags.function(tags.variableName),
+        color: "#268BD2"
+      },
+      {
+        tag: [tags.bool, tags.null],
+        color: "#B58900"
+      },
+      {
+        tag: tags.tagName,
+        color: "#268BD2",
+        fontWeight: "bold"
+      },
+      {
+        tag: tags.angleBracket,
+        color: "#93A1A1"
+      },
+      {
+        tag: tags.attributeName,
+        color: "#93A1A1"
+      },
+      {
+        tag: tags.typeName,
+        color: "#859900"
+      }
+    ]
+  });
+
+  // node_modules/thememirror/dist/themes/tomorrow.js
+  var tomorrow = create_theme_default({
+    variant: "light",
+    settings: {
+      background: "#FFFFFF",
+      foreground: "#4D4D4C",
+      caret: "#AEAFAD",
+      selection: "#D6D6D6",
+      gutterBackground: "#FFFFFF",
+      gutterForeground: "#4D4D4C80",
+      lineHighlight: "#EFEFEF"
+    },
+    styles: [
+      {
+        tag: tags.comment,
+        color: "#8E908C"
+      },
+      {
+        tag: [tags.variableName, tags.self, tags.propertyName, tags.attributeName, tags.regexp],
+        color: "#C82829"
+      },
+      {
+        tag: [tags.number, tags.bool, tags.null],
+        color: "#F5871F"
+      },
+      {
+        tag: [tags.className, tags.typeName, tags.definition(tags.typeName)],
+        color: "#C99E00"
+      },
+      {
+        tag: [tags.string, tags.special(tags.brace)],
+        color: "#718C00"
+      },
+      {
+        tag: tags.operator,
+        color: "#3E999F"
+      },
+      {
+        tag: [tags.definition(tags.propertyName), tags.function(tags.variableName)],
+        color: "#4271AE"
+      },
+      {
+        tag: tags.keyword,
+        color: "#8959A8"
+      },
+      {
+        tag: tags.derefOperator,
+        color: "#4D4D4C"
+      }
+    ]
+  });
 
   // static_libs/build_codemirror.js
   function selectLine2(view, pos) {
@@ -25733,7 +26607,7 @@
   var _activeEditors = /* @__PURE__ */ new Set();
   window._activeEditors = _activeEditors;
   window.setEditorTheme = (view, isDark) => {
-    view.dispatch({ effects: view._themeCompartment.reconfigure(isDark ? oneDark : []) });
+    view.dispatch({ effects: view._themeCompartment.reconfigure(isDark ? dracula : []) });
   };
   window.applyThemeToAllEditors = (isDark) => {
     for (const view of _activeEditors) {
@@ -25790,7 +26664,7 @@
         keymap.of([defaultKeymap]),
         python(),
         indentCompartment.of(indentUnit.of(" ".repeat(indentSpaces))),
-        themeCompartment.of(isDark ? oneDark : []),
+        themeCompartment.of(isDark ? dracula : []),
         updateListenerExtension(onChange)
       ],
       parent: el

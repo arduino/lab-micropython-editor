@@ -21,7 +21,7 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search"
 import { lintKeymap } from "@codemirror/lint"
 import { python } from "@codemirror/lang-python"
-import { oneDark } from "@codemirror/theme-one-dark"
+import { dracula } from "thememirror"
 
 function selectLine(view, pos) {
   const line = view.state.doc.lineAt(pos)
@@ -150,7 +150,7 @@ const _activeEditors = new Set()
 window._activeEditors = _activeEditors
 
 window.setEditorTheme = (view, isDark) => {
-  view.dispatch({ effects: view._themeCompartment.reconfigure(isDark ? oneDark : []) })
+  view.dispatch({ effects: view._themeCompartment.reconfigure(isDark ? dracula : []) })
 }
 
 window.applyThemeToAllEditors = (isDark) => {
@@ -210,7 +210,7 @@ window.createEditor = (doc, el, onChange, indentSpaces = 4, isDark = false) => {
       keymap.of([defaultKeymap]),
       python(),
       indentCompartment.of(indentUnit.of(' '.repeat(indentSpaces))),
-      themeCompartment.of(isDark ? oneDark : []),
+      themeCompartment.of(isDark ? dracula : []),
       updateListenerExtension(onChange)
     ],
     parent: el

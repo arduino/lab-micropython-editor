@@ -260,6 +260,9 @@ async function store(state, emitter) {
   
   emitter.on('update-ports', async () => {
     state.availablePorts = await getAvailablePorts()
+    if (state.overlay?.type === 'connection' && state.overlay.props?.error) {
+      state.overlay.props.error = null
+    }
     emitter.emit('render')
   })
   emitter.on('select-port', async (port) => {
@@ -384,7 +387,7 @@ async function store(state, emitter) {
   emitter.on('connection-timeout', async () => {
     state.isConnected = false
     state.isConnecting = false
-    await serialBridge.disconnect()
+    try { await serialBridge.disconnect() } catch (_) {}
     state.availablePorts = await getAvailablePorts()
     state.overlay = { type: 'connection', props: { error: 'Could not connect. Reset the board and try again.' } }
     emitter.emit('render')

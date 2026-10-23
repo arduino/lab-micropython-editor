@@ -14,7 +14,12 @@ class Serial {
     }
 
     async connect(path) {
-        await this.board.open(path)
+        try {
+            await this.board.open(path)
+        } catch (e) {
+            try { await this.board.close() } catch (_) {}
+            throw e
+        }
         this.registerCallbacks()
     }
 

@@ -54,7 +54,7 @@
     "choo": "^7.1.0",
     "codemirror": "^6.0.2",
     "esbuild": "^0.25.9",
-    "micropython.js": "github:arduino/micropython.js#v2.1.2",
+    "micropython.js": "github:arduino/micropython.js#v2.1.3",
     "thememirror": "^2.0.1"
   },
   "engines": {

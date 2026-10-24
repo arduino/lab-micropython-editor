@@ -15,9 +15,11 @@
   },
   "devDependencies": {
     "@electron/notarize": "^2.2.1",
-    "@electron/rebuild": "^3.2.13",
-    "electron": "^19.0.10",
-    "electron-builder": "^23.3.3",
+    "@electron/rebuild": "^4.2.1",
+    "browserify": "^17.0.1",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.25.9",
     "is-ci": "^3.0.1"
   },
   "build": {
@@ -37,14 +39,20 @@
     },
     "win": {
       "target": "zip",
-      "sign": "./build_resources/windowsCustomSign.js",
-      "icon": "build_resources/icon.png"
+      "icon": "build_resources/icon.png",
+      "signtoolOptions": {
+        "sign": "./build_resources/windowsCustomSign.js"
+      }
     },
     "linux": {
       "target": "zip",
       "icon": "build_resources/icon.icns"
     },
     "afterSign": "build_resources/notarize.js",
+    "files": [
+      "**/*",
+      "!node_modules/upy-packager/bin/**"
+    ],
     "asarUnpack": [
       "node_modules/upy-package/**",
       "node_modules/upy-packager/**"
@@ -55,10 +63,8 @@
     "@codemirror/lang-python": "github:codemirror/lang-python",
     "@codemirror/theme-one-dark": "^6.1.3",
     "about-window": "^1.15.2",
-    "browserify": "^17.0.1",
     "choo": "^7.1.0",
     "codemirror": "^6.0.2",
-    "esbuild": "^0.25.9",
     "micropython.js": "github:arduino/micropython.js#v2.1.3",
     "thememirror": "^2.0.1",
     "upy-package": "github:arduino/upy-package",

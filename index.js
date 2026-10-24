@@ -17,6 +17,7 @@ function createWindow () {
     titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: false,
+      sandbox: false,
       webSecurity: true,
       enableRemoteModule: false,
       preload: path.join(__dirname, "preload.js"),

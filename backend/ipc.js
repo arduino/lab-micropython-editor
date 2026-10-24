@@ -1,6 +1,7 @@
 const fs = require('fs')
 const registerMenu = require('./menu.js')
 const serial = require('./serial/serial.js').sharedInstance
+const packages = require('./packages.js')
 const { MicroPythonError } = require('micropython.js')
 const { shell } = require('electron');
 
@@ -166,6 +167,10 @@ module.exports = function registerIPCHandlers(win, ipcMain, app, dialog) {
   win.on('close', (event) => {
     event.preventDefault()
     win.webContents.send('check-before-close')
+  })
+
+  ipcMain.handle('packages', async (event, command, ...args) => {
+    return await packages[command](...args)
   })
 
   ipcMain.handle('serial', async (event, command, ...args) => {

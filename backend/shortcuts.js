@@ -19,6 +19,7 @@ const shortcuts = {
     SELECT_LINE: 'CommandOrControl+Alt+L',
     TAB_NEXT: 'Control+Tab',
     TAB_PREV: 'Control+Shift+Tab',
+    INSTALL_LIBRARIES: 'CommandOrControl+Shift+I',
   },
   menu: {
     CLOSE: 'CmdOrCtrl+W',
@@ -38,6 +39,7 @@ const shortcuts = {
     SELECT_LINE: 'CmdOrCtrl+Alt+L',
     TAB_NEXT: 'Ctrl+Tab',
     TAB_PREV: 'Ctrl+Shift+Tab',
+    INSTALL_LIBRARIES: 'CmdOrCtrl+Shift+I',
   },
   // Shortcuts
 }

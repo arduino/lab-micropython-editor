@@ -165,6 +165,49 @@ class Serial {
         })
     }
 
+    async installPackage(packageUrl, compileFiles = false, overwriteExisting = true) {
+        if (!globalThis.fetch) {
+            const { net } = require('electron')
+            globalThis.fetch = (url, opts = {}) => new Promise((resolve, reject) => {
+                const req = net.request({ url, redirect: 'follow' })
+                if (opts.signal) opts.signal.addEventListener('abort', () => req.abort())
+                req.on('response', (res) => {
+                    const chunks = []
+                    res.on('data', c => chunks.push(c))
+                    resolve({
+                        ok: res.statusCode >= 200 && res.statusCode < 300,
+                        status: res.statusCode,
+                        statusText: res.statusMessage || '',
+                        body: res,
+                        text: () => new Promise((ok, fail) => {
+                            res.on('end', () => ok(Buffer.concat(chunks).toString()))
+                            res.on('error', fail)
+                        }),
+                        json: () => new Promise((ok, fail) => {
+                            res.on('end', () => { try { ok(JSON.parse(Buffer.concat(chunks).toString())) } catch(e) { fail(e) } })
+                            res.on('error', fail)
+                        }),
+                    })
+                })
+                req.on('error', reject)
+                req.end()
+            })
+        }
+        const { Packager } = await import(require.resolve('upy-packager').replace(/app\.asar([/\\])/, 'app.asar.unpacked$1'))
+        const packager = new Packager(this.board, compileFiles, overwriteExisting)
+        const origDebug = console.debug
+        console.debug = (...args) => {
+            const line = args.join(' ')
+            origDebug(line)
+            this.win.webContents.send('package-install-log', line)
+        }
+        try {
+            await packager.packageAndInstall(packageUrl)
+        } finally {
+            console.debug = origDebug
+        }
+    }
+
     async renameFile(oldName, newName) {
         return await this.board.fs_rename(oldName, newName)
     }

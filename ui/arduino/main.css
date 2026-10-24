@@ -1142,6 +1142,317 @@ button.file-list-cta-btn:hover {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
+#overlay .overlay-package-search {
+  width: 420px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  text-align: left;
+}
+
+#overlay .overlay-pkg-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5em 0.75em;
+  background: var(--color-bg-light);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 1em;
+  outline: none;
+}
+
+#overlay .overlay-pkg-search-input:focus {
+  border-color: var(--color-brand);
+}
+
+#overlay .overlay-pkg-search-results {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9em;
+  color: var(--color-text-secondary);
+}
+
+#overlay .overlay-pkg-search-item {
+  padding: 0.5em 0.6em;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+#overlay .overlay-pkg-search-item:hover {
+  background: var(--color-bg-light);
+  border-color: var(--color-brand);
+}
+
+#overlay .overlay-pkg-search-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+#overlay .overlay-pkg-search-desc {
+  font-size: 0.85em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#overlay .overlay-pkg-search-error {
+  color: var(--color-error, #c0392b);
+  margin: 0;
+}
+
+#overlay .overlay-pkg-detail {
+  width: 420px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  text-align: left;
+}
+
+#overlay .overlay-pkg-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#overlay .overlay-pkg-back {
+  background: none;
+  border: none;
+  color: var(--color-brand);
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 0;
+}
+
+#overlay .overlay-pkg-back:hover {
+  text-decoration: underline;
+}
+
+#overlay .overlay-pkg-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+#overlay .overlay-pkg-detail-name {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+#overlay .overlay-pkg-detail-meta {
+  font-size: 0.8em;
+  color: var(--color-text-dim);
+}
+
+#overlay .overlay-pkg-detail-desc {
+  font-size: 0.9em;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-top: 0.25em;
+}
+
+#overlay .overlay-pkg-detail-row {
+  display: flex;
+  gap: 0.5em;
+  font-size: 0.82em;
+  align-items: baseline;
+  overflow: hidden;
+}
+
+#overlay .overlay-pkg-detail-label {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+  min-width: 4em;
+}
+
+#overlay .overlay-pkg-detail-value {
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#overlay .overlay-pkg-detail-link {
+  color: var(--color-brand);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+#overlay .overlay-pkg-detail-link:hover {
+  text-decoration: underline;
+}
+
+#overlay .overlay-pkg-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin-top: 0.25em;
+}
+
+#overlay .overlay-pkg-tag {
+  font-size: 0.75em;
+  padding: 0.15em 0.5em;
+  border-radius: 999px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+#overlay .overlay-package-install {
+  width: 460px;
+  max-width: 460px;
+}
+
+#overlay .overlay-package-install-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#overlay .overlay-package-install-header p {
+  margin: 0;
+  flex: 1;
+}
+
+#overlay .overlay-pkg-activity {
+  display: flex;
+  gap: 0.3em;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.75em;
+  height: 1.5em;
+}
+
+#overlay .overlay-pkg-activity--done {
+  visibility: hidden;
+}
+
+#overlay .overlay-pkg-activity span {
+  font-size: 2em;
+  line-height: 0.5;
+  color: var(--color-text-primary);
+  animation: pkg-dot-pulse 1.4s infinite ease-in-out;
+}
+
+#overlay .overlay-pkg-activity span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+#overlay .overlay-pkg-activity span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pkg-dot-pulse {
+  0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+  40%            { opacity: 1;   transform: translateY(-4px); }
+}
+
+#overlay .overlay-pkg-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em;
+  margin-top: 0.75em;
+}
+
+#overlay .overlay-pkg-confirm-msg {
+  font-size: 0.85em;
+  color: var(--color-text-secondary);
+  margin-right: auto;
+}
+
+#overlay .overlay-pkg-action-btn {
+  padding: 0.3em 1em;
+  font-size: 0.85em;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-light);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+#overlay .overlay-pkg-action-btn:hover {
+  background: var(--color-bg-hover);
+}
+
+#overlay .overlay-pkg-action-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+#overlay .overlay-btn--primary.overlay-pkg-action-btn {
+  background: var(--color-brand);
+  color: #fff;
+  border-color: var(--color-brand);
+}
+
+#overlay .overlay-btn--primary.overlay-pkg-action-btn:hover {
+  filter: brightness(1.1);
+}
+
+#overlay .overlay-btn--danger.overlay-pkg-action-btn {
+  background: var(--color-error, #c0392b);
+  color: #fff;
+  border-color: var(--color-error, #c0392b);
+}
+
+#overlay .overlay-close--package {
+  flex-shrink: 0;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+#overlay .overlay-close--package:hover {
+  background: var(--color-bg-hover);
+}
+
+#overlay .overlay-close--package:disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+#overlay .overlay-package-log {
+  margin-top: 0.75em;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.5em 0.75em;
+  font-family: monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  white-space: pre;
+  text-align: left;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(10 * 1.5 * 0.9em);
+}
+
 #overlay .overlay-pct {
   display: block;
   font-size: 0.85em;

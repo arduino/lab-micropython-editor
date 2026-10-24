@@ -1,3 +1,120 @@
+function PackageDetailView(pkg, emit) {
+  const el = html`<div class="overlay-pkg-detail">
+    <div class="overlay-pkg-detail-header">
+      <button class="overlay-pkg-back" onclick=${() => emit('deselect-package')}>← Back</button>
+      <button class="overlay-btn overlay-btn--primary overlay-pkg-action-btn" onclick=${() => emit('install-package-from-search', pkg)}>Install</button>
+    </div>
+    <div class="overlay-pkg-detail-body"></div>
+  </div>`
+
+  const body = el.querySelector('.overlay-pkg-detail-body')
+
+  const name = document.createElement('div')
+  name.className = 'overlay-pkg-detail-name'
+  name.textContent = pkg.name
+  body.appendChild(name)
+
+  if (pkg.version) {
+    const ver = document.createElement('div')
+    ver.className = 'overlay-pkg-detail-meta'
+    ver.textContent = `v${pkg.version}`
+    body.appendChild(ver)
+  }
+
+  if (pkg.description) {
+    const desc = document.createElement('div')
+    desc.className = 'overlay-pkg-detail-desc'
+    desc.textContent = pkg.description
+    body.appendChild(desc)
+  }
+
+  const metas = []
+  if (pkg.author) metas.push({ label: 'Author', value: pkg.author, link: false })
+  if (pkg.license) metas.push({ label: 'License', value: pkg.license, link: false })
+  if (pkg.url) metas.push({ label: 'URL', value: pkg.url, link: true })
+  if (pkg.docs) metas.push({ label: 'Docs', value: pkg.docs, link: true })
+
+  for (const { label, value, link } of metas) {
+    const row = document.createElement('div')
+    row.className = 'overlay-pkg-detail-row'
+    const l = document.createElement('span')
+    l.className = 'overlay-pkg-detail-label'
+    l.textContent = label
+    let v
+    if (link) {
+      v = document.createElement('a')
+      v.className = 'overlay-pkg-detail-link'
+      v.textContent = value
+      v.addEventListener('click', (e) => { e.preventDefault(); emit('open-url', value) })
+    } else {
+      v = document.createElement('span')
+      v.className = 'overlay-pkg-detail-value'
+      v.textContent = value
+    }
+    row.appendChild(l)
+    row.appendChild(v)
+    body.appendChild(row)
+  }
+
+  if (pkg.tags?.length) {
+    const tagRow = document.createElement('div')
+    tagRow.className = 'overlay-pkg-tags'
+    for (const tag of pkg.tags) {
+      const t = document.createElement('span')
+      t.className = 'overlay-pkg-tag'
+      t.textContent = tag
+      tagRow.appendChild(t)
+    }
+    body.appendChild(tagRow)
+  }
+
+  return el
+}
+
+function PackageSearchLayout(props, emit) {
+  const el = html`<div class="overlay-package-search"></div>`
+
+  if (props.selectedPackage) {
+    el.appendChild(PackageDetailView(props.selectedPackage, emit))
+    return el
+  }
+
+  const input = html`<input class="overlay-pkg-search-input" type="text" placeholder="Search packages…" value="${props.query}" />`
+  const results = html`<div class="overlay-pkg-search-results"></div>`
+
+  let debounceTimer = null
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => emit('search-packages', input.value.trim()), 350)
+  })
+
+  requestAnimationFrame(() => input.focus())
+
+  if (props.loading) {
+    results.textContent = 'Searching…'
+  } else if (props.error) {
+    const err = document.createElement('p')
+    err.className = 'overlay-pkg-search-error'
+    err.textContent = props.error
+    results.appendChild(err)
+  } else if (props.results.length === 0 && props.query) {
+    results.textContent = 'No packages found'
+  } else {
+    for (const pkg of props.results) {
+      const item = html`<div class="overlay-pkg-search-item">
+        <div class="overlay-pkg-search-name">${pkg.name}</div>
+        <div class="overlay-pkg-search-desc">${pkg.description || ''}</div>
+      </div>`
+      item.addEventListener('click', () => emit('select-package', pkg))
+      results.appendChild(item)
+    }
+  }
+
+  el.appendChild(input)
+  el.appendChild(results)
+  return el
+}
+
 // Shared button row for confirm/alert overlays.
 // buttons: [{ label, result, style }] where style is 'primary' or 'secondary'.
 function ButtonRow(buttons, emit) {
@@ -21,6 +138,39 @@ function CloseButton(emit) {
 
 function SpinnerLayout(props) {
   return html`<div><p>${props.message}</p></div>`
+}
+
+function PackageInstallLayout(props, emit) {
+  const el = html`<div class="overlay-package-install">
+    <div class="overlay-package-install-header">
+      <p>${props.message}</p>
+    </div>
+    <div class="overlay-package-log"></div>
+    <div class="overlay-pkg-activity${props.done ? ' overlay-pkg-activity--done' : ''}"><span>.</span><span>.</span><span>.</span></div>
+    <div class="overlay-pkg-actions"></div>
+  </div>`
+  const log = el.querySelector('.overlay-package-log')
+  log.textContent = props.log.join('\n')
+  requestAnimationFrame(() => { log.scrollTop = log.scrollHeight })
+
+  const actions = el.querySelector('.overlay-pkg-actions')
+  if (props.done) {
+    const btn = html`<button class="overlay-btn overlay-btn--primary overlay-pkg-action-btn" onclick=${() => emit('overlay-button-clicked', null)}>Done</button>`
+    actions.appendChild(btn)
+  } else if (props.confirmCancel) {
+    const msg = document.createElement('span')
+    msg.className = 'overlay-pkg-confirm-msg'
+    msg.textContent = 'Cancel and remove partial install?'
+    const yes = html`<button class="overlay-btn overlay-btn--danger overlay-pkg-action-btn" onclick=${() => emit('package-install-cancel')}>Yes, cancel</button>`
+    const no = html`<button class="overlay-btn overlay-pkg-action-btn" onclick=${() => emit('package-install-uncancel')}>Keep going</button>`
+    actions.appendChild(msg)
+    actions.appendChild(no)
+    actions.appendChild(yes)
+  } else {
+    const btn = html`<button class="overlay-btn overlay-pkg-action-btn" disabled=${props.cancelling} onclick=${() => emit('package-install-cancel')}>Cancel</button>`
+    actions.appendChild(btn)
+  }
+  return el
 }
 
 function ProgressLayout(props, emit) {
@@ -147,7 +297,13 @@ function Overlay(state, emit) {
 
   if (state.overlay) {
     const { type, props } = state.overlay
-    if (type === 'spinner') {
+    if (type === 'package-search') {
+      layout = PackageSearchLayout(props, emit)
+      interactive = true
+    } else if (type === 'package-install') {
+      layout = PackageInstallLayout(props, emit)
+      interactive = true
+    } else if (type === 'spinner') {
       layout = SpinnerLayout(props)
     } else if (type === 'progress') {
       layout = ProgressLayout(props, emit)

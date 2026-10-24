@@ -128,6 +128,14 @@ const SerialBridge = {
   renameFile: async (oldName, newName) => {
     return await ipcRenderer.invoke('serial', 'renameFile', oldName, newName)
   },
+  searchPackages: async (pattern) => ipcRenderer.invoke('packages', 'searchPackages', pattern),
+  installPackage: async (packageUrl, compileFiles = false, overwriteExisting = true) => {
+    return await ipcRenderer.invoke('serial', 'installPackage', packageUrl, compileFiles, overwriteExisting)
+  },
+  onPackageInstallLog: (callback) => {
+    ipcRenderer.removeAllListeners('package-install-log')
+    ipcRenderer.on('package-install-log', (event, line) => callback(line))
+  },
   onConnectionClosed: async (callback) => {
     // Remove all previous listeners  
     if (ipcRenderer.listeners("serial-on-connection-closed").length > 0) {

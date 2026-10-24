@@ -1642,7 +1642,7 @@ async function store(state, emitter) {
     emitter.emit('open-selected-files')
   })
 
-  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'new-file', 'connection', 'settings'])
+  const DISMISSABLE_OVERLAY_TYPES = new Set(['confirm', 'alert', 'new-file', 'connection', 'settings', 'package-search'])
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && DISMISSABLE_OVERLAY_TYPES.has(state.overlay?.type)) {
       emitter.emit('overlay-button-clicked', null)
@@ -1663,6 +1663,139 @@ async function store(state, emitter) {
 
   emitter.on('cancel-operation', async () => {
     if (state.isConnected) await serialBridge.keyboardInterrupt()
+  })
+
+  // PACKAGE INSTALLER
+  emitter.on('install-package', async (packageUrl) => {
+    if (!state.isConnected) return
+    if (terminalRouter) terminalRouter.setOperation('suppress')
+    state.overlay = {
+      type: 'package-install',
+      props: { message: `Installing ${packageUrl}…`, log: [], installedFiles: [], done: false, confirmCancel: false, cancelling: false }
+    }
+    emitter.emit('render')
+    serialBridge.onPackageInstallLog((line) => {
+      if (state.overlay?.type === 'package-install') {
+        state.overlay.props.log.push(line)
+        const fileMatches = line.match(/\/\S+\.(?:py|mpy)/g)
+        if (fileMatches) {
+          for (const f of fileMatches) {
+            if (!state.overlay.props.installedFiles.includes(f)) {
+              state.overlay.props.installedFiles.push(f)
+            }
+          }
+        }
+        emitter.emit('render')
+        requestAnimationFrame(() => {
+          const log = document.querySelector('.overlay-package-log')
+          if (log) log.scrollTop = log.scrollHeight
+        })
+      }
+    })
+    try {
+      await serialBridge.installPackage(packageUrl)
+    } catch (e) {
+      if (state.overlay?.type === 'package-install' && state.overlay.props.cancelling) {
+        if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
+        if (state.overlay?.type === 'package-install') {
+          state.overlay.props.message = 'Installation cancelled'
+          state.overlay.props.done = true
+          emitter.emit('render')
+        }
+        return
+      }
+      state.overlay = null
+      if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
+      emitter.emit('render')
+      await alertError(state, emitter, e, 'Package install failed')
+      return
+    }
+    if (state.overlay?.type === 'package-install') {
+      state.overlay.props.done = true
+      state.overlay.props.message = `${packageUrl} installed`
+      if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
+      emitter.emit('render')
+    }
+  })
+
+  emitter.on('package-install-cancel', async () => {
+    if (!state.overlay || state.overlay.type !== 'package-install') return
+    if (!state.overlay.props.confirmCancel) {
+      state.overlay.props.confirmCancel = true
+      emitter.emit('render')
+      return
+    }
+    state.overlay.props.cancelling = true
+    state.overlay.props.confirmCancel = false
+    state.overlay.props.log.push('--- cancelling ---')
+    emitter.emit('render')
+    try { await serialBridge.keyboardInterrupt() } catch (_) {}
+    // If the packager's own cleanup hangs, force-close after 5s
+    setTimeout(() => {
+      if (state.overlay?.type === 'package-install' && state.overlay.props.cancelling) {
+        state.overlay.props.message = 'Installation cancelled'
+        state.overlay.props.done = true
+        if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
+        emitter.emit('render')
+      }
+    }, 5000)
+  })
+
+  emitter.on('package-install-uncancel', () => {
+    if (!state.overlay || state.overlay.type !== 'package-install') return
+    state.overlay.props.confirmCancel = false
+    emitter.emit('render')
+  })
+
+  // PACKAGE SEARCH
+  emitter.on('open-url', (url) => win.openUrl(url))
+
+  emitter.on('open-package-search', () => {
+    if (state.overlay) return
+    state.overlay = { type: 'package-search', props: { query: '', results: [], loading: false, error: null } }
+    updateMenu()
+    emitter.emit('render')
+  })
+
+  emitter.on('search-packages', async (query) => {
+    if (state.overlay?.type !== 'package-search') return
+    state.overlay.props.query = query
+    state.overlay.props.loading = true
+    state.overlay.props.error = null
+    emitter.emit('render')
+    try {
+      const results = await serialBridge.searchPackages(query)
+      if (state.overlay?.type === 'package-search') {
+        state.overlay.props.results = results
+        state.overlay.props.loading = false
+        emitter.emit('render')
+      }
+    } catch (e) {
+      if (state.overlay?.type === 'package-search') {
+        state.overlay.props.error = e.message || 'Search failed'
+        state.overlay.props.loading = false
+        emitter.emit('render')
+      }
+    }
+  })
+
+  emitter.on('select-package', (pkg) => {
+    if (state.overlay?.type !== 'package-search') return
+    state.overlay.props.selectedPackage = pkg
+    emitter.emit('render')
+  })
+
+  emitter.on('deselect-package', () => {
+    if (state.overlay?.type !== 'package-search') return
+    state.overlay.props.selectedPackage = null
+    emitter.emit('render')
+  })
+
+  emitter.on('install-package-from-search', (pkg) => {
+    const packageUrl = pkg.url || pkg.name
+    state.overlay = null
+    emitter.emit('render')
+    emitter.emit('install-package', packageUrl)
   })
 
   // DOWNLOAD AND UPLOAD FILES
@@ -1961,6 +2094,9 @@ async function store(state, emitter) {
   win.onKeyboardShortcut((key) => {
     if (state.overlay !== null) return
     if (state.shortcutsDisabled) return
+    if (key === shortcuts.INSTALL_LIBRARIES) {
+      if (state.isConnected) emitter.emit('open-package-search')
+    }
     if (key === shortcuts.CLOSE) {
       emitter.emit('close-tab', state.editingFile)
     }

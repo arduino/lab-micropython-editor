@@ -9,6 +9,7 @@
     "post-set-shell": "npm config set script-shell bash",
     "rebuild": "node build_resources/electron-rebuild.js",
     "dev": "electron  --inspect ./",
+    "prebuild": "rm -rf node_modules/upy-package/node_modules node_modules/upy-packager/node_modules",
     "build": "npm run post-set-shell && electron-builder",
     "postinstall": "npm run post-set-shell && npm run rebuild"
   },
@@ -43,7 +44,11 @@
       "target": "zip",
       "icon": "build_resources/icon.icns"
     },
-    "afterSign": "build_resources/notarize.js"
+    "afterSign": "build_resources/notarize.js",
+    "asarUnpack": [
+      "node_modules/upy-package/**",
+      "node_modules/upy-packager/**"
+    ]
   },
   "license": "MIT",
   "dependencies": {
@@ -55,7 +60,9 @@
     "codemirror": "^6.0.2",
     "esbuild": "^0.25.9",
     "micropython.js": "github:arduino/micropython.js#v2.1.3",
-    "thememirror": "^2.0.1"
+    "thememirror": "^2.0.1",
+    "upy-package": "github:arduino/upy-package",
+    "upy-packager": "github:ubidefeo/upy-packager#feature/accept-open-serial-port"
   },
   "engines": {
     "node": ">=20"

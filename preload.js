@@ -91,7 +91,8 @@ const Window = {
   updateMenuState: (state) => {
     return ipcRenderer.invoke('update-menu-state', state)
   },
-  getShortcuts: () => shortcuts
+  getShortcuts: () => shortcuts,
+  openUrl: (url) => ipcRenderer.invoke('open-url', url)
 }
 
 /**

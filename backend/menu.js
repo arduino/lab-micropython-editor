@@ -167,7 +167,13 @@ module.exports = function registerMenu(win, state = {}) {
           enabled: state.isConnected && state.view === 'editor',
           click: () => win.webContents.send('shortcut-cmd', shortcuts.global.RESET)
         },
-        { type: 'separator' }
+        { type: 'separator' },
+        {
+          label: 'Install Libraries',
+          accelerator: shortcuts.menu.INSTALL_LIBRARIES,
+          enabled: state.isConnected && !state.hasOverlay,
+          click: () => win.webContents.send('shortcut-cmd', shortcuts.global.INSTALL_LIBRARIES)
+        }
       ]
     },
     {

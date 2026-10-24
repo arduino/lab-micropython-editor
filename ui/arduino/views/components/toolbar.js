@@ -70,16 +70,14 @@ function Toolbar(state, emit) {
           onClick: () => emit('save')
         })}
 
-        ${!window.BridgeWindow.isLinux() ? html`<div class="separator"></div>` : ''}
+        <div class="separator"></div>
 
-        ${!window.BridgeWindow.isLinux() ? Button({
+        ${Button({
           icon: 'install-package.svg',
           label: `Libraries`,
-          onClick: () => {
-            if(state.isConnected) emit('disconnect') // Package installer requires exclusive access to the serial port
-            emit('launch-app', 'micropython-package-installer://', 'https://github.com/arduino/lab-micropython-package-installer/releases/latest')          
-          }
-        }) : '' }
+          disabled: !state.isConnected,
+          onClick: () => emit('open-package-search')
+        })}
       </div>
         
       <div id="app-views">

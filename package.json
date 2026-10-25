@@ -73,7 +73,10 @@
       "node_modules/yallist/**",
       "node_modules/p-timeout/**",
       "node_modules/crc-32/**",
-      "node_modules/semver/**"
+      "node_modules/semver/**",
+      "node_modules/micropython.js/**",
+      "node_modules/mkdirp/**",
+      "node_modules/fs-minipass/**"
     ]
   },
   "license": "MIT",

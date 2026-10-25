@@ -14,7 +14,7 @@ function createWindow () {
   win = new BrowserWindow({
     width: 820,
     height: 700,
-    titleBarStyle: 'hidden',
+    titleBarStyle: process.platform === 'darwin' ? 'hidden' : 'default',
     webPreferences: {
       nodeIntegration: false,
       sandbox: false,

@@ -178,7 +178,7 @@ jobs:
   artifacts:
     name: ${{ matrix.artifact.name }} artifact
     needs: build
-    if: always() && needs.build.result != 'skipped'
+    if: always() && needs.build.result != 'skipped' && !startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     strategy:
@@ -272,6 +272,16 @@ jobs:
             echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
             echo "PRERELEASE=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Strip version from artifact filenames
+        shell: bash
+        run: |
+          for f in artifacts/*.zip; do
+            # Arduino.Lab.for.MicroPython-0.31.0-linux_arm64.zip
+            # → Arduino.Lab.for.MicroPython-linux_arm64.zip
+            NEW=$(echo "$f" | sed 's/-[0-9][^-]*-/-/')
+            [ "$f" != "$NEW" ] && mv "$f" "$NEW"
+          done
 
       - name: Publish Release [GitHub]
         uses: svenstaro/upload-release-action@2.11.2

@@ -193,7 +193,8 @@ class Serial {
                 req.end()
             })
         }
-        const { Packager } = await import(require.resolve('upy-packager/logic/packager.js').replace(/app\.asar([/\\])/, 'app.asar.unpacked$1'))
+        const { pathToFileURL } = require('url')
+        const { Packager } = await import(pathToFileURL(require.resolve('upy-packager/logic/packager.js').replace(/app\.asar([/\\])/, 'app.asar.unpacked$1')).href)
         const packager = new Packager(this.board, compileFiles, overwriteExisting)
         const origDebug = console.debug
         console.debug = (...args) => {

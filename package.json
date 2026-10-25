@@ -27,14 +27,9 @@
     "artifactName": "${productName}-${version}-${os}_${arch}.${ext}",
     "extraResources": "./ui/arduino/helpers.py",
     "mac": {
-      "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "universal"
-          ]
-        }
-      ],
+      "target": {
+        "target": "zip"
+      },
       "icon": "build_resources/icon.icns"
     },
     "win": {
@@ -54,29 +49,7 @@
       "!node_modules/upy-packager/bin/**"
     ],
     "asarUnpack": [
-      "node_modules/upy-package/**",
-      "node_modules/upy-packager/**",
-      "node_modules/js-yaml/**",
-      "node_modules/argparse/**",
-      "node_modules/fuse.js/**",
-      "node_modules/fs-extra/**",
-      "node_modules/graceful-fs/**",
-      "node_modules/jsonfile/**",
-      "node_modules/universalify/**",
-      "node_modules/at-least-node/**",
-      "node_modules/tar/**",
-      "node_modules/chownr/**",
-      "node_modules/fs-minipass/**",
-      "node_modules/minipass/**",
-      "node_modules/minizlib/**",
-      "node_modules/mkdirp/**",
-      "node_modules/yallist/**",
-      "node_modules/p-timeout/**",
-      "node_modules/crc-32/**",
-      "node_modules/semver/**",
-      "node_modules/micropython.js/**",
-      "node_modules/mkdirp/**",
-      "node_modules/fs-minipass/**"
+      "node_modules/**"
     ]
   },
   "license": "MIT",

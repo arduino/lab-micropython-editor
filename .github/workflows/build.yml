@@ -38,8 +38,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - os: macos-latest
-            id: macos-universal
+          - os: macos-26
+            id: macos-arm64
+          - os: macos-26-intel
+            id: macos-x64
           - os: [self-hosted, windows-sign-pc]
             id: windows-x64
           - os: ubuntu-latest
@@ -159,8 +161,8 @@ jobs:
             # attributes, which macOS Archive Utility rejects as "unsupported format".
             # Replace the zip with one created by ditto, which Archive Utility handles correctly.
             if [ "${{ runner.OS }}" = "macOS" ]; then
-              APP=$(find dist/mac-universal -maxdepth 1 -name "*.app" -type d | head -1)
-              ZIP=$(find dist -maxdepth 1 -name "*mac_universal.zip" | head -1)
+              APP=$(find dist -maxdepth 2 -name "*.app" -type d | head -1)
+              ZIP=$(find dist -maxdepth 1 -name "*.zip" | head -1)
               rm "$ZIP"
               ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
             fi
@@ -183,9 +185,12 @@ jobs:
       fail-fast: true
       matrix:
         artifact:
-          - path: "*-mac_universal.zip"
-            name: Arduino.Lab.for.MicroPython-mac_universal
-            id: macos-universal
+          - path: "*-mac_arm64.zip"
+            name: Arduino.Lab.for.MicroPython-mac_arm64
+            id: macos-arm64
+          - path: "*-mac_x64.zip"
+            name: Arduino.Lab.for.MicroPython-mac_x64
+            id: macos-x64
           - path: "*-win_x64.zip"
             name: Arduino.Lab.for.MicroPython-win_x64
             id: windows-x64

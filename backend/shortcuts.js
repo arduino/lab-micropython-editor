@@ -2,6 +2,7 @@ const { globalShortcut } = require('electron')
 let shortcutsActive = false
 const shortcuts = {
   global: {
+    HIDE: 'CommandOrControl+H',
     CLOSE: 'CommandOrControl+W',
     CONNECT: 'CommandOrControl+Shift+C',
     DISCONNECT: 'CommandOrControl+Shift+D',
@@ -19,9 +20,10 @@ const shortcuts = {
     SELECT_LINE: 'CommandOrControl+Alt+L',
     TAB_NEXT: 'Control+Tab',
     TAB_PREV: 'Control+Shift+Tab',
-    INSTALL_LIBRARIES: 'CommandOrControl+Shift+I',
+    INSTALL_LIBRARIES: 'CommandOrControl+Shift+L',
   },
   menu: {
+    HIDE: 'CmdOrCtrl+H',
     CLOSE: 'CmdOrCtrl+W',
     CONNECT: 'CmdOrCtrl+Shift+C',
     DISCONNECT: 'CmdOrCtrl+Shift+D',
@@ -39,7 +41,7 @@ const shortcuts = {
     SELECT_LINE: 'CmdOrCtrl+Alt+L',
     TAB_NEXT: 'Ctrl+Tab',
     TAB_PREV: 'Ctrl+Shift+Tab',
-    INSTALL_LIBRARIES: 'CmdOrCtrl+Shift+I',
+    INSTALL_LIBRARIES: 'CmdOrCtrl+Shift+L',
   },
   // Shortcuts
 }

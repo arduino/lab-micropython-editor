@@ -51,7 +51,7 @@ module.exports = function registerMenu(win, state = {}) {
           click: () => win.webContents.send('open-settings')
         },
         { type: 'separator' },
-        { role: 'hide', accelerator: 'CmdOrCtrl+Shift+H' },
+        { role: 'hide', accelerator: shortcuts.global.HIDE },
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },

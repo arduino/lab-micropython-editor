@@ -32,7 +32,7 @@ function ensureFetch() {
 async function getPackageManager() {
     ensureFetch()
     if (!_packageManager) {
-        const { PackageManager } = await import(require.resolve('upy-package').replace(/app\.asar([/\\])/, 'app.asar.unpacked$1'))
+        const { PackageManager } = await import(require.resolve('upy-package/logic/package-manager.js').replace(/app\.asar([/\\])/, 'app.asar.unpacked$1'))
         _packageManager = new PackageManager()
     }
     return _packageManager

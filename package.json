@@ -72,7 +72,8 @@
       "node_modules/mkdirp/**",
       "node_modules/yallist/**",
       "node_modules/p-timeout/**",
-      "node_modules/crc-32/**"
+      "node_modules/crc-32/**",
+      "node_modules/semver/**"
     ]
   },
   "license": "MIT",

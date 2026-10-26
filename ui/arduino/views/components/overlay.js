@@ -1,10 +1,10 @@
 function PackageDetailView(pkg, emit) {
   const el = html`<div class="overlay-pkg-detail">
-    <div class="overlay-pkg-detail-header">
+    <div class="overlay-pkg-detail-body"></div>
+    <div class="overlay-pkg-detail-actions">
       <button class="overlay-pkg-back" onclick=${() => emit('deselect-package')}>← Back</button>
       <button class="overlay-btn overlay-btn--primary overlay-pkg-action-btn" onclick=${() => emit('install-package-from-search', pkg)}>Install</button>
     </div>
-    <div class="overlay-pkg-detail-body"></div>
   </div>`
 
   const body = el.querySelector('.overlay-pkg-detail-body')
@@ -76,6 +76,7 @@ function PackageSearchLayout(props, emit) {
 
   if (props.selectedPackage) {
     el.appendChild(PackageDetailView(props.selectedPackage, emit))
+    el.appendChild(CloseButton(emit))
     return el
   }
 
@@ -114,6 +115,7 @@ function PackageSearchLayout(props, emit) {
   el.appendChild(title)
   el.appendChild(input)
   el.appendChild(results)
+  el.appendChild(CloseButton(emit))
   return el
 }
 
@@ -145,7 +147,7 @@ function SpinnerLayout(props) {
 function PackageInstallLayout(props, emit) {
   const el = html`<div class="overlay-package-install">
     <div class="overlay-package-install-header">
-      <p>${props.message}</p>
+      <p>${props.done ? html`<strong>${props.packageName || ''}</strong> ${props.message}` : html`${props.message} <strong>${props.packageName || ''}</strong>…`}</p>
     </div>
     <div class="overlay-package-log"></div>
     <div class="overlay-pkg-activity${props.done ? ' overlay-pkg-activity--done' : ''}"><span>.</span><span>.</span><span>.</span></div>

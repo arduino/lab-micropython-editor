@@ -1143,6 +1143,7 @@ button.file-list-cta-btn:hover {
 }
 
 #overlay .overlay-package-search {
+  position: relative;
   width: 420px;
   max-width: 420px;
   display: flex;
@@ -1221,7 +1222,7 @@ button.file-list-cta-btn:hover {
   text-align: left;
 }
 
-#overlay .overlay-pkg-detail-header {
+#overlay .overlay-pkg-detail-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1368,7 +1369,7 @@ button.file-list-cta-btn:hover {
 #overlay .overlay-pkg-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.5em;
   margin-top: 0.75em;
 }

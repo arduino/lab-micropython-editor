@@ -1672,12 +1672,12 @@ async function store(state, emitter) {
   })
 
   // PACKAGE INSTALLER
-  emitter.on('install-package', async (packageUrl) => {
+  emitter.on('install-package', async (packageUrl, packageName) => {
     if (!state.isConnected) return
     if (terminalRouter) terminalRouter.setOperation('suppress')
     state.overlay = {
       type: 'package-install',
-      props: { message: `Installing ${packageUrl}…`, log: [], installedFiles: [], done: false, confirmCancel: false, cancelling: false }
+      props: { message: 'Installing', packageName: packageName || packageUrl, log: [], installedFiles: [], done: false, confirmCancel: false, cancelling: false }
     }
     emitter.emit('render')
     serialBridge.onPackageInstallLog((line) => {
@@ -1718,7 +1718,7 @@ async function store(state, emitter) {
     }
     if (state.overlay?.type === 'package-install') {
       state.overlay.props.done = true
-      state.overlay.props.message = `${packageUrl} installed`
+      state.overlay.props.message = 'Installed'
       if (terminalRouter && state.isConnected) terminalRouter.setOperation('repl-interactive')
       emitter.emit('render')
     }
@@ -1801,7 +1801,7 @@ async function store(state, emitter) {
     const packageUrl = pkg.url || pkg.name
     state.overlay = null
     emitter.emit('render')
-    emitter.emit('install-package', packageUrl)
+    emitter.emit('install-package', packageUrl, pkg.name)
   })
 
   // DOWNLOAD AND UPLOAD FILES

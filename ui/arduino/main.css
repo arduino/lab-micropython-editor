@@ -1151,6 +1151,11 @@ button.file-list-cta-btn:hover {
   text-align: left;
 }
 
+#overlay .overlay-pkg-search-title {
+  margin: 0;
+  flex: 1;
+}
+
 #overlay .overlay-pkg-search-input {
   width: 100%;
   box-sizing: border-box;
@@ -1229,6 +1234,7 @@ button.file-list-cta-btn:hover {
   cursor: pointer;
   font-size: 0.9em;
   padding: 0;
+  width: auto;
 }
 
 #overlay .overlay-pkg-back:hover {

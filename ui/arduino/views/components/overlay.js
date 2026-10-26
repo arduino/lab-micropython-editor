@@ -79,7 +79,8 @@ function PackageSearchLayout(props, emit) {
     return el
   }
 
-  const input = html`<input class="overlay-pkg-search-input" type="text" placeholder="Search packages…" value="${props.query}" />`
+  const title = html`<p class="overlay-pkg-search-title">Install library</p>`
+  const input = html`<input class="overlay-pkg-search-input" type="text" placeholder="Library name" value="${props.query}" />`
   const results = html`<div class="overlay-pkg-search-results"></div>`
 
   let debounceTimer = null
@@ -110,6 +111,7 @@ function PackageSearchLayout(props, emit) {
     }
   }
 
+  el.appendChild(title)
   el.appendChild(input)
   el.appendChild(results)
   return el

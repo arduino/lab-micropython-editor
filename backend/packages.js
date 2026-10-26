@@ -41,7 +41,15 @@ async function getPackageManager() {
 
 async function searchPackages(pattern) {
     const pm = await getPackageManager()
-    const packages = await pm.findPackages(pattern || '')
+    let packages = await pm.findPackages(pattern || '')
+    if (pattern) {
+        const q = pattern.toLowerCase()
+        packages = packages.filter(p =>
+            (p.name && p.name.toLowerCase().includes(q)) ||
+            (p.description && p.description.toLowerCase().includes(q)) ||
+            (Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(q)))
+        )
+    }
     return packages.map(p => ({
         name: p.name || '',
         url: p.url || null,

@@ -16,11 +16,21 @@ function FileManagerView(state, emit) {
 
   function DeviceHeader({ source, fullPath, icon }) {
     const sourceSelected = source === 'board' ? boardSelected : diskSelected
+    const sourceFiles = state[`${source}Files`]
     const selectionActive = sourceSelected.length > 0
+    const allSelected = sourceFiles.length > 0 && sourceSelected.length === sourceFiles.length
 
     const allowOpen   = canEdit({ selectedFiles: sourceSelected })
     const allowRename = sourceSelected.length === 1 && selectedFiles.length === 1
     const allowDelete = sourceSelected.length > 0
+
+    const checkboxButton = allSelected
+      ? html`<button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all" aria-label="Deselect all">
+          <img class="icon" src="media/clear-checked.svg" />
+        </button>`
+      : html`<button class="header-checkbox" onclick=${() => emit('select-all-by-source', source)} data-tooltip="Select all" aria-label="Select all">
+          <img class="icon" src="media/checked_inactive.svg" />
+        </button>`
 
     const defaultButtons = html`
       <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-folder', source)} data-tooltip="New folder" aria-label="New folder">
@@ -29,6 +39,7 @@ function FileManagerView(state, emit) {
       <button disabled=${source === 'board' && !isConnected} onclick=${() => emit('create-file', source)} data-tooltip="New file" aria-label="New file">
         <img class="icon" src="media/new-file.svg" />
       </button>
+      ${checkboxButton}
     `
 
     const selectionButtons = html`
@@ -41,9 +52,7 @@ function FileManagerView(state, emit) {
       <button disabled=${!allowDelete} onclick=${() => emit('remove-files', source)} data-tooltip="Delete" aria-label="Delete">
         <img class="icon" src="media/delete.svg" />
       </button>
-      <button class="header-checkbox" onclick=${() => emit('clear-selection-by-source', source)} data-tooltip="Deselect all" aria-label="Deselect all">
-        <img class="icon" src="media/clear-checked.svg" />
-      </button>
+      ${checkboxButton}
     `
 
     return html`

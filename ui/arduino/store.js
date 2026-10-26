@@ -1517,6 +1517,12 @@ async function store(state, emitter) {
     state.selectedFiles = state.selectedFiles.filter(f => f.source !== source)
     emitter.emit('render')
   })
+  emitter.on('select-all-by-source', (source) => {
+    const files = state[`${source}Files`]
+    const existing = state.selectedFiles.filter(f => f.source !== source)
+    state.selectedFiles = [...existing, ...files.map(f => ({ ...f, source }))]
+    emitter.emit('render')
+  })
   emitter.on('open-selected-files', async () => {
     // log('open-selected-files')
     let filesToOpen = []
